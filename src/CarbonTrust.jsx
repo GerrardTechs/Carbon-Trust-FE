@@ -686,55 +686,6 @@ function Dashboard({ parcels, alerts, company, setPage, t }) {
         </div>
       )}
 
-      {/* AI Matching FAB */}
-      <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end gap-2">
-        <button onClick={runMatch}
-          className="text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-sm active:scale-95 transition-all"
-          style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-          <Ic.Bot />{t.market.aiMatch}
-        </button>
-      </div>
-
-      {/* AI Match Modal */}
-      <Modal open={matchModal} onClose={() => setMatchModal(false)} title="🤖 AI Carbon Matching Engine">
-        {matching ? (
-          <div className="flex flex-col items-center py-6 gap-4">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 border-4 border-green-200 rounded-full" />
-              <div className="absolute inset-0 border-4 border-green-600 border-t-transparent rounded-full spin" />
-            </div>
-            <p className="text-gray-600 text-sm">{t.market.analyzing}</p>
-            <p className="text-xs text-gray-400">Analyzing: price · volume · location · NDVI · certification</p>
-          </div>
-        ) : matchResult ? (
-          <div className="flex flex-col gap-4">
-            <div className="bg-green-50 rounded-xl p-4 text-center">
-              <p className="text-4xl font-black text-green-700">{matchResult.score || 97.4}%</p>
-              <p className="text-xs text-gray-500">{t.market.score}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">{t.market.buyer}</p><p className="text-xs font-bold">{company.name}</p></div>
-              <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">{t.market.seller}</p><p className="text-xs font-bold">{matchResult.company || "Borneo Green Alliance"}</p></div>
-            </div>
-            <div className="bg-green-50 rounded-xl p-3 text-sm">
-              <p className="text-xs text-gray-400 mb-1">MRV Data</p>
-              <p className="font-bold">{matchResult.company}</p>
-              <p className="text-xs text-green-700 mt-1">NDVI {matchResult.ndvi} · Abs. {matchResult.absRate} tCO₂/ha/yr</p>
-              <div className="flex justify-between mt-2 text-xs">
-                <span>Volume: <strong>{matchResult.volume || 500} t</strong></span>
-                <span>Price: <strong>${matchResult.price || 18.5}/t</strong></span>
-              </div>
-              <p className="text-green-700 font-black mt-1">Total: ${((matchResult.volume || 500) * (matchResult.price || 18.5)).toLocaleString()} USD</p>
-            </div>
-            <button onClick={() => { setMatchModal(false); setPage("market"); }}
-              className="w-full py-3 rounded-xl font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-              {t.market.proceed}
-            </button>
-          </div>
-        ) : null}
-      </Modal>
-
       {/* IoT History Modal */}
       <Modal open={histModal} onClose={() => setHistModal(false)} title={`📈 IoT History — ${histParcelId} (72h)`} wide>
         <div className="mb-3 flex gap-2 flex-wrap">
