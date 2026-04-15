@@ -127,8 +127,12 @@ const TR = {
       tree:"Virtual Tree 🌳", treeDesc:"Grows with every completed transaction",
       simulateTx:"Simulate New Transaction (+1 🌱)",
       save:"Save Profile",
+      companyName:"Company Name", emailLabel:"Institutional Email", locationLabel:"Location",
+      removalProjectLabel:"Carbon Removal Project", entityTypeLabel:"Entity / Company Type", bizTypeLabel:"Business Activity Type",
     },
     common:{ save:"Save", cancel:"Cancel", back:"← Back", loading:"Processing...", confirm:"Confirm", download:"Download", close:"Close", add:"Add", submit:"Submit" },
+    exit:{ btn:"Exit", title:"Exit Application", desc:"What would you like to do?", exitOnly:"Exit App", logout:"Exit & Log Out", logoutDesc:"You will return to the registration screen.", cancelBtn:"Cancel", noActiveTransaction:"No active transaction" },
+    market:{ viewDetails:"View Details" },
   },
   id: {
     flag:"🇮🇩", label:"Indonesia",
@@ -186,12 +190,16 @@ const TR = {
       tree:"Pohon Virtual 🌳", treeDesc:"Tumbuh seiring transaksi",
       simulateTx:"Simulasi Transaksi Baru (+1 🌱)",
       save:"Simpan Profil",
+      companyName:"Nama Perusahaan", emailLabel:"Email Institusi", locationLabel:"Lokasi",
+      removalProjectLabel:"Proyek Penyerapan Karbon", entityTypeLabel:"Jenis Entitas / Perusahaan", bizTypeLabel:"Jenis Kegiatan Usaha",
     },
     common:{ save:"Simpan", cancel:"Batal", back:"← Kembali", loading:"Memproses...", confirm:"Konfirmasi", download:"Unduh", close:"Tutup", add:"Tambah", submit:"Kirim" },
+    exit:{ btn:"Keluar", title:"Keluar Aplikasi", desc:"Apa yang ingin Anda lakukan?", exitOnly:"Keluar Aplikasi", logout:"Keluar & Log Out", logoutDesc:"Anda akan kembali ke halaman pendaftaran.", cancelBtn:"Batal", noActiveTransaction:"Tidak ada transaksi aktif" },
+    market:{ viewDetails:"Lihat Detail" },
   },
-  zh: { flag:"🇨🇳", label:"中文", nav:{ home:"首页",market:"碳市场",calc:"计算器",land:"土地",verify:"核查",profile:"企业",tx:"交易" }, dash:{ greeting:"欢迎回来",tagline:"有效 · 实时 · 无欺诈",netCarbon:"净碳余额",totalEm:"总排放量",totalAbs:"总吸收量",credits:"碳信用额度",creditsUSD:"投资组合价值",liveIot:"实时物联网传感器",history:"历史",alerts:"AI检测与预警",dismiss:"关闭",myProjects:"我的活跃项目",seeAll:"查看所有土地 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"单位" }, land:{ title:"土地所有权",addParcel:"+ 添加地块",area:"面积 (ha)",type:"土地类型",name:"地块名称",lat:"纬度",lng:"经度",depth:"泥炭深度 (m)",simulate:"模拟条件",viewAll:"所有土地地块",stockFormula:"碳储量公式",types:{forest:"森林",peatland:"泥炭地",mangrove:"红树林",agricultural:"农业",industrial:"工业"},status:{healthy:"健康",flooded:"洪涝",degraded:"退化",burned:"火灾",drying:"泥炭干燥"},alerts:{flooded:"🌊 检测到洪涝",peatland_degraded:"⚠️ 泥炭退化",burned:"🔥 火灾检测",drying:"🌡️ 泥炭干燥"} }, calc:{ title:"碳排放计算器",scope1:"范围1",scope2:"范围2",scope3:"范围3",calculate:"计算排放量",totalEm:"总排放量",offsetNeeded:"所需碳信用",leakage:"泄漏估算",ref:"基于IPCC 2006" }, market:{ title:"碳市场",search:"搜索...",detail:"查看详情",transact:"开始交易",aiMatch:"AI匹配",analyzing:"分析中...",score:"兼容性得分",buyer:"买家",seller:"卖家",proceed:"继续交易 →",recommend:"为您推荐" }, tx:{ title:"交易",new:"新交易",stage0:"协议已创建",stage1:"资金在托管",stage2:"碳已验证",stage3:"资金已释放",blockchain:"在区块链查看",confirmReceipt:"确认收货",escrow:"托管金额",immutable:"由47个节点验证",volume:"数量",price:"价格/吨",total:"总计" }, verify:{ title:"MRV和验证",download:"下载ISO 14064证书",log:"IoT·ML·卫星日志" }, profile:{ title:"企业档案",settings:"档案设置",wallet:"区块链钱包ID",generate:"生成钱包",walletNote:"钱包ID只能生成一次。",esg:"ESG评分",esgStart:"开始ESG评估",esgDesc:"完成问卷和文件提交以获得AI验证的ESG评分。",esgStatus:{not_started:"未开始",in_progress:"进行中",submitted:"已提交",verified:"已验证"},tree:"虚拟树 🌳",treeDesc:"随着每次交易成长",simulateTx:"模拟新交易 (+1 🌱)",save:"保存档案" }, common:{ save:"保存",cancel:"取消",back:"← 返回",loading:"处理中...",confirm:"确认",download:"下载",close:"关闭",add:"添加",submit:"提交" } },
-  ko: { flag:"🇰🇷", label:"한국어", nav:{ home:"홈",market:"탄소시장",calc:"계산기",land:"토지",verify:"검증",profile:"기업",tx:"거래" }, dash:{ greeting:"환영합니다",tagline:"유효 · 실시간 · 사기없음",netCarbon:"순탄소 잔액",totalEm:"총 배출량",totalAbs:"총 흡수량",credits:"탄소 크레딧",creditsUSD:"포트폴리오 가치",liveIot:"실시간 IoT 센서",history:"기록",alerts:"AI 감지 및 경보",dismiss:"닫기",myProjects:"내 활성 프로젝트",seeAll:"모든 토지 보기 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"단위" }, land:{ title:"토지 소유권",addParcel:"+ 토지 추가",area:"면적 (ha)",type:"토지 유형",name:"필지 이름",lat:"위도",lng:"경도",depth:"이탄 깊이 (m)",simulate:"조건 시뮬레이션",viewAll:"모든 토지 필지",stockFormula:"탄소 저장량 공식",types:{forest:"산림",peatland:"이탄지",mangrove:"맹그로브",agricultural:"농업",industrial:"산업"},status:{healthy:"정상",flooded:"침수",degraded:"훼손",burned:"화재",drying:"이탄 건조"},alerts:{flooded:"🌊 홍수 감지",peatland_degraded:"⚠️ 이탄 훼손",burned:"🔥 화재 감지",drying:"🌡️ 이탄 건조"} }, calc:{ title:"탄소 배출 계산기",scope1:"범위 1",scope2:"범위 2",scope3:"범위 3",calculate:"배출량 계산",totalEm:"총 배출량",offsetNeeded:"필요 크레딧",leakage:"누출 추정",ref:"IPCC 2006 기반" }, market:{ title:"탄소 시장",search:"검색...",detail:"상세 보기",transact:"거래 시작",aiMatch:"AI 매칭",analyzing:"분석 중...",score:"호환성 점수",buyer:"구매자",seller:"판매자",proceed:"거래로 진행 →",recommend:"추천" }, tx:{ title:"거래",new:"새 거래",stage0:"계약 생성",stage1:"자금 에스크로",stage2:"탄소 검증",stage3:"자금 해제",blockchain:"블록체인에서 보기",confirmReceipt:"수령 확인",escrow:"에스크로 금액",immutable:"47개 노드 검증",volume:"수량",price:"가격/톤",total:"합계" }, verify:{ title:"MRV 및 검증",download:"ISO 14064 인증서 다운로드",log:"IoT·ML·위성 로그" }, profile:{ title:"기업 프로필",settings:"프로필 설정",wallet:"블록체인 지갑 ID",generate:"지갑 생성",walletNote:"지갑 ID는 한 번만 생성할 수 있습니다.",esg:"ESG 점수",esgStart:"ESG 평가 시작",esgDesc:"설문지 및 문서 제출 완료 시 AI 검증 ESG 점수 수령.",esgStatus:{not_started:"미시작",in_progress:"진행 중",submitted:"제출됨",verified:"검증됨"},tree:"가상 나무 🌳",treeDesc:"거래마다 성장",simulateTx:"새 거래 시뮬레이션 (+1 🌱)",save:"프로필 저장" }, common:{ save:"저장",cancel:"취소",back:"← 뒤로",loading:"처리 중...",confirm:"확인",download:"다운로드",close:"닫기",add:"추가",submit:"제출" } },
-  ja: { flag:"🇯🇵", label:"日本語", nav:{ home:"ホーム",market:"炭素市場",calc:"計算機",land:"土地",verify:"検証",profile:"企業",tx:"取引" }, dash:{ greeting:"おかえりなさい",tagline:"有効 · リアルタイム · 不正なし",netCarbon:"純炭素残高",totalEm:"総排出量",totalAbs:"総吸収量",credits:"カーボンクレジット",creditsUSD:"ポートフォリオ価値",liveIot:"リアルタイムIoTセンサー",history:"履歴",alerts:"AI検知・アラート",dismiss:"閉じる",myProjects:"アクティブプロジェクト",seeAll:"全土地を見る →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"単位" }, land:{ title:"土地所有権",addParcel:"+ 土地追加",area:"面積 (ha)",type:"土地種別",name:"区画名",lat:"緯度",lng:"経度",depth:"泥炭深度 (m)",simulate:"条件シミュレーション",viewAll:"全土地区画",stockFormula:"炭素貯留量算式",types:{forest:"森林",peatland:"泥炭地",mangrove:"マングローブ",agricultural:"農業",industrial:"工業"},status:{healthy:"健全",flooded:"浸水",degraded:"劣化",burned:"火災",drying:"泥炭乾燥"},alerts:{flooded:"🌊 洪水検知",peatland_degraded:"⚠️ 泥炭劣化",burned:"🔥 火災検知",drying:"🌡️ 泥炭乾燥"} }, calc:{ title:"排出量計算ツール",scope1:"スコープ1",scope2:"スコープ2",scope3:"スコープ3",calculate:"排出量を計算",totalEm:"総排出量",offsetNeeded:"必要クレジット",leakage:"リーケージ推定",ref:"IPCC 2006基準" }, market:{ title:"炭素市場",search:"検索...",detail:"詳細を見る",transact:"取引開始",aiMatch:"AIマッチング",analyzing:"分析中...",score:"互換性スコア",buyer:"購入者",seller:"販売者",proceed:"取引に進む →",recommend:"おすすめ" }, tx:{ title:"取引",new:"新規取引",stage0:"契約作成",stage1:"資金エスクロー",stage2:"炭素検証",stage3:"資金解放",blockchain:"ブロックチェーンで見る",confirmReceipt:"受領確認",escrow:"エスクロー金額",immutable:"47ノード検証",volume:"数量",price:"価格/トン",total:"合計" }, verify:{ title:"MRVと検証",download:"ISO 14064証明書ダウンロード",log:"IoT·ML·衛星ログ" }, profile:{ title:"企業プロフィール",settings:"プロフィール設定",wallet:"ブロックチェーンウォレットID",generate:"ウォレット生成",walletNote:"ウォレットIDは一度のみ生成可能です。",esg:"ESGスコア",esgStart:"ESG評価を開始",esgDesc:"アンケートと書類提出でAI検証済みESGスコアを取得。",esgStatus:{not_started:"未開始",in_progress:"進行中",submitted:"提出済み",verified:"検証済み"},tree:"バーチャルツリー 🌳",treeDesc:"取引のたびに成長",simulateTx:"新取引シミュレーション (+1 🌱)",save:"プロフィール保存" }, common:{ save:"保存",cancel:"キャンセル",back:"← 戻る",loading:"処理中...",confirm:"確認",download:"ダウンロード",close:"閉じる",add:"追加",submit:"提出" } },
+  zh: { flag:"🇨🇳", label:"中文", nav:{ home:"首页",market:"碳市场",calc:"计算器",land:"土地",verify:"核查",profile:"企业",tx:"交易" }, dash:{ greeting:"欢迎回来",tagline:"有效 · 实时 · 无欺诈",netCarbon:"净碳余额",totalEm:"总排放量",totalAbs:"总吸收量",credits:"碳信用额度",creditsUSD:"投资组合价值",liveIot:"实时物联网传感器",history:"历史",alerts:"AI检测与预警",dismiss:"关闭",myProjects:"我的活跃项目",seeAll:"查看所有土地 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"单位" }, land:{ title:"土地所有权",addParcel:"+ 添加地块",area:"面积 (ha)",type:"土地类型",name:"地块名称",lat:"纬度",lng:"经度",depth:"泥炭深度 (m)",simulate:"模拟条件",viewAll:"所有土地地块",stockFormula:"碳储量公式",types:{forest:"森林",peatland:"泥炭地",mangrove:"红树林",agricultural:"农业",industrial:"工业"},status:{healthy:"健康",flooded:"洪涝",degraded:"退化",burned:"火灾",drying:"泥炭干燥"},alerts:{flooded:"🌊 检测到洪涝",peatland_degraded:"⚠️ 泥炭退化",burned:"🔥 火灾检测",drying:"🌡️ 泥炭干燥"} }, calc:{ title:"碳排放计算器",scope1:"范围1",scope2:"范围2",scope3:"范围3",calculate:"计算排放量",totalEm:"总排放量",offsetNeeded:"所需碳信用",leakage:"泄漏估算",ref:"基于IPCC 2006" }, market:{ title:"碳市场",search:"搜索...",detail:"查看详情",transact:"开始交易",aiMatch:"AI匹配",analyzing:"分析中...",score:"兼容性得分",buyer:"买家",seller:"卖家",proceed:"继续交易 →",recommend:"为您推荐" }, tx:{ title:"交易",new:"新交易",stage0:"协议已创建",stage1:"资金在托管",stage2:"碳已验证",stage3:"资金已释放",blockchain:"在区块链查看",confirmReceipt:"确认收货",escrow:"托管金额",immutable:"由47个节点验证",volume:"数量",price:"价格/吨",total:"总计" }, verify:{ title:"MRV和验证",download:"下载ISO 14064证书",log:"IoT·ML·卫星日志" }, profile:{ title:"企业档案",settings:"档案设置",wallet:"区块链钱包ID",generate:"生成钱包",walletNote:"钱包ID只能生成一次。",esg:"ESG评分",esgStart:"开始ESG评估",esgDesc:"完成问卷和文件提交以获得AI验证的ESG评分。",esgStatus:{not_started:"未开始",in_progress:"进行中",submitted:"已提交",verified:"已验证"},tree:"虚拟树 🌳",treeDesc:"随着每次交易成长",simulateTx:"模拟新交易 (+1 🌱)",save:"保存档案",companyName:"企业名称",emailLabel:"机构邮箱",locationLabel:"位置",removalProjectLabel:"碳去除项目",entityTypeLabel:"实体/企业类型",bizTypeLabel:"业务活动类型" }, common:{ save:"保存",cancel:"取消",back:"← 返回",loading:"处理中...",confirm:"确认",download:"下载",close:"关闭",add:"添加",submit:"提交" }, exit:{ btn:"退出",title:"退出应用",desc:"您想做什么？",exitOnly:"退出应用",logout:"退出并注销",logoutDesc:"您将返回到注册页面。",cancelBtn:"取消",noActiveTransaction:"没有活跃交易" }, market:{ viewDetails:"查看详情" } },
+  ko: { flag:"🇰🇷", label:"한국어", nav:{ home:"홈",market:"탄소시장",calc:"계산기",land:"토지",verify:"검증",profile:"기업",tx:"거래" }, dash:{ greeting:"환영합니다",tagline:"유효 · 실시간 · 사기없음",netCarbon:"순탄소 잔액",totalEm:"총 배출량",totalAbs:"총 흡수량",credits:"탄소 크레딧",creditsUSD:"포트폴리오 가치",liveIot:"실시간 IoT 센서",history:"기록",alerts:"AI 감지 및 경보",dismiss:"닫기",myProjects:"내 활성 프로젝트",seeAll:"모든 토지 보기 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"단위" }, land:{ title:"토지 소유권",addParcel:"+ 토지 추가",area:"면적 (ha)",type:"토지 유형",name:"필지 이름",lat:"위도",lng:"경도",depth:"이탄 깊이 (m)",simulate:"조건 시뮬레이션",viewAll:"모든 토지 필지",stockFormula:"탄소 저장량 공식",types:{forest:"산림",peatland:"이탄지",mangrove:"맹그로브",agricultural:"농업",industrial:"산업"},status:{healthy:"정상",flooded:"침수",degraded:"훼손",burned:"화재",drying:"이탄 건조"},alerts:{flooded:"🌊 홍수 감지",peatland_degraded:"⚠️ 이탄 훼손",burned:"🔥 화재 감지",drying:"🌡️ 이탄 건조"} }, calc:{ title:"탄소 배출 계산기",scope1:"범위 1",scope2:"범위 2",scope3:"범위 3",calculate:"배출량 계산",totalEm:"총 배출량",offsetNeeded:"필요 크레딧",leakage:"누출 추정",ref:"IPCC 2006 기반" }, market:{ title:"탄소 시장",search:"검색...",detail:"상세 보기",transact:"거래 시작",aiMatch:"AI 매칭",analyzing:"분석 중...",score:"호환성 점수",buyer:"구매자",seller:"판매자",proceed:"거래로 진행 →",recommend:"추천" }, tx:{ title:"거래",new:"새 거래",stage0:"계약 생성",stage1:"자금 에스크로",stage2:"탄소 검증",stage3:"자금 해제",blockchain:"블록체인에서 보기",confirmReceipt:"수령 확인",escrow:"에스크로 금액",immutable:"47개 노드 검증",volume:"수량",price:"가격/톤",total:"합계" }, verify:{ title:"MRV 및 검증",download:"ISO 14064 인증서 다운로드",log:"IoT·ML·위성 로그" }, profile:{ title:"기업 프로필",settings:"프로필 설정",wallet:"블록체인 지갑 ID",generate:"지갑 생성",walletNote:"지갑 ID는 한 번만 생성할 수 있습니다.",esg:"ESG 점수",esgStart:"ESG 평가 시작",esgDesc:"설문지 및 문서 제출 완료 시 AI 검증 ESG 점수 수령.",esgStatus:{not_started:"미시작",in_progress:"진행 중",submitted:"제출됨",verified:"검증됨"},tree:"가상 나무 🌳",treeDesc:"거래마다 성장",simulateTx:"새 거래 시뮬레이션 (+1 🌱)",save:"프로필 저장",companyName:"기업명",emailLabel:"기관 이메일",locationLabel:"위치",removalProjectLabel:"탄소 제거 프로젝트",entityTypeLabel:"법인/기업 유형",bizTypeLabel:"사업 활동 유형" }, common:{ save:"저장",cancel:"취소",back:"← 뒤로",loading:"처리 중...",confirm:"확인",download:"다운로드",close:"닫기",add:"추가",submit:"제출" }, exit:{ btn:"종료",title:"앱 종료",desc:"어떻게 하시겠습니까?",exitOnly:"앱 종료",logout:"종료 및 로그아웃",logoutDesc:"등록 화면으로 돌아갑니다.",cancelBtn:"취소",noActiveTransaction:"활성 거래 없음" }, market:{ viewDetails:"상세 보기" } },
+  ja: { flag:"🇯🇵", label:"日本語", nav:{ home:"ホーム",market:"炭素市場",calc:"計算機",land:"土地",verify:"検証",profile:"企業",tx:"取引" }, dash:{ greeting:"おかえりなさい",tagline:"有効 · リアルタイム · 不正なし",netCarbon:"純炭素残高",totalEm:"総排出量",totalAbs:"総吸収量",credits:"カーボンクレジット",creditsUSD:"ポートフォリオ価値",liveIot:"リアルタイムIoTセンサー",history:"履歴",alerts:"AI検知・アラート",dismiss:"閉じる",myProjects:"アクティブプロジェクト",seeAll:"全土地を見る →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"単位" }, land:{ title:"土地所有権",addParcel:"+ 土地追加",area:"面積 (ha)",type:"土地種別",name:"区画名",lat:"緯度",lng:"経度",depth:"泥炭深度 (m)",simulate:"条件シミュレーション",viewAll:"全土地区画",stockFormula:"炭素貯留量算式",types:{forest:"森林",peatland:"泥炭地",mangrove:"マングローブ",agricultural:"農業",industrial:"工業"},status:{healthy:"健全",flooded:"浸水",degraded:"劣化",burned:"火災",drying:"泥炭乾燥"},alerts:{flooded:"🌊 洪水検知",peatland_degraded:"⚠️ 泥炭劣化",burned:"🔥 火災検知",drying:"🌡️ 泥炭乾燥"} }, calc:{ title:"排出量計算ツール",scope1:"スコープ1",scope2:"スコープ2",scope3:"スコープ3",calculate:"排出量を計算",totalEm:"総排出量",offsetNeeded:"必要クレジット",leakage:"リーケージ推定",ref:"IPCC 2006基準" }, market:{ title:"炭素市場",search:"検索...",detail:"詳細を見る",transact:"取引開始",aiMatch:"AIマッチング",analyzing:"分析中...",score:"互換性スコア",buyer:"購入者",seller:"販売者",proceed:"取引に進む →",recommend:"おすすめ" }, tx:{ title:"取引",new:"新規取引",stage0:"契約作成",stage1:"資金エスクロー",stage2:"炭素検証",stage3:"資金解放",blockchain:"ブロックチェーンで見る",confirmReceipt:"受領確認",escrow:"エスクロー金額",immutable:"47ノード検証",volume:"数量",price:"価格/トン",total:"合計" }, verify:{ title:"MRVと検証",download:"ISO 14064証明書ダウンロード",log:"IoT·ML·衛星ログ" }, profile:{ title:"企業プロフィール",settings:"プロフィール設定",wallet:"ブロックチェーンウォレットID",generate:"ウォレット生成",walletNote:"ウォレットIDは一度のみ生成可能です。",esg:"ESGスコア",esgStart:"ESG評価を開始",esgDesc:"アンケートと書類提出でAI検証済みESGスコアを取得。",esgStatus:{not_started:"未開始",in_progress:"進行中",submitted:"提出済み",verified:"検証済み"},tree:"バーチャルツリー 🌳",treeDesc:"取引のたびに成長",simulateTx:"新取引シミュレーション (+1 🌱)",save:"プロフィール保存",companyName:"企業名",emailLabel:"機関メール",locationLabel:"場所",removalProjectLabel:"炭素除去プロジェクト",entityTypeLabel:"法人/企業タイプ",bizTypeLabel:"事業活動タイプ" }, common:{ save:"保存",cancel:"キャンセル",back:"← 戻る",loading:"処理中...",confirm:"確認",download:"ダウンロード",close:"閉じる",add:"追加",submit:"提出" }, exit:{ btn:"終了",title:"アプリを終了",desc:"どうしますか？",exitOnly:"アプリを終了",logout:"終了してログアウト",logoutDesc:"登録画面に戻ります。",cancelBtn:"キャンセル",noActiveTransaction:"アクティブな取引なし" }, market:{ viewDetails:"詳細を見る" } },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -679,7 +687,7 @@ function Dashboard({ parcels, alerts, company, setPage, t }) {
                   <p className="text-xs text-gray-600">{a.message}</p>
                 </div>
                 <button onClick={() => setDismissedAlerts(d => [...d, a.id])}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 text-lg leading-none font-bold">×</button>
+                  className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all" title="Dismiss">×</button>
               </div>
             ))}
           </div>
@@ -777,7 +785,7 @@ function LandPage({ parcels, setParcels, t, lang }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-teal-200 text-xs uppercase tracking-widest mb-0.5">{t.land.title}</p>
-            <p className="font-black text-xl">{parcels.length} {lang === "id" ? "Bidang Terdaftar" : "Registered Parcels"}</p>
+            <p className="font-black text-xl">{parcels.length} {lang==="id"?"Bidang Terdaftar":lang==="zh"?"已注册地块":lang==="ko"?"등록된 필지":lang==="ja"?"登録済み区画":"Registered Parcels"}</p>
           </div>
           <button onClick={() => setAddModal(true)}
             className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 transition-colors">
@@ -785,9 +793,9 @@ function LandPage({ parcels, setParcels, t, lang }) {
           </button>
         </div>
         <div className="flex gap-4 mt-3 text-sm">
-          <div><p className="text-teal-300 text-xs">Area</p><p className="font-bold">{parcels.reduce((s, p) => s + p.area, 0).toLocaleString()} ha</p></div>
-          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">Absorption</p><p className="font-bold text-green-300">+{parcels.reduce((s, p) => s + Math.max(0, calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
-          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">Emission</p><p className="font-bold text-red-300">{parcels.reduce((s, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
+          <div><p className="text-teal-300 text-xs">{t.land.area||"Area"}</p><p className="font-bold">{parcels.reduce((s, p) => s + p.area, 0).toLocaleString()} ha</p></div>
+          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalAbs||"Absorption"}</p><p className="font-bold text-green-300">+{parcels.reduce((s, p) => s + Math.max(0, calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
+          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalEm||"Emission"}</p><p className="font-bold text-red-300">{parcels.reduce((s, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
         </div>
       </div>
 
@@ -1112,7 +1120,7 @@ function CalcPage({ t }) {
           </div>
           {result.breakdown.length > 0 && (
             <div className="card overflow-hidden">
-              <div className="p-3 border-b border-gray-100"><p className="font-bold text-gray-800 text-sm">Breakdown by Source</p></div>
+              <div className="p-3 border-b border-gray-100"><p className="font-bold text-gray-800 text-sm">{lang==="id"?"Rincian per Sumber":lang==="zh"?"按来源细分":lang==="ko"?"소스별 분류":lang==="ja"?"ソース別内訳":"Breakdown by Source"}</p></div>
               <div className="divide-y divide-gray-50">
                 {result.breakdown.map((b, i) => (
                   <div key={i} className="flex items-center justify-between px-4 py-2.5">
@@ -1222,10 +1230,10 @@ function MarketPage({ t, setPage, setActiveTx }) {
                       className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-xl font-bold hover:bg-gray-200">
                       {t.market.detail}
                     </button>
-                    <button onClick={() => startTransaction(proj)}
+                    <button onClick={() => setDetailProject(proj)}
                       className="text-xs text-white px-2.5 py-1.5 rounded-xl font-bold"
                       style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-                      {t.market.transact}
+                      {t.market.detail}
                     </button>
                   </div>
                 </div>
@@ -1324,7 +1332,7 @@ function MarketPage({ t, setPage, setActiveTx }) {
 // ─────────────────────────────────────────────────────────────
 // PAGE: TRANSACTION
 // ─────────────────────────────────────────────────────────────
-function TxPage({ tx, setTx, t }) {
+function TxPage({ tx, setTx, t, lang }) {
   const [blockModal, setBlockModal] = useState(false);
   const [hashes, setHashes] = useState([]);
   const [confirming, setConfirming] = useState(false);
@@ -1336,8 +1344,8 @@ function TxPage({ tx, setTx, t }) {
   if (!tx) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3 fade-up">
       <p className="text-4xl">📋</p>
-      <p className="text-gray-500 text-sm">No active transaction</p>
-      <p className="text-xs text-gray-400">Start a transaction from the Market page</p>
+      <p className="text-gray-500 text-sm">{t.exit?.noActiveTransaction||"No active transaction"}</p>
+      <p className="text-xs text-gray-400">{lang==="id"?"Mulai transaksi dari halaman Bursa":lang==="zh"?"从市场页面开始交易":lang==="ko"?"시장 페이지에서 거래를 시작하세요":lang==="ja"?"市場ページから取引を開始してください":"Start a transaction from the Market page"}</p>
     </div>
   );
 
@@ -1399,7 +1407,7 @@ function TxPage({ tx, setTx, t }) {
 
       {/* Timeline */}
       <div className="card p-4">
-        <p className="font-bold text-gray-800 mb-4">Transaction Status</p>
+        <p className="font-bold text-gray-800 mb-4">{t.tx.title} Status</p>
         <div className="relative">
           <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-100" />
           <div className="absolute left-5 top-5 w-0.5 bg-emerald-500 transition-all duration-700"
@@ -1569,10 +1577,11 @@ function VerifyPage({ t, parcels }) {
 // ─────────────────────────────────────────────────────────────
 // PAGE: PROFILE
 // ─────────────────────────────────────────────────────────────
-function ProfilePage({ company, setCompany, t, lang }) {
+function ProfilePage({ company, setCompany, t, lang, onLogout }) {
   const [settingsModal, setSettingsModal] = useState(false);
   const [esgModal, setEsgModal] = useState(false);
   const [walletModal, setWalletModal] = useState(false);
+  const [exitModal, setExitModal] = useState(false);
   const [esgStep, setEsgStep] = useState(0);
   const [esgAnswers, setEsgAnswers] = useState([]);
   const [esgSubmitting, setEsgSubmitting] = useState(false);
@@ -1648,15 +1657,21 @@ function ProfilePage({ company, setCompany, t, lang }) {
             <p className="text-green-600 text-sm font-semibold">{company.entity}</p>
             <p className="text-gray-400 text-xs truncate">{company.location}</p>
           </div>
-          <button onClick={() => setSettingsModal(true)}
-            className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 flex-shrink-0">
-            <Ic.Settings />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setExitModal(true)}
+              className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-400 hover:bg-red-100 flex-shrink-0" title={t.exit.btn}>
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            </button>
+            <button onClick={() => setSettingsModal(true)}
+              className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 flex-shrink-0">
+              <Ic.Settings />
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-gray-50 rounded-xl p-2"><p className="text-gray-400">Business Type</p><p className="font-bold text-gray-700">{company.bizType}</p></div>
-          <div className="bg-gray-50 rounded-xl p-2"><p className="text-gray-400">Transactions</p><p className="font-bold text-gray-700">{txCount}</p></div>
-          <div className="bg-gray-50 rounded-xl p-2 col-span-2"><p className="text-gray-400">Removal Project</p><p className="font-bold text-gray-700">{company.removalProject}</p></div>
+          <div className="bg-gray-50 rounded-xl p-2"><p className="text-gray-400">{t.profile.bizTypeLabel||"Business Type"}</p><p className="font-bold text-gray-700">{company.bizType}</p></div>
+          <div className="bg-gray-50 rounded-xl p-2"><p className="text-gray-400">{lang==="id"?"Transaksi":lang==="zh"?"交易":lang==="ko"?"거래":lang==="ja"?"取引":"Transactions"}</p><p className="font-bold text-gray-700">{txCount}</p></div>
+          <div className="bg-gray-50 rounded-xl p-2 col-span-2"><p className="text-gray-400">{t.profile.removalProjectLabel||"Removal Project"}</p><p className="font-bold text-gray-700">{company.removalProject}</p></div>
         </div>
       </div>
 
@@ -1759,10 +1774,10 @@ function ProfilePage({ company, setCompany, t, lang }) {
       <Modal open={settingsModal} onClose={() => setSettingsModal(false)} title={`⚙️ ${t.profile.settings}`}>
         <div className="flex flex-col gap-3">
           {[
-            { l: "Company Name", k: "name", type: "text" },
-            { l: "Institutional Email", k: "email", type: "email" },
-            { l: "Location", k: "location", type: "text" },
-            { l: "Carbon Removal Project", k: "removalProject", type: "text" },
+            { l: t.profile.companyName || "Company Name", k: "name", type: "text" },
+            { l: t.profile.emailLabel || "Institutional Email", k: "email", type: "email" },
+            { l: t.profile.locationLabel || "Location", k: "location", type: "text" },
+            { l: t.profile.removalProjectLabel || "Carbon Removal Project", k: "removalProject", type: "text" },
           ].map(f => (
             <div key={f.k}>
               <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
@@ -1771,14 +1786,14 @@ function ProfilePage({ company, setCompany, t, lang }) {
             </div>
           ))}
           <div>
-            <label className="text-xs font-bold text-gray-600 block mb-1">Entity / Company Type</label>
+            <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile.entityTypeLabel || "Entity / Company Type"}</label>
             <select value={form.entity || ""} onChange={e => setForm(p => ({ ...p, entity: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["PT (Perseroan Terbatas)", "PT Tbk (Terbuka)", "BUMN", "Koperasi", "CV", "Yayasan", "NGO", "Other"].map(e => <option key={e}>{e}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-600 block mb-1">Business Activity Type</label>
+            <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile.bizTypeLabel || "Business Activity Type"}</label>
             <select value={form.bizType || ""} onChange={e => setForm(p => ({ ...p, bizType: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["Manufacturing", "Plantation", "Mining", "Energy", "Transportation", "Construction", "Finance", "Technology", "Healthcare", "Other"].map(b => <option key={b}>{b}</option>)}
@@ -1817,13 +1832,13 @@ function ProfilePage({ company, setCompany, t, lang }) {
         ) : (
           <div className="flex flex-col gap-4 text-center">
             <p className="text-4xl">📋</p>
-            <p className="font-bold text-gray-800">All questions answered!</p>
-            <p className="text-xs text-gray-500">Submit for AI analysis to receive your ESG score</p>
+            <p className="font-bold text-gray-800">{lang==="id"?"Semua pertanyaan terjawab!":lang==="zh"?"所有问题已回答！":lang==="ko"?"모든 질문에 답했습니다!":lang==="ja"?"すべての質問に回答しました！":"All questions answered!"}</p>
+            <p className="text-xs text-gray-500">{lang==="id"?"Kirim untuk analisis AI guna mendapatkan skor ESG Anda":lang==="zh"?"提交进行AI分析以获得ESG评分":lang==="ko"?"AI 분석을 위해 제출하면 ESG 점수를 받습니다":lang==="ja"?"AIによる分析のために提出してESGスコアを取得":"Submit for AI analysis to receive your ESG score"}</p>
             <button onClick={submitESG} disabled={esgSubmitting}
               className="w-full text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
               style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
               {esgSubmitting ? <Spinner /> : null}
-              {esgSubmitting ? "Calculating..." : "Generate ESG Score →"}
+{esgSubmitting ? (lang==="id"?"Menghitung...":lang==="zh"?"计算中...":lang==="ko"?"계산 중...":lang==="ja"?"計算中...":"Calculating...") : (lang==="id"?"Buat Skor ESG →":lang==="zh"?"生成ESG评分 →":lang==="ko"?"ESG 점수 생성 →":lang==="ja"?"ESGスコアを生成 →":"Generate ESG Score →")}
             </button>
           </div>
         )}
@@ -1833,14 +1848,36 @@ function ProfilePage({ company, setCompany, t, lang }) {
       <Modal open={walletModal} onClose={() => setWalletModal(false)} title="🔐 Generate Blockchain Wallet">
         <div className="flex flex-col gap-4">
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <p className="text-sm font-bold text-amber-700">⚠️ Important</p>
+            <p className="text-sm font-bold text-amber-700">⚠️ {lang==="id"?"Penting":lang==="zh"?"重要":lang==="ko"?"중요":lang==="ja"?"重要":"Important"}</p>
             <p className="text-xs text-amber-600 mt-1">{t.profile.walletNote}</p>
           </div>
-          <p className="text-sm text-gray-600">Your unique blockchain wallet ID will be generated and permanently stored in our database. This cannot be changed later.</p>
+          <p className="text-sm text-gray-600">{lang==="id"?"Wallet ID blockchain unik Anda akan dibuat dan disimpan permanen di database kami. Ini tidak dapat diubah nantinya.":lang==="zh"?"您唯一的区块链钱包ID将被生成并永久存储在我们的数据库中。以后无法更改。":lang==="ko"?"귀하의 고유한 블록체인 지갑 ID가 생성되어 데이터베이스에 영구적으로 저장됩니다. 이후 변경할 수 없습니다.":lang==="ja"?"あなたのユニークなブロックチェーンウォレットIDが生成され、データベースに永久保存されます。後で変更することはできません。":"Your unique blockchain wallet ID will be generated and permanently stored in our database. This cannot be changed later."}</p>
           <button onClick={() => { generateWallet(); setWalletModal(false); }}
             className="w-full text-white py-3 rounded-xl font-bold"
             style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-            ✅ Generate My Wallet ID
+{lang==="id"?"✅ Buat Wallet ID Saya":lang==="zh"?"✅ 生成我的钱包ID":lang==="ko"?"✅ 내 지갑 ID 생성":lang==="ja"?"✅ ウォレットIDを生成":"✅ Generate My Wallet ID"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Exit Modal */}
+      <Modal open={exitModal} onClose={() => setExitModal(false)} title={`🚪 ${t.exit.title}`}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-500 text-center">{t.exit.desc}</p>
+          <button onClick={() => setExitModal(false)}
+            className="w-full py-3 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+            {t.exit.exitOnly}
+          </button>
+          <button
+            onClick={() => { setExitModal(false); if (typeof onLogout === "function") onLogout(); }}
+            className="w-full py-3 rounded-xl font-bold text-white flex flex-col items-center gap-0.5 active:scale-95 transition-all"
+            style={{ background: "linear-gradient(135deg,#dc2626,#b91c1c)" }}>
+            <span>{t.exit.logout}</span>
+            <span className="text-xs font-normal opacity-80">{t.exit.logoutDesc}</span>
+          </button>
+          <button onClick={() => setExitModal(false)}
+            className="text-sm text-gray-400 hover:text-gray-600 text-center py-1 font-medium">
+            {t.exit.cancelBtn}
           </button>
         </div>
       </Modal>
@@ -1851,9 +1888,9 @@ function ProfilePage({ company, setCompany, t, lang }) {
 // ─────────────────────────────────────────────────────────────
 // APP ROOT
 // ─────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ onLogout, initialLang = "en" }) {
   const [page, setPage] = useState("home");
-  const [lang, setLang] = useState("en"); // Default: English
+  const [lang, setLang] = useState(initialLang);
   const [parcels, setParcels] = useState(MOCK_PARCELS);
   const [alerts, setAlerts] = useState(MOCK_ALERTS);
   const [company, setCompany] = useState(MOCK_COMPANY);
@@ -1888,9 +1925,9 @@ export default function App() {
       case "land":    return <LandPage parcels={parcels} setParcels={setParcels} t={t} lang={lang} />;
       case "calc":    return <CalcPage t={t} />;
       case "market":  return <MarketPage t={t} setPage={setPage} setActiveTx={setActiveTx} />;
-      case "tx":      return <TxPage tx={activeTx} setTx={setActiveTx} t={t} />;
+      case "tx":      return <TxPage tx={activeTx} setTx={setActiveTx} t={t} lang={lang} />;
       case "verify":  return <VerifyPage t={t} parcels={parcels} />;
-      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} />;
+      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={onLogout} />;
       default:        return <Dashboard parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
   };

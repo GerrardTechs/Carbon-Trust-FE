@@ -1,0 +1,87 @@
+/**
+ * CarbonTrust — App.jsx
+ * Root component: state management, routing, global style injection.
+ *
+ * Page routing:
+ *   home    → Dashboard.jsx
+ *   land    → LandPage.jsx
+ *   calc    → CalcPage.jsx
+ *   market  → MarketPage.jsx
+ *   tx      → TxPage.jsx
+ *   verify  → VerifyPage.jsx
+ *   profile → ProfilePage.jsx
+ *
+ * Props:
+ *   onLogout(lang)   — called when user chooses "Exit & Log Out"
+ *   initialLang      — language code from AuthFlow (default: "en")
+ */
+import { useState, useEffect } from "react";
+import {
+  COMPANY_ID, apiFetch, GCSS,
+  MOCK_PARCELS, MOCK_ALERTS, MOCK_COMPANY,
+  TR, Header, BottomNav,
+} from "./shared.jsx";
+
+import {Dashboard}  from "./Dashboard.jsx";
+import {LandPage}   from "./LandPage.jsx";
+import {CalcPage}   from "./CalcPage.jsx";
+import {MarketPage} from "./MarketPage.jsx";
+import {TxPage}     from "./TxPage.jsx";
+import {VerifyPage} from "./VerifyPage.jsx";
+import {ProfilePage} from "./ProfilePage.jsx";
+
+export default function App({ onLogout, initialLang = "en" }) {
+  const [page,     setPage]     = useState("home");
+  const [lang,     setLang]     = useState(initialLang);
+  const [parcels,  setParcels]  = useState(MOCK_PARCELS);
+  const [alerts,   setAlerts]   = useState(MOCK_ALERTS);
+  const [company,  setCompany]  = useState(MOCK_COMPANY);
+  const [activeTx, setActiveTx] = useState(null);
+
+  const t = TR[lang] || TR.en;
+
+  // Load real data from backend (fallback: mock data stays)
+  useEffect(() => {
+    apiFetch(`/parcels?companyId=${COMPANY_ID}`).then(d => { if (d?.length) setParcels(d); });
+    apiFetch(`/alerts?companyId=${COMPANY_ID}`).then(d => { if (Array.isArray(d)) setAlerts(d); });
+    apiFetch(`/company/${COMPANY_ID}`).then(d => { if (d?.id) setCompany(d); });
+    apiFetch(`/transactions?companyId=${COMPANY_ID}`).then(d => {
+      if (d?.length) setActiveTx(d[d.length - 1]);
+    });
+  }, []);
+
+  // Derive alerts from parcel status changes
+  useEffect(() => {
+    const dynamic = [
+      ...parcels.filter(p => p.status === "flooded").map(p => ({ id:`fl-${p.id}`, parcelId:p.id, type:"critical", message:`MNDWI > 0.42 — Flood confirmed · ${p.name}`, time:new Date().toISOString() })),
+      ...parcels.filter(p => p.status === "degraded" && p.type === "peatland").map(p => ({ id:`pd-${p.id}`, parcelId:p.id, type:"warning", message:`${p.name}: Peat degrading, NDVI=${p.ndvi}, becoming emitter`, time:new Date().toISOString() })),
+      ...parcels.filter(p => p.status === "burned").map(p => ({ id:`br-${p.id}`, parcelId:p.id, type:"critical", message:`FIRE detected at ${p.name} — Credits suspended`, time:new Date().toISOString() })),
+      ...parcels.filter(p => p.status === "healthy").map(p => ({ id:`ok-${p.id}`, parcelId:p.id, type:"info", message:`${p.name}: All sensors normal, NDVI stable ${p.ndvi}`, time:new Date().toISOString() })),
+    ];
+    setAlerts(dynamic.length ? dynamic : MOCK_ALERTS);
+  }, [parcels]);
+
+  const renderPage = () => {
+    switch (page) {
+      case "home":    return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
+      case "land":    return <LandPage    parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
+      case "calc":    return <CalcPage    t={t} setPage={setPage} />;
+      case "market":  return <MarketPage  t={t} setPage={setPage} setActiveTx={setActiveTx} />;
+      case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
+      case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
+      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} setPage={setPage} />;
+      default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen" style={{ background: "#f1f5f1" }}>
+      <style>{GCSS}</style>
+      <div className="max-w-md mx-auto relative min-h-screen flex flex-col bg-gray-50 shadow-2xl">
+        <Header alerts={alerts} lang={lang} setLang={setLang} t={t} />
+        <main className="flex-1 overflow-y-auto pb-20">{renderPage()}</main>
+        <BottomNav page={page} setPage={setPage} t={t} />
+      </div>
+    </div>
+  );
+}
