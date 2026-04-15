@@ -362,7 +362,13 @@ const css = `
   .select-field.error { border-color: ${G.err}; }
   .select-field option { color: ${G.slate800}; }
   .select-field.placeholder { color: ${G.slate400}; }
-
+  
+  .logo-fill {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
   .label {
     font-size: 11px;
     font-weight: 700;
@@ -395,14 +401,22 @@ const css = `
 
   .globe-ring {
     width: 120px;
-    height: 120px;
+    height: 120px;        /* width == height agar benar-benar bulat */
     border-radius: 50%;
-    background: ${G.green50};
+    transform: scale(1.8);
+    overflow: hidden;     /* ini yang memotong gambar jadi lingkaran */
+    background: white;
     border: 1.5px solid ${G.green100};
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 32px;
+    margin-bottom: 70px;
+  }
+
+  .globe-ring img {
+    width: 170%;
+    height: 170%;
+    object-fit: contain;  /* atau 'cover' jika ingin penuh */
   }
 
   .welcome-headline {
@@ -869,19 +883,16 @@ const Icons = {
       <rect x="28" y="52" width="8" height="8" />
     </svg>
   ),
-  logo: (size = 52) => (
-    <svg width={size} height={size} viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r="30" fill="#dcfce7" />
-      <circle cx="32" cy="32" r="22" fill="#bbf7d0" />
-      <circle cx="32" cy="34" r="3" fill="#0d9488"/>
-      {[[32,23],[41.5,28.5],[41.5,39.5],[32,45],[22.5,39.5],[22.5,28.5]].map(([x,y],i)=>(
-        <circle key={i} cx={x} cy={y} r="2" fill="#14b8a6"/>
-      ))}
-      <path d="M44 28A14 14 0 0 1 44 40" stroke="#0f766e" strokeWidth="2" fill="none" strokeLinecap="round"/>
-      <path d="M20 40A14 14 0 0 1 20 28" stroke="#0f766e" strokeWidth="2" fill="none" strokeLinecap="round"/>
-      <polygon points="44,39 48,42 44,45" fill="#0f766e"/>
-      <polygon points="20,29 16,26 20,23" fill="#0f766e"/>
-    </svg>
+  logo: () => (
+    <img
+      src="/logo_depan.svg"
+      alt="Logo"
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain"
+      }}
+    />
   ),
 };
 
@@ -949,7 +960,7 @@ function WelcomePage({ onContinue, lang, setLang }) {
 
       <div className="welcome-top">
         <div className="globe-ring">
-          {Icons.logo(52)}
+          {Icons.logo()}
         </div>
         <h1 className="welcome-headline">{t.headline}</h1>
         <p className="welcome-sub">{t.sub}</p>
