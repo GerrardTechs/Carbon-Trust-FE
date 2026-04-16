@@ -18,7 +18,7 @@
 import { useState, useEffect } from "react";
 import {
   COMPANY_ID, apiFetch, GCSS,
-  MOCK_PARCELS, MOCK_ALERTS, MOCK_COMPANY,
+  MOCK_PARCELS, MOCK_ALERTS, MOCK_COMPANY, MOCK_PROJECTS,
   TR, Header, BottomNav,
 } from "./shared.jsx";
 
@@ -30,12 +30,13 @@ import {TxPage}     from "./TxPage.jsx";
 import {VerifyPage} from "./VerifyPage.jsx";
 import {ProfilePage} from "./ProfilePage.jsx";
 
-export default function App({ onLogout, initialLang = "en" }) {
+export default function App({ onLogout, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
   const [lang,     setLang]     = useState(initialLang);
   const [parcels,  setParcels]  = useState(MOCK_PARCELS);
   const [alerts,   setAlerts]   = useState(MOCK_ALERTS);
-  const [company,  setCompany]  = useState(MOCK_COMPANY);
+  const [company, setCompany] = useState(userData || MOCK_COMPANY); 
+  const [projects, setProjects] = useState(MOCK_PROJECTS);
   const [activeTx, setActiveTx] = useState(null);
 
   const t = TR[lang] || TR.en;
@@ -66,12 +67,30 @@ export default function App({ onLogout, initialLang = "en" }) {
       case "home":    return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
       case "land":    return <LandPage    parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
       case "calc":    return <CalcPage    t={t} setPage={setPage} />;
-      case "market":  return <MarketPage  t={t} setPage={setPage} setActiveTx={setActiveTx} />;
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
+      case "market":  return <MarketPage t={t} setPage={setPage} setActiveTx={setActiveTx} projects={projects} setProjects={setProjects} />;
       case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
-      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} setPage={setPage} />;
+      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} setPage={setPage} qStatus={qStatus} updateQStatus={setQStatus}
+      />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
+  };
+
+  const [qStatus, setQStatus] = useState(() => {
+    const saved = localStorage.getItem("carbon_q_status");
+    return saved ? JSON.parse(saved) : {
+      isComplete: false,
+      lastUpdated: null,
+      resetCount: 0,
+      answers: {}
+    };
+  });
+  
+  // Fungsi untuk menyimpan status kuisioner
+  const updateQStatus = (newData) => {
+    const updated = { ...qStatus, ...newData };
+    setQStatus(updated);
+    localStorage.setItem("carbon_q_status", JSON.stringify(updated));
   };
 
   return (

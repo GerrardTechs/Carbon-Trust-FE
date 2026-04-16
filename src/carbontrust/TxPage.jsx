@@ -1,152 +1,140 @@
-/**
- * CarbonTrust — TxPage.jsx
- * Transaction tracker: escrow stages, blockchain ledger view
- */
-import { useState } from "react";
-import { apiFetch, Modal, Spinner, Ic } from "./shared.jsx";
+import { useState, useEffect } from "react";
+import { Ic } from "./shared.jsx"; // Menyimpan import ikon jika nanti dibutuhkan
 
-export function TxPage({ tx, setTx, t, lang }) {
+const ESCROW_STEPS = [
+  { key: "escrow",   label: "Dana dalam escrow",             desc: "Token ditahan sistem, belum diteruskan ke penjual." },
+  { key: "verify",   label: "Verifikasi data satelit & IoT", desc: "Sistem mengecek NDVI, koordinat, dan sensor CO₂." },
+  { key: "complete", label: "Selesai — sertifikat terbit",   desc: "Kredit karbon sah dan tercatat di blockchain." },
+];
+
+export function TxPage({ tx, setTx, t, lang, setPage }) {
+  const [step, setStep] = useState(0);
   const [blockModal, setBlockModal] = useState(false);
   const [hashes, setHashes] = useState([]);
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
+  // 👇 TAMBAHKAN KODE INI UNTUK ANIMASI ESCROW 👇
+  useEffect(() => {
+    // Kalau tidak ada transaksi, atau status sudah 2 (Selesai), hentikan timer
+    if (!tx || tx.status >= 2) return; 
+
+    const timer = setTimeout(() => {
+      // Majukan status transaksi +1 setiap 3 detik
+      setTx(prevTx => ({ ...prevTx, status: prevTx.status + 1 }));
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [tx, setTx]);
+  // 👆 SAMPAI SINI 👆
+
   const STAGES = [t.tx.stage0, t.tx.stage1, t.tx.stage2, t.tx.stage3];
   const ICONS = ["📝", "🔒", "✅", "💸"];
 
+  // Efek untuk menjalankan animasi escrow (maju 1 step setiap 3 detik)
+  useEffect(() => {
+    if (!tx || step >= 2) return;
+    const timer = setTimeout(() => setStep(s => s + 1), 3000);
+    return () => clearTimeout(timer);
+  }, [step, tx]);
+
+  // Jika tidak ada transaksi aktif
   if (!tx) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3 fade-up">
       <p className="text-4xl">📋</p>
-      <p className="text-gray-500 text-sm">{t.exit?.noActiveTransaction||"No active transaction"}</p>
-      <p className="text-xs text-gray-400">{lang==="id"?"Mulai transaksi dari halaman Bursa":lang==="zh"?"从市场页面开始交易":lang==="ko"?"시장 페이지에서 거래를 시작하세요":lang==="ja"?"市場ページから取引を開始してください":"Start a transaction from the Market page"}</p>
+      <p className="text-gray-500 text-sm">{t.exit?.noActiveTransaction || "Tidak ada transaksi aktif"}</p>
+      <button 
+        onClick={() => setPage("market")} 
+        className="mt-4 px-6 py-2 bg-green-600 text-white rounded-full text-sm font-bold shadow hover:bg-green-700 transition"
+      >
+        Pergi ke Bursa Karbon
+      </button>
     </div>
   );
 
-  function viewBlockchain() {
-    const c = "0123456789abcdef";
-    setHashes(Array.from({ length: 5 }, (_, i) => ({
-      block: 19847320 + i,
-      hash: "0x" + Array.from({ length: 64 }, () => c[Math.floor(Math.random() * 16)]).join(""),
-      time: `${i * 2 + 1} min ago`,
-    })));
-    setBlockModal(true);
-  }
-
-  async function confirm() {
-    setConfirming(true);
-    await apiFetch(`/transactions/${tx.id}/status`, { method: "PATCH", body: JSON.stringify({ status: 3 }) });
-    setTimeout(() => { setTx(x => ({ ...x, status: 3 })); setConfirming(false); setConfirmed(true); }, 1800);
-  }
-
-  function advanceStage() {
-    if (tx.status < 2) {
-      setTx(x => ({ ...x, status: x.status + 1 }));
-      apiFetch(`/transactions/${tx.id}/status`, { method: "PATCH", body: JSON.stringify({ status: tx.status + 1 }) });
-    }
-  }
+  // Ambil data dari state transaksi
+  const project = tx.project || tx;
+  const txId = tx.txId || "TX-" + Math.floor(Math.random() * 900000 + 100000);
+  const blockHash = tx.blockHash || "0x" + Array.from({length:32},()=>"0123456789abcdef"[Math.floor(Math.random()*16)]).join("");
+  const timestamp = tx.timestamp || new Date().toISOString();
 
   return (
-    <div className="flex flex-col gap-3 px-4 pt-4 pb-4 fade-up">
-      {/* Header card */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Transaction ID</p>
-            <p className="font-black text-gray-800 text-lg">{tx.id}</p>
-          </div>
-          <span className={`text-xs px-3 py-1 rounded-full font-bold ${tx.status === 3 ? "bg-emerald-100 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-            {tx.status === 3 ? "✓ Completed" : "● Active"}
-          </span>
+    <div className="flex flex-col gap-4 fade-up mb-20">
+      
+      {/* Header Info Singkat */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-bold text-gray-800">Detail Transaksi</h2>
+          <p className="text-sm text-gray-500">{project.name || "Proyek Karbon"}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div><p className="text-gray-400 text-xs">{t.market.buyer}</p><p className="font-bold text-xs">{tx.buyer}</p></div>
-          <div><p className="text-gray-400 text-xs">{t.market.seller}</p><p className="font-bold text-xs">{tx.seller}</p></div>
-          <div><p className="text-gray-400 text-xs">{t.tx.volume}</p><p className="font-bold">{tx.volume} tCO₂e</p></div>
-          <div><p className="text-gray-400 text-xs">{t.tx.price}</p><p className="font-bold">${tx.pricePerTon}/t</p></div>
+        <div className="text-right">
+          <p className="text-xs text-gray-400">Total Nilai</p>
+          <p className="text-xl font-black text-green-700">${project.price || "0"}</p>
         </div>
       </div>
 
-      {/* Escrow */}
-      <div className="rounded-2xl p-4 text-white" style={{ background: "linear-gradient(135deg,#1e293b,#334155)" }}>
-        <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">{t.tx.escrow}</p>
-        <p className="text-3xl font-black">${tx.escrowAmount?.toLocaleString()}</p>
-        <p className="text-slate-400 text-xs mt-1">USD · {t.tx.total}: ${tx.totalUSD?.toLocaleString()}</p>
-        <div className="mt-3 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
-            style={{ width: `${((tx.status + 1) / 4) * 100}%` }} />
-        </div>
-        <p className="text-slate-400 text-xs mt-1">Stage {tx.status + 1}/4</p>
-      </div>
-
-      {/* Timeline */}
-      <div className="card p-4">
-        <p className="font-bold text-gray-800 mb-4">{t.tx.title} Status</p>
-        <div className="relative">
-          <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-100" />
-          <div className="absolute left-5 top-5 w-0.5 bg-emerald-500 transition-all duration-700"
-            style={{ height: `${(tx.status / 3) * 85}%` }} />
-          <div className="flex flex-col gap-5">
-            {STAGES.map((stage, i) => {
-              const done = i <= tx.status;
-              const active = i === tx.status;
-              return (
-                <div key={i} className="flex items-start gap-4 relative z-10">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-lg transition-all ${done ? "bg-emerald-100 ring-2 ring-emerald-400" : "bg-gray-100"} ${active ? "ring-4 ring-emerald-200 scale-110" : ""}`}>
-                    {ICONS[i]}
-                  </div>
-                  <div className="pt-1">
-                    <p className={`font-bold text-sm ${done ? "text-gray-800" : "text-gray-400"}`}>{stage}</p>
-                    {active && <p className="text-xs text-emerald-600 pulse2">● In progress</p>}
-                  </div>
+      {/* Timeline escrow */}
+      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <p className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Status Escrow Berjalan</p>
+        {ESCROW_STEPS.map((s, i) => {
+          const isDone   = i < step;
+          const isActive = i === step;
+          return (
+            <div key={s.key} className="flex gap-4 items-start">
+              <div className="flex flex-col items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm transition-all duration-500
+                  ${isDone ? "bg-green-100 text-green-700" : isActive ? "bg-green-700 text-white scale-110" : "bg-gray-100 text-gray-400"}`}>
+                  {isDone ? "✓" : i + 1}
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                {i < 2 && <div className={`w-0.5 h-10 my-1 transition-all duration-500 ${isDone ? "bg-green-500" : "bg-gray-200"}`} />}
+              </div>
+              <div className="pt-1 pb-4">
+                <p className={`text-sm font-bold ${isActive ? "text-gray-900" : "text-gray-600"}`}>{s.label}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{s.desc}</p>
+                {isActive && i < 2 && (
+                  <p className="text-xs font-bold text-green-600 mt-2 animate-pulse flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span> Sedang diproses...
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Advance stage (demo) */}
-      {tx.status < 2 && (
-        <button onClick={advanceStage}
-          className="card p-3 text-center text-xs text-gray-500 hover:bg-gray-50 border-dashed">
-          ▶ Advance to next stage (demo)
-        </button>
-      )}
-
-      <button onClick={viewBlockchain}
-        className="flex items-center justify-center gap-2 w-full border-2 border-green-600 text-green-700 py-3 rounded-xl font-bold hover:bg-green-50">
-        <Ic.Chain />{t.tx.blockchain}
-      </button>
-
-      {!confirmed && tx.status === 2 ? (
-        <button onClick={confirm} disabled={confirming}
-          className="flex items-center justify-center gap-2 w-full text-white py-3 rounded-xl font-bold disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-          {confirming ? <Spinner /> : <Ic.Check />}
-          {t.tx.confirmReceipt}
-        </button>
-      ) : (confirmed || tx.status === 3) ? (
-        <div className="flex items-center justify-center gap-2 w-full bg-emerald-50 text-emerald-700 py-3 rounded-xl font-bold border border-emerald-200">
-          ✅ Transaction Complete — Funds Released
-        </div>
-      ) : null}
-
-      <Modal open={blockModal} onClose={() => setBlockModal(false)} title="⛓ Blockchain Ledger">
-        <div className="flex flex-col gap-3">
-          <p className="text-xs text-gray-500">Immutable record on Ethereum Testnet (Sepolia)</p>
-          {hashes.map((e, i) => (
-            <div key={i} className="bg-gray-50 rounded-xl p-3">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-400 font-mono">Block #{e.block}</span>
-                <span className="text-gray-400">{e.time}</span>
+      {/* Struk digital — muncul setelah step 2 (Selesai) */}
+      {step === 2 && (
+        <div className="bg-white rounded-2xl p-5 border border-green-200 shadow-md fade-up bg-green-50/30">
+          <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
+            <span className="text-xl">📜</span>
+            <p className="text-sm font-bold text-gray-800 uppercase tracking-wide">Sertifikat & Jejak Blockchain</p>
+          </div>
+          
+          <div className="space-y-3">
+            {[
+              ["ID Transaksi",      txId],
+              ["Hash Blockchain", blockHash],
+              ["Pembeli",       "COMP-001 · PT. Nusantara Hijau Tbk"],
+              ["Penjual (Proyek)", `${project.id || "PRJ"} · ${project.company || project.name}`],
+              ["Koordinat IoT",   `${project.lat ?? "-2.21"}, ${project.lng ?? "113.91"}`],
+              ["Harga",         `$${project.price}/tCO₂`],
+              ["Waktu",         new Date(timestamp).toLocaleString("id-ID")],
+              ["Status",        "✅ Verified & Certified"],
+            ].map(([l, v]) => (
+              <div key={l} className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">{l}</span>
+                <span className={`text-xs font-bold text-right max-w-[60%] break-all
+                  ${l === "Hash Blockchain" ? "font-mono text-gray-400 font-normal" : "text-gray-800"}
+                  ${l === "Status" ? "text-green-600" : ""}`}>{v}</span>
               </div>
-              <p className="font-mono text-xs text-green-700 break-all">{e.hash}</p>
-            </div>
-          ))}
-          <p className="text-xs text-center text-gray-400">{t.tx.immutable}</p>
+            ))}
+          </div>
+
+          <button onClick={() => { setTx(null); setPage("market"); }} className="mt-6 w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm shadow hover:bg-black transition">
+            Tutup & Kembali ke Bursa
+          </button>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
-

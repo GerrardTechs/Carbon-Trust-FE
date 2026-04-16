@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-export const API = "http://localhost:4000/api";
+export const API = "http://127.0.0.1:3000/api";
 export const COMPANY_ID = "COMP-001";
 export const CREDIT_PRICE = 18.5;
 
@@ -337,12 +337,16 @@ export const MOCK_ALERTS = [
   { id:"ALT-003",parcelId:"LP-001",type:"info",    message:"Sensor C-12: CO₂ flux normal, NDVI stable 0.78",time:new Date(Date.now()-3600000).toISOString() },
 ];
 export const MOCK_PROJECTS = [
-  { id:"PRJ-001",company:"Borneo Green Alliance",country:"Indonesia",flag:"🇮🇩",price:18.5,available:3200,type:"Reforestation",verified:true,rating:4.9,ndvi:0.78,absRate:8.5 },
-  { id:"PRJ-002",company:"Mekong Solar Co.",country:"Vietnam",flag:"🇻🇳",price:14.2,available:1800,type:"Renewable Energy",verified:true,rating:4.7,ndvi:null,absRate:0 },
-  { id:"PRJ-003",company:"Sumatra Peat Restore",country:"Indonesia",flag:"🇮🇩",price:16.8,available:900,type:"Peat Restoration",verified:true,rating:4.6,ndvi:0.61,absRate:2.1 },
-  { id:"PRJ-004",company:"Amazon Blue Carbon Ltd",country:"Brazil",flag:"🇧🇷",price:22.0,available:950,type:"Blue Carbon",verified:false,rating:4.8,ndvi:0.72,absRate:11.4 },
+  { id:"PRJ-001",company:"Borneo Green Alliance",country:"Indonesia",flag:"🇮🇩",price:18.5,available:3200,type:"Reforestation",verified:true,rating:4.9,ndvi:0.78,absRate:8.5, isLocked: false },
+  { id:"PRJ-002",company:"Mekong Solar Co.",country:"Vietnam",flag:"🇻🇳",price:14.2,available:1800,type:"Renewable Energy",verified:true,rating:4.7,ndvi:null,absRate:0, isLocked: false },
+  { id:"PRJ-003",company:"Sumatra Peat Restore",country:"Indonesia",flag:"🇮🇩",price:16.8,available:900,type:"Peat Restoration",verified:true,rating:4.6,ndvi:0.61,absRate:2.1, isLocked: false },
+  { id:"PRJ-004",company:"Amazon Blue Carbon Ltd",country:"Brazil",flag:"🇧🇷",price:22.0,available:950,type:"Blue Carbon",verified:false,rating:4.8,ndvi:0.72,absRate:11.4, isLocked: false },
 ];
 
+export function lockProject(id) {
+  const proj = MOCK_PROJECTS.find(p => p.id === id);
+  if (proj) proj.isLocked = true;
+}
 // ─── SHARED UI ─────────────────────────────────────────────────────────────
 export function Modal({ open, onClose, title, children, wide }) {
   if (!open) return null;

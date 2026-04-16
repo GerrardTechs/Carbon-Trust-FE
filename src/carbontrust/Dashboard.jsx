@@ -24,7 +24,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
 
   useEffect(() => {
     try {
-      const socket = io("http://localhost:4000");
+      const socket = io("http://127.0.0.1:3000");
       socket.on("iot_live", ({ parcelId, data }) => {
         if (parcelId === "LP-001") {
           setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });

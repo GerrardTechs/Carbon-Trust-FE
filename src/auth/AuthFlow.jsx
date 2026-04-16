@@ -1702,6 +1702,43 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     setStep("verify");
   }
 
+  const handleFinalSubmit = async (finalCalcData) => {
+    // 1. Gabungkan semua data dari langkah 1 sampai akhir
+    const completeData = {
+      ...userData,
+      ...operationalData,
+      ...finalCalcData,
+      role: role // Kirimkan juga role-nya (company / landlord)
+    };
+
+    setCalcData(finalCalcData); // Simpan ke state
+
+    try {
+      // 2. Tembak API Backend
+      const response = await fetch("http://127.0.0.1:3000/api/auth/register-company", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(completeData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success"); // Lanjut ke halaman centang hijau
+
+        // 3. Setelah animasi success selesai, lempar data asli backend ke App.jsx
+        setTimeout(() => {
+          if (onComplete) onComplete(role, result.user, lang, result.token);
+        }, 2000);
+      } else {
+        alert("Gagal registrasi di server.");
+      }
+    } catch (error) {
+      alert("Gagal terhubung ke backend. Pastikan server nyala.");
+      console.error(error);
+    }
+  };
+
   function handleVerified() {
     // After email verify: company → operational details; landlord → skip to success
     if (role === "company") {
@@ -1767,7 +1804,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
       )}
       {step === "calcmethod" && (
         <CalcMethodPage
-          onSubmit={handleCalcMethod}
+          onSubmit={handleFinalSubmit}
           onBack={() => setStep("operational")}
           lang={lang}
         />

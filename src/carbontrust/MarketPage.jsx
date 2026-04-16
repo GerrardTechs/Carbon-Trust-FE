@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { COMPANY_ID, apiFetch, MOCK_PROJECTS, Modal, Spinner, Ic } from "./shared.jsx";
 
-export function MarketPage({ t, setPage, setActiveTx }) {
+export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
   const [search, setSearch]           = useState("");
-  const [projects, setProjects]       = useState(MOCK_PROJECTS);
   const [detailProject, setDetail]    = useState(null);
   const [matchModal, setMatchModal]   = useState(false);
   const [matching, setMatching]       = useState(false);
@@ -12,7 +10,8 @@ export function MarketPage({ t, setPage, setActiveTx }) {
 
   useEffect(() => {
     apiFetch(`/projects?search=${encodeURIComponent(search)}`).then(d => {
-      if (d && Array.isArray(d)) setProjects(d);
+      if (d && Array.isArray(d))
+        setProjects(d.map(p => ({ ...p, isLocked: p.isLocked ?? false })));
     });
   }, [search]);
 
@@ -22,18 +21,52 @@ export function MarketPage({ t, setPage, setActiveTx }) {
     return sb - sa;
   });
 
+  function lockProject(id) {
+    // Sekarang ini akan mengubah state di App.jsx, jadi datanya awet
+    setProjects(prev => prev.map(p => 
+      p.id === id ? { ...p, isLocked: true } : p
+    ));
+  }
+
   async function runMatch() {
     setMatchModal(true); setMatching(true); setMatchResult(null);
     const res = await apiFetch("/match", { method:"POST", body: JSON.stringify({ companyId: COMPANY_ID, volumeNeeded: 500 }) });
     setTimeout(() => { setMatching(false); setMatchResult(res?.best || sorted[0]); }, 2200);
   }
 
+  // Kunci proyek di state lokal agar langsung berubah di UI
+  function lockProject(projId) {
+    setProjects(prev => prev.map(p => p.id === projId ? { ...p, isLocked: true } : p));
+    // Juga update detailProject jika sedang terbuka
+    setDetail(prev => prev && prev.id === projId ? { ...prev, isLocked: true } : prev);
+  }
+
   async function startTransaction(proj) {
-    const tx = await apiFetch("/transactions", {
-      method: "POST",
-      body: JSON.stringify({ buyerCompanyId: COMPANY_ID, sellerCompanyId: proj.companyId || "EXT", projectId: proj.id, buyer: "PT. Nusantara Hijau Tbk", seller: proj.company, volume: 500, pricePerTon: proj.price }),
-    });
-    setActiveTx(tx || { id:"TXN-NEW-001", buyer:"PT. Nusantara Hijau Tbk", seller: proj.company, volume:500, pricePerTon: proj.price, totalUSD:500*proj.price, escrowAmount:500*proj.price, status:0, blockHash:"0x"+"abc123".repeat(10), createdAt:new Date() });
+    // 1. Kunci proyek di UI agar tidak dibeli 2x (Anti-Fraud)
+    lockProject(proj.id);
+  
+    // 2. Generate Hash palsu untuk simulasi Blockchain Trace
+    const blockHash = "0x" + Array.from({ length: 32 }, () =>
+      Math.floor(Math.random() * 16).toString(16)).join("");
+  
+    // 3. Gabungkan data proyek ke dalam object transaksi
+    // Kita set status: 0 agar animasi escrow dimulai dari tahap awal
+    const tx = {
+      id: "TXN-" + Math.floor(Math.random() * 900000 + 100000),
+      project: proj, // Simpan objek project utuh di sini agar TxPage bisa baca detailnya
+      buyer: "PT. Nusantara Hijau Tbk",
+      seller: proj.company,
+      projectId: proj.id,
+      volume: 500,
+      pricePerTon: proj.price,
+      totalUSD: 500 * proj.price,
+      status: 0, // <--- Mulai dari Escrow
+      blockHash,
+      timestamp: new Date().toISOString(),
+    };
+  
+    // 4. Set ke state global dan pindah halaman
+    setActiveTx(tx);
     setPage("tx");
   }
 
@@ -59,12 +92,26 @@ export function MarketPage({ t, setPage, setActiveTx }) {
       {/* Project cards */}
       <div className="px-4 pt-3 flex flex-col gap-3">
         {sorted.map((proj, idx) => (
-          <div key={proj.id} className={`card p-4 ${idx === 0 ? "border-2 border-green-300 bg-green-50/30" : ""}`}>
-            {idx === 0 && (
+          <div
+            key={proj.id}
+            className={`card p-4 transition-all
+              ${idx === 0 && !proj.isLocked ? "border-2 border-green-300 bg-green-50/30" : ""}
+              ${proj.isLocked ? "opacity-50 grayscale" : ""}
+            `}
+          >
+            {idx === 0 && !proj.isLocked && (
               <div className="flex items-center gap-1 mb-2">
                 <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">⭐ {t.market.recommend}</span>
               </div>
             )}
+
+            {/* Badge In Escrow */}
+            {proj.isLocked && (
+              <div className="flex items-center gap-1 mb-2">
+                <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">🔒 In Escrow — Sedang Ditinjau</span>
+              </div>
+            )}
+
             <div className="flex items-start gap-3">
               <div className="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center text-3xl flex-shrink-0">
                 {projIcon(proj.type)}
@@ -97,11 +144,17 @@ export function MarketPage({ t, setPage, setActiveTx }) {
                     ? <span className="flex items-center gap-0.5 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200 font-bold"><Ic.Shield />ISO 14064</span>
                     : <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">⏳ Pending</span>
                   }
-                  {/* Single "View Details" button — opens detail modal */}
-                  <button onClick={() => setDetail(proj)}
-                    className="ml-auto text-xs text-white px-3 py-1.5 rounded-xl font-bold active:scale-95 transition-all"
-                    style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-                    {t.market.detail}
+                  <button
+                    disabled={proj.isLocked}
+                    onClick={() => !proj.isLocked && setDetail(proj)}
+                    className={`ml-auto text-xs px-3 py-1.5 rounded-xl font-bold transition-all
+                      ${proj.isLocked
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "text-white active:scale-95"
+                      }`}
+                    style={proj.isLocked ? {} : { background: "linear-gradient(135deg,#166534,#0f766e)" }}
+                  >
+                    {proj.isLocked ? "Terkunci" : t.market.detail}
                   </button>
                 </div>
               </div>
@@ -152,10 +205,14 @@ export function MarketPage({ t, setPage, setActiveTx }) {
                   : t.market.renewableProj}
               </p>
             </div>
-            <button onClick={() => { startTransaction(detailProject); setDetail(null); }}
-              className="w-full py-3 rounded-xl font-bold text-white active:scale-95 transition-all"
-              style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-              {t.market.transact} →
+            <button
+              disabled={detailProject.isLocked}
+              onClick={() => { if (!detailProject.isLocked) { startTransaction(detailProject); setDetail(null); } }}
+              className={`w-full py-3 rounded-xl font-bold text-white transition-all
+                ${detailProject.isLocked ? "opacity-50 cursor-not-allowed bg-gray-400" : "active:scale-95"}`}
+              style={detailProject.isLocked ? {} : { background: "linear-gradient(135deg,#166534,#0f766e)" }}
+            >
+              {detailProject.isLocked ? "🔒 Proyek Sedang Ditinjau" : `${t.market.transact} →`}
             </button>
           </div>
         )}
@@ -192,10 +249,14 @@ export function MarketPage({ t, setPage, setActiveTx }) {
               </div>
               <p className="text-green-700 font-black mt-1">Total: ${(500 * matchResult.price).toLocaleString()} USD</p>
             </div>
-            <button onClick={() => { startTransaction(matchResult); setMatchModal(false); }}
-              className="w-full py-3 rounded-xl font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#166634,#0f766e)" }}>
-              {t.market.proceed}
+            <button
+              disabled={matchResult.isLocked}
+              onClick={() => { if (!matchResult.isLocked) { startTransaction(matchResult); setMatchModal(false); } }}
+              className={`w-full py-3 rounded-xl font-bold text-white
+                ${matchResult.isLocked ? "opacity-50 cursor-not-allowed bg-gray-400" : ""}`}
+              style={matchResult.isLocked ? {} : { background: "linear-gradient(135deg,#166634,#0f766e)" }}
+            >
+              {matchResult.isLocked ? "🔒 Proyek Terkunci" : t.market.proceed}
             </button>
           </div>
         ) : null}
