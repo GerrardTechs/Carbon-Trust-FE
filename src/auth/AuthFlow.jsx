@@ -1715,7 +1715,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
 
     try {
       // 2. Tembak API Backend
-      const response = await fetch("https://carbon-trust-be-production.up.railway.app/api/auth/register-company", {
+      const response = await fetch("https://carbon-trust-be.onrender.com/api/auth/register-company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(completeData)
