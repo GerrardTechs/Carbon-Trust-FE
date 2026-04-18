@@ -527,12 +527,17 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, qStatus, u
       <Modal open={exitModal} onClose={() => setExitModal(false)} title={`🚪 ${t.exit?.title || "Exit Application"}`}>
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-500 text-center">{t.exit?.desc || "What would you like to do?"}</p>
+          
           {/* Exit only — tutup app, tetap login */}
           <button
-            onClick={() => setExitModal(false)}
+            onClick={() => { 
+              setExitModal(false); 
+              if (typeof onExit === "function") onExit(); // <--- Tambahkan onExit di sini
+            }}
             className="w-full py-3 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
             {t.exit?.exitOnly || "Exit App"}
           </button>
+
           {/* Exit & Logout — kembali ke AuthFlow */}
           <button
             onClick={() => { setExitModal(false); if (typeof onLogout === "function") onLogout(); }}
@@ -541,6 +546,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, qStatus, u
             <span>{t.exit?.logout || "Exit & Log Out"}</span>
             <span className="text-xs font-normal opacity-80">{t.exit?.logoutDesc || "You will return to the registration screen."}</span>
           </button>
+
           <button onClick={() => setExitModal(false)}
             className="text-sm text-gray-400 hover:text-gray-600 text-center py-1 font-medium">
             {t.exit?.cancelBtn || "Cancel"}

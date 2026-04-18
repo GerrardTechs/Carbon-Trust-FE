@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-export const API = "http://127.0.0.1:3000/api";
+export const API = "https://carbon-trust-be-production.up.railway.app/api";
 export const COMPANY_ID = "COMP-001";
 export const CREDIT_PRICE = 18.5;
 
@@ -457,7 +457,7 @@ export function LangSel({ lang, setLang }) {
 }
 
 // ─── HEADER ────────────────────────────────────────────────────────────────
-export function Header({ alerts, lang, setLang, t }) {
+export function Header({ alerts, onDismiss, lang, setLang, t }) {
   const [open, setOpen] = useState(false);
   const crit = alerts.filter(a => a.type !== "info").length;
   return (
@@ -484,6 +484,12 @@ export function Header({ alerts, lang, setLang, t }) {
                 <p className="text-xs text-gray-600">{a.message}</p>
                 <p className="text-xs text-gray-400">{new Date(a.time).toLocaleTimeString()}</p>
               </div>
+              <button
+        onClick={() => onDismiss(a.id)}
+        className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-black/10 hover:text-gray-600 text-xs flex-shrink-0 mt-0.5"
+      >
+        ✕
+      </button>
             </div>
           ))}
         </div>

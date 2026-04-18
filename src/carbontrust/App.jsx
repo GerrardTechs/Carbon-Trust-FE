@@ -30,7 +30,7 @@ import {TxPage}     from "./TxPage.jsx";
 import {VerifyPage} from "./VerifyPage.jsx";
 import {ProfilePage} from "./ProfilePage.jsx";
 
-export default function App({ onLogout, initialLang = "en", userData }) {
+export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
   const [lang,     setLang]     = useState(initialLang);
   const [parcels,  setParcels]  = useState(MOCK_PARCELS);
@@ -64,13 +64,14 @@ export default function App({ onLogout, initialLang = "en", userData }) {
 
   const renderPage = () => {
     switch (page) {
-      case "home":    return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
+      case "home":    return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} activeTx={activeTx} qStatus={qStatus}/>;
       case "land":    return <LandPage    parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
       case "calc":    return <CalcPage    t={t} setPage={setPage} />;
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
       case "market":  return <MarketPage t={t} setPage={setPage} setActiveTx={setActiveTx} projects={projects} setProjects={setProjects} />;
       case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
-      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} setPage={setPage} qStatus={qStatus} updateQStatus={setQStatus}
+      case "profile": case "profile": 
+      return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
@@ -93,11 +94,16 @@ export default function App({ onLogout, initialLang = "en", userData }) {
     localStorage.setItem("carbon_q_status", JSON.stringify(updated));
   };
 
+  async function handleDismiss(alertId) {
+    await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
+  }
+
   return (
     <div className="min-h-screen" style={{ background: "#f1f5f1" }}>
       <style>{GCSS}</style>
       <div className="max-w-md mx-auto relative min-h-screen flex flex-col bg-gray-50 shadow-2xl">
-        <Header alerts={alerts} lang={lang} setLang={setLang} t={t} />
+        <Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} />
         <main className="flex-1 overflow-y-auto pb-20">{renderPage()}</main>
         <BottomNav page={page} setPage={setPage} t={t} />
       </div>

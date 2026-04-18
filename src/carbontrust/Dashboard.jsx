@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
+import Header from './App'; 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import {
   COMPANY_ID, CREDIT_PRICE, apiFetch,
@@ -20,11 +21,12 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [histModal, setHistModal] = useState(false);
   const [histParcelId, setHistParcelId] = useState("LP-001");
   const [histData, setHistData] = useState([]);
+  const [lang, setLang] = useState('en'); 
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
 
   useEffect(() => {
     try {
-      const socket = io("http://127.0.0.1:3000");
+      const socket = io("https://carbon-trust-be-production.up.railway.app");
       socket.on("iot_live", ({ parcelId, data }) => {
         if (parcelId === "LP-001") {
           setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });
@@ -49,6 +51,13 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
       return () => clearInterval(id);
     }
   }, []);
+
+async function handleDismiss(alertId) {
+  await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
+  setAlerts(prev => prev.filter(a => a.id !== alertId));
+}
+
+<Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} />
 
   async function openHistory(parcelId) {
     setHistParcelId(parcelId);
