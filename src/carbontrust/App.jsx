@@ -95,7 +95,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   };
 
   async function handleDismiss(alertId) {
-    await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
+    await fetch(`https://carbon-trust-be.onrender.com/api/alerts/${alertId}`, { method: "DELETE" });
     setAlerts(prev => prev.filter(a => a.id !== alertId));
   }
 

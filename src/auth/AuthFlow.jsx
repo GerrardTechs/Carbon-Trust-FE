@@ -1064,8 +1064,27 @@ function RolePage({ onSelect, onGuest, onBack, lang }) {
   );
 }
 
+// ─── Helper: generate institution ID from company name ───────
+function generateInstitutionId(companyName) {
+  if (!companyName || !companyName.trim()) return "";
+  const stopWords = ["pt", "cv", "tbk", "persero", "the", "and", "&", "-"];
+  const words = companyName.trim().split(/\s+/).filter(
+    w => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
+  );
+  const prefix = words
+    .slice(0, 3)
+    .map(w => w.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 3))
+    .join("");
+  let hash = 0;
+  for (let i = 0; i < companyName.length; i++) {
+    hash = ((hash << 5) - hash + companyName.charCodeAt(i)) | 0;
+  }
+  const suffix = String(Math.abs(hash) % 9000 + 1000);
+  return `CT-${prefix.slice(0, 6)}-${suffix}`;
+}
+
 // ─── SCREEN 3: Register form (Login 1) ───────────────────────
-// Extended with: username, institutionId, position, customPosition
+// Extended with: username, institutionId (auto-generated), position, customPosition
 function RegisterPage({ role, onSubmit, onBack, lang }) {
   const [form, setForm] = useState({
     name: "", email: "", username: "", password: "",
@@ -1074,14 +1093,28 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
 
   const t = LANGS[lang].register;
   const strength = pwStrength(form.password, t);
   const isCompany = role === "company";
 
+  // Auto-generate institution ID whenever company name changes
   function setField(name, value) {
-    setForm(p => ({ ...p, [name]: value }));
+    if (name === "name" && isCompany) {
+      const newId = generateInstitutionId(value);
+      setForm(p => ({ ...p, [name]: value, institutionId: newId }));
+    } else {
+      setForm(p => ({ ...p, [name]: value }));
+    }
     setErrors(p => ({ ...p, [name]: "" }));
+  }
+
+  function copyId() {
+    if (!form.institutionId) return;
+    navigator.clipboard.writeText(form.institutionId).catch(() => {});
+    setIdCopied(true);
+    setTimeout(() => setIdCopied(false), 2000);
   }
 
   function validate() {
@@ -1218,16 +1251,57 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
             <>
               <p className="section-label" style={{ marginTop: 4 }}>Institution</p>
 
-              {/* Institution ID */}
+              {/* Institution ID — auto-generated, read-only */}
               <div className="field-group">
-                <label className="label">{t.institutionIdLabel}</label>
-                <input
-                  className="input-field"
-                  type="text"
-                  placeholder={t.institutionIdPlaceholder}
-                  value={form.institutionId}
-                  onChange={e => setField("institutionId", e.target.value)}
-                />
+                <label className="label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {t.institutionIdLabel}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px",
+                    borderRadius: 999, background: G.green100, color: G.green800,
+                    letterSpacing: ".04em", textTransform: "uppercase",
+                  }}>Auto</span>
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    className="input-field"
+                    type="text"
+                    readOnly
+                    value={form.institutionId || (lang === "id" ? "Otomatis dari nama PT..." : "Generated from company name...")}
+                    style={{
+                      background: form.institutionId ? G.green50 : G.slate100,
+                      borderColor: form.institutionId ? G.green500 : G.slate200,
+                      color: form.institutionId ? G.green800 : G.slate400,
+                      fontWeight: form.institutionId ? 700 : 400,
+                      fontFamily: form.institutionId ? "monospace" : "inherit",
+                      letterSpacing: form.institutionId ? ".06em" : "normal",
+                      paddingRight: 80,
+                      cursor: "default",
+                    }}
+                  />
+                  {form.institutionId && (
+                    <button
+                      type="button"
+                      onClick={copyId}
+                      style={{
+                        position: "absolute", right: 10, top: "50%",
+                        transform: "translateY(-50%)",
+                        background: idCopied ? G.green600 : G.green100,
+                        border: "none", borderRadius: 8,
+                        padding: "4px 10px", fontSize: 11, fontWeight: 700,
+                        color: idCopied ? G.white : G.green800,
+                        cursor: "pointer", transition: "all .15s",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {idCopied ? "✓ Copied" : "Copy"}
+                    </button>
+                  )}
+                </div>
+                <p style={{ fontSize: 11, color: G.slate400, marginTop: 4 }}>
+                  {lang === "id"
+                    ? "ID ini otomatis dibuat dari nama perusahaan Anda."
+                    : "This ID is automatically generated from your company name."}
+                </p>
               </div>
 
               {/* Position dropdown */}
