@@ -23,6 +23,11 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [histData, setHistData] = useState([]);
   const [lang, setLang] = useState('en'); 
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
+  const [stockPrice, setStockPrice] = useState({ symbol:"", price:"", prev:"" });
+const [showStockInput, setShowStockInput] = useState(false);
+  // Track previous values for delta % display (#23 #25)
+  const [prevKpi, setPrevKpi] = useState(null);
+  const [kpiDelta, setKpiDelta] = useState({ abs: 0, em: 0, net: 0 });
 
   useEffect(() => {
     try {
@@ -53,7 +58,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   }, []);
 
 async function handleDismiss(alertId) {
-  await fetch(`https://carbon-trust-be.onrender.com/api/alerts/${alertId}`, { method: "DELETE" });
+  await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
   setAlerts(prev => prev.filter(a => a.id !== alertId));
 }
 
@@ -82,6 +87,15 @@ async function handleDismiss(alertId) {
   const totalAbs  = parseFloat(parcels.reduce((s, p) => s + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
   const totalEm   = parseFloat(parcels.reduce((s, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
+
+  // Compute delta % when parcels (conditions) change
+  useEffect(() => {
+    if (prevKpi) {
+      const pct = (cur, prev) => prev === 0 ? 0 : +((cur - prev) / Math.abs(prev) * 100).toFixed(1);
+      setKpiDelta({ abs: pct(totalAbs, prevKpi.abs), em: pct(totalEm, prevKpi.em), net: pct(netBal, prevKpi.net) });
+    }
+    setPrevKpi({ abs: totalAbs, em: totalEm, net: netBal });
+  }, [parcels]);
   const credits   = Math.max(0, Math.floor(netBal * 12));
   const creditsUSD = (credits * CREDIT_PRICE).toLocaleString();
   const cv = v => convertUnit(v, unit);
@@ -108,14 +122,19 @@ async function handleDismiss(alertId) {
       {/* KPI cards */}
       <div className="px-4 grid grid-cols-3 gap-2">
         {[
-          { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿" },
-          { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭" },
-          { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️" },
+          { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
+          { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
+          { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
         ].map((k, i) => (
           <div key={i} className="card p-3 text-center">
             <p className="text-xl mb-0.5">{k.icon}</p>
             <p className={`font-black text-sm ${k.color === "emerald" ? "text-emerald-700" : k.color === "red" ? "text-red-600" : "text-teal-700"}`}>{k.v}</p>
             <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
+            {k.delta !== 0 && (
+              <p className={`text-xs font-bold mt-0.5 ${k.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                ({k.delta > 0 ? "▲" : "▼"}{Math.abs(k.delta)}%)
+              </p>
+            )}
             <p className="text-xs text-gray-500 leading-tight mt-0.5">{k.l}</p>
           </div>
         ))}
@@ -134,6 +153,129 @@ async function handleDismiss(alertId) {
           <p className="text-xs text-teal-600">@ ${CREDIT_PRICE}/t</p>
         </div>
       </div>
+
+      {/* Stock Price Card */}
+<div className="px-4">
+  <div className="card p-4">
+    <div className="flex items-center justify-between mb-2">
+      <p className="text-xs font-bold text-gray-700">📈 Harga Saham</p>
+      <button onClick={() => setShowStockInput(s => !s)}
+        className="text-xs text-green-600 font-bold hover:underline">
+        {showStockInput ? "Tutup" : "Input"}
+      </button>
+    </div>
+
+    {showStockInput && (
+      <div className="flex flex-col gap-2 mb-3 fade-up">
+        {[
+          { label:"Kode Saham", key:"symbol", ph:"TLKM" },
+          { label:"Harga Sekarang (Rp)", key:"price", ph:"3750" },
+          { label:"Harga Sebelumnya (Rp)", key:"prev", ph:"3900" },
+        ].map(f => (
+          <div key={f.key} className="flex gap-2 items-center">
+            <label className="text-xs text-gray-500 w-28 shrink-0">{f.label}</label>
+            <input type={f.key==="symbol"?"text":"number"} placeholder={f.ph}
+              value={stockPrice[f.key]}
+              onChange={e => setStockPrice(s => ({...s, [f.key]: e.target.value}))}
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
+          </div>
+        ))}
+      </div>
+    )}
+
+    {stockPrice.symbol && stockPrice.price ? (() => {
+      const cur  = parseFloat(stockPrice.price) || 0;
+      const prev = parseFloat(stockPrice.prev)  || 0;
+      const delta = prev ? cur - prev : 0;
+      const pct   = prev ? +((delta / prev) * 100).toFixed(2) : 0;
+      const up    = delta >= 0;
+      return (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-black text-gray-800">{stockPrice.symbol.toUpperCase()}</p>
+            <p className="text-xs text-gray-400">Harga terakhir</p>
+          </div>
+          <div className="text-right">
+            <p className="font-black text-lg text-gray-800">Rp {cur.toLocaleString("id-ID")}</p>
+            {prev > 0 && (
+              <p className={`text-xs font-bold ${up ? "text-emerald-600" : "text-red-500"}`}>
+                {up ? "▲" : "▼"} Rp {Math.abs(delta).toLocaleString("id-ID")} ({up ? "+" : ""}{pct}%)
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    })() : (
+      <p className="text-xs text-gray-400 text-center py-1">Belum ada data saham</p>
+    )}
+  </div>
+</div>
+
+      {/* Active Carbon Projects — #6 */}
+{(() => {
+  const activeProjects = [
+    { id:"PRJ-A", name:"Rehabilitasi Gambut Riau", type:"peatland", area:320, status:"active",
+      absorption: parcels.find(p=>p.type==="peatland") ? calcAbsorption(parcels.find(p=>p.type==="peatland")) : 0,
+      startDate:"Jan 2024", method:"Rewetting & revegetasi", progress:68 },
+    { id:"PRJ-B", name:"Konservasi Hutan Kalimantan", type:"forest", area:450, status:"active",
+      absorption: parcels.find(p=>p.type==="forest") ? calcAbsorption(parcels.find(p=>p.type==="forest")) : 0,
+      startDate:"Mar 2023", method:"REDD+ protection", progress:85 },
+    { id:"PRJ-C", name:"Mangrove Pesisir Sumatra", type:"mangrove", area:85, status:"pending",
+      absorption: parcels.find(p=>p.type==="mangrove") ? calcAbsorption(parcels.find(p=>p.type==="mangrove")) : 0,
+      startDate:"Jun 2024", method:"Replanting & monitoring", progress:32 },
+  ];
+  const typeIcon = { peatland:"🌾", forest:"🌲", mangrove:"🌴" };
+  const statusColor = {
+    active:    "bg-emerald-100 text-emerald-700",
+    pending:   "bg-amber-100 text-amber-700",
+    completed: "bg-blue-100 text-blue-700",
+  };
+  return (
+    <div className="px-4">
+      <p className="text-sm font-bold text-gray-800 mb-2">
+        {t.dash?.activeProjects || "Proyek Karbon Aktif"}
+      </p>
+      <div className="flex flex-col gap-2">
+        {activeProjects.map(proj => (
+          <div key={proj.id} className="card p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{typeIcon[proj.type]}</span>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">{proj.name}</p>
+                  <p className="text-xs text-gray-400">{proj.method} · {proj.area} ha</p>
+                </div>
+              </div>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor[proj.status]}`}>
+                {t.dash?.projectStatus?.[proj.status] || proj.status}
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="mb-2">
+              <div className="flex justify-between mb-1">
+                <p className="text-xs text-gray-400">Progress</p>
+                <p className="text-xs font-bold text-gray-600">{proj.progress}%</p>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div className="h-1.5 rounded-full transition-all"
+                  style={{ width:`${proj.progress}%`,
+                    background: proj.status==="active" ? "linear-gradient(90deg,#16a34a,#0d9488)" : "#f59e0b" }} />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <p className="text-xs text-gray-400">Mulai: {proj.startDate}</p>
+              <p className={`text-xs font-black ${proj.absorption < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                {proj.absorption >= 0 ? "▲" : "▼"}{Math.abs(proj.absorption)} t/bulan
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+})()}
 
       {/* IoT Sensors */}
       <div className="px-4">

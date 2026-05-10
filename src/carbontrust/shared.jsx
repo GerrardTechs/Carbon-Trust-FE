@@ -55,6 +55,8 @@ export const TR = {
       alerts:"AI Detection & Alerts", dismiss:"Dismiss",
       myProjects:"My Active Projects", seeAll:"See all land →",
       units:{ t:"tCO₂e", kt:"ktCO₂e", Mt:"MtCO₂e", kg:"kg CO₂e" }, unitLabel:"Unit",
+      activeProjects: "Active Carbon Projects",
+projectStatus: { active:"Active", pending:"Pending", completed:"Completed" },
     },
     land:{
       title:"Land Ownership", addParcel:"Add Land Parcel",
@@ -64,7 +66,13 @@ export const TR = {
       stockFormula:"Carbon Stock Formula",
       types:{ forest:"Forest",peatland:"Peatland",mangrove:"Mangrove",agricultural:"Agricultural",industrial:"Industrial" },
       status:{ healthy:"Healthy",flooded:"Flooded",degraded:"Degraded",burned:"Burned",drying:"Peat Drying" },
-      alerts:{ flooded:"🌊 FLOOD DETECTED — Absorption reduced, credits suspended",peatland_degraded:"⚠️ PEAT DEGRADING — Becoming CO₂ emitter (Ebo formula active)",burned:"🔥 FIRE DETECTED — Credits cancelled for affected area",drying:"🌡️ PEAT DRYING — High emission risk" },
+      alerts:{
+        flooded:"🌊 BANJIR / FLOOD — Serapan berkurang drastis. Air menggenangi lahan menghambat fotosintesis & pertukaran gas. Kredit karbon ditangguhkan.",
+        degraded:"⚠️ TERDEGRADASI — Lahan kehilangan kemampuan serapan. Vegetasi rusak, struktur tanah terganggu. Perlu rehabilitasi segera.",
+        peatland_degraded:"⚠️ GAMBUT TERDEGRADASI — Gambut berubah jadi emitter CO₂ aktif. Dekomposisi organik melepas CH₄ & CO₂ dalam jumlah besar (Ebo formula aktif).",
+        burned:"🔥 KEBAKARAN / FIRE — Emisi masif CO₂ & CH₄. Karbon tersimpan dilepas seketika. Kredit dibatalkan untuk area terdampak. Gas metana mengancam kesehatan.",
+        drying:"🌡️ GAMBUT MENGERING — Kelembaban turun drastis. Gambut kering = emitter CH₄ & CO₂. Risiko kebakaran meningkat. NDVI menurun."
+      },
     },
     calc:{
       title:"Emission Calculator", scope1:"Scope 1 — Direct",
@@ -73,6 +81,13 @@ export const TR = {
       offsetNeeded:"Carbon Credits Needed", leakage:"Estimated Leakage",
       ref:"Based on IPCC 2006 · ESDM Indonesia EF",
       breakdownTitle:"Breakdown by Source",
+      method: "Calculation Method",
+methodOp: "Operational Control",
+methodEq: "Equity Share",
+equityPct: "Equity Share (%)",
+ownershipCert: "Upload Ownership Certificate",
+ownershipHint: "PDF/image of share ownership document",
+ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
     },
     market:{
       title:"Carbon Market", search:"Search projects, companies, countries...",
@@ -144,6 +159,8 @@ export const TR = {
       alerts:"Deteksi AI & Peringatan", dismiss:"Hapus",
       myProjects:"Proyek Aktif Saya", seeAll:"Lihat semua lahan →",
       units:{ t:"tCO₂e", kt:"ktCO₂e", Mt:"MtCO₂e", kg:"kg CO₂e" }, unitLabel:"Satuan",
+      activeProjects: "Proyek Karbon Aktif",
+projectStatus: { active:"Aktif", pending:"Dalam Proses", completed:"Selesai" },
     },
     land:{
       title:"Kepemilikan Lahan", addParcel:"Tambah Lahan",
@@ -153,7 +170,13 @@ export const TR = {
       stockFormula:"Formula Stok Karbon",
       types:{ forest:"Hutan",peatland:"Gambut",mangrove:"Mangrove",agricultural:"Pertanian",industrial:"Industri" },
       status:{ healthy:"Sehat",flooded:"Banjir",degraded:"Terdegradasi",burned:"Terbakar",drying:"Gambut Kering" },
-      alerts:{ flooded:"🌊 BANJIR TERDETEKSI — Serapan berkurang, kredit ditangguhkan",peatland_degraded:"⚠️ GAMBUT TERDEGRADASI — Berubah jadi emitter CO₂",burned:"🔥 KEBAKARAN — Kredit dibatalkan area terdampak",drying:"🌡️ GAMBUT MENGERING — Risiko emisi tinggi" },
+      alerts:{
+        flooded:"🌊 BANJIR TERDETEKSI — Serapan berkurang drastis. Lahan tergenang menghambat fotosintesis. Kredit karbon ditangguhkan sementara.",
+        degraded:"⚠️ TERDEGRADASI — Vegetasi rusak, struktur tanah terganggu. Kapasitas serapan menurun signifikan. Rehabilitasi diperlukan.",
+        peatland_degraded:"⚠️ GAMBUT TERDEGRADASI — Gambut menjadi sumber emisi CO₂ & metana aktif. Dekomposisi bahan organik melepas gas rumah kaca dalam jumlah besar.",
+        burned:"🔥 KEBAKARAN TERDETEKSI — Emisi CO₂ & CH₄ masif. Karbon tersimpan dalam biomasa dilepas seketika. Kredit dibatalkan. Gas metana berbahaya.",
+        drying:"🌡️ GAMBUT MENGERING — Kelembaban kritis. Gambut kering berubah jadi emitter aktif. Risiko kebakaran & emisi CH₄ sangat tinggi."
+      },
     },
     calc:{
       title:"Kalkulator Emisi", scope1:"Scope 1 — Langsung",
@@ -162,6 +185,13 @@ export const TR = {
       offsetNeeded:"Kredit Karbon Dibutuhkan", leakage:"Estimasi Leakage",
       ref:"Berdasarkan IPCC 2006 · Faktor Emisi ESDM Indonesia",
       breakdownTitle:"Rincian per Sumber",
+      method: "Metode Kalkulasi",
+methodOp: "Kendali Operasional",
+methodEq: "Equity Share",
+equityPct: "Persentase Kepemilikan Saham (%)",
+ownershipCert: "Upload Sertifikat Kepemilikan",
+ownershipHint: "PDF/foto dokumen kepemilikan saham",
+ownershipReject: "File ditolak — harus PDF atau gambar (JPG/PNG)",
     },
     market:{
       title:"Bursa Karbon", search:"Cari proyek, perusahaan, negara...",
@@ -270,25 +300,61 @@ export const ABS_RATES = {
   agricultural: { healthy:1.2, flooded:0.2, degraded:0.5, burned:-5,   drying:0    },
   industrial:   { healthy:0.0, flooded:0.0, degraded:0.0, burned:0,    drying:0    },
 };
+// Diesel density: 1 liter = 0.832 kg → EF 2.68 kg CO₂/liter (IPCC 2006)
+// Solar/HSD conversion: input liter → auto convert to kg (×0.832) internally
 export const EF = {
-  diesel:      { ef:2.68,  unit:"liter", scope:1 },
-  petrol:      { ef:2.31,  unit:"liter", scope:1 },
-  lpg:         { ef:3.00,  unit:"kg",    scope:1 },
-  naturalGas:  { ef:2.04,  unit:"m³",    scope:1 },
-  coal:        { ef:2.42,  unit:"kg",    scope:1 },
-  refrigerant: { ef:1430,  unit:"kg",    scope:1 },
-  electricity: { ef:0.87,  unit:"kWh",   scope:2 },
-  heatSteam:   { ef:0.26,  unit:"kWh",   scope:2 },
-  bizTravel:   { ef:0.255, unit:"km",    scope:3 },
-  commuting:   { ef:0.21,  unit:"km",    scope:3 },
-  transport:   { ef:0.062, unit:"ton·km",scope:3 },
-  waste:       { ef:0.5,   unit:"kg",    scope:3 },
+  // ── Scope 1: Stationary Combustion ──────────────────────────
+  genset:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Genset (Solar/HSD)" },
+  boiler:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Boiler (Solar/HSD)" },
+  furnace:     { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Furnace (Solar/HSD)" },
+  lpg:         { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"LPG" },
+  naturalGas:  { ef:2.04,  unit:"m³",   scope:1, category:"stationary", source:"Natural Gas" },
+  coal:        { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Coal / Batubara" },
+  // ── Scope 1: Mobile Combustion / Transport ──────────────────
+  diesel:      { ef:2.68,  unit:"liter", scope:1, category:"mobile", litToKg:0.832, source:"Diesel (kendaraan)" },
+  petrol:      { ef:2.31,  unit:"liter", scope:1, category:"mobile", source:"Bensin/Premium" },
+  truck:       { ef:0.120, unit:"km",    scope:1, category:"mobile", source:"Truk besar / Fuso" },
+  smallTruck:  { ef:0.085, unit:"km",    scope:1, category:"mobile", source:"Truk kecil / Pick-up" },
+  opCar:       { ef:0.171, unit:"km",    scope:1, category:"mobile", source:"Mobil operasional" },
+  bus:         { ef:0.089, unit:"km",    scope:1, category:"mobile", source:"Bus / Minibus" },
+  // ── Scope 1: Fugitive ───────────────────────────────────────
+  refrigerant: { ef:1430,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant AC (R-22)" },
+  // ── Scope 2: Purchased Energy ───────────────────────────────
+  electricity: { ef:0.87,  unit:"kWh",  scope:2, category:"electricity", source:"Grid PLN (kWh)" },
+  heatSteam:   { ef:0.26,  unit:"kWh",  scope:2, category:"steam", source:"Purchased Heat/Steam" },
+  // ── Scope 3: Value Chain ────────────────────────────────────
+  bizTravel:   { ef:0.255, unit:"km",   scope:3, category:"travel", source:"Business Travel (pesawat)" },
+  commuting:   { ef:0.21,  unit:"km",   scope:3, category:"travel", source:"Commuting karyawan" },
+  freightRoad: { ef:0.062, unit:"ton·km",scope:3, category:"freight", source:"Pengiriman darat (ton·km)" },
+  freightShip: { ef:0.012, unit:"ton·km",scope:3, category:"freight", source:"Pengiriman laut (ton·km)" },
+  fuelDelivery:{ ef:0.062, unit:"km",   scope:3, category:"freight", source:"Ongkir bahan bakar (km)" },
+  waste:       { ef:0.5,   unit:"kg",   scope:3, category:"waste", source:"Limbah operasional" },
 };
+
 export const EF_LABELS = {
-  diesel:"Diesel",petrol:"Gasoline / Petrol",lpg:"LPG",naturalGas:"Natural Gas",
-  coal:"Coal",refrigerant:"Refrigerant (AC)",electricity:"Electricity (Grid)",
-  heatSteam:"Purchased Heat/Steam",bizTravel:"Business Travel",commuting:"Employee Commuting",
-  transport:"Freight Transport",waste:"Operational Waste",
+  genset:"Genset (Solar/HSD)", boiler:"Boiler (Solar/HSD)", furnace:"Furnace (Solar/HSD)",
+  lpg:"LPG", naturalGas:"Gas Alam (m³)", coal:"Batubara",
+  diesel:"Diesel kendaraan", petrol:"Bensin/Premium",
+  truck:"Truk besar / Fuso", smallTruck:"Truk kecil / Pick-up",
+  opCar:"Mobil operasional", bus:"Bus / Minibus",
+  refrigerant:"Refrigerant AC",
+  electricity:"Listrik PLN (kWh)", heatSteam:"Panas/Steam beli",
+  bizTravel:"Perjalanan bisnis", commuting:"Komuter karyawan",
+  freightRoad:"Pengiriman darat", freightShip:"Pengiriman laut",
+  fuelDelivery:"Ongkir bahan bakar",
+  waste:"Limbah operasional",
+};
+
+// Category labels for grouping in CalcPage
+export const EF_CATEGORIES = {
+  stationary: "Pembakaran Stasioner (Genset/Boiler/Furnace)",
+  mobile:     "Transportasi & Kendaraan",
+  fugitive:   "Emisi Fugitif",
+  electricity:"Listrik yang Dibeli",
+  steam:      "Panas / Steam",
+  travel:     "Perjalanan & Komuter",
+  freight:    "Pengiriman & Logistik",
+  waste:      "Limbah",
 };
 
 // ─── UTILS ─────────────────────────────────────────────────────────────────

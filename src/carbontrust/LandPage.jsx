@@ -168,7 +168,31 @@ export function LandPage({ parcels, setParcels, t, lang }) {
                 </div>
               ))}
             </div>
-            {alertKey && <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">{t.land.alerts[alertKey]}</div>}
+            {/* Risk description card — #26 */}
+            {selParcel.status !== "healthy" && (() => {
+              const riskInfo = {
+                flooded:  { color:"blue",   icon:"🌊", gasInfo:"Oksigen terlarut berkurang → dekomposisi anaerobik melepas CH₄ & N₂O", action:"Cek drainase & sistem pompa segera" },
+                degraded: { color:"amber",  icon:"⚠️", gasInfo:"Struktur tanah rusak → dekomposisi karbon organik melepas CO₂ tambahan", action:"Rehabilitasi vegetasi & perbaiki struktur lahan" },
+                burned:   { color:"red",    icon:"🔥", gasInfo:"Pembakaran langsung melepas CO₂, CH₄, N₂O & partikel berbahaya", action:"Hentikan aktivitas di area terdampak, laporkan ke otoritas" },
+                drying:   { color:"orange", icon:"🌡️", gasInfo:"Gambut kering kehilangan kelembaban → oksidasi melepas CO₂ & CH₄ dalam volume besar", action:"Rewetting segera: buka kanal, naikkan muka air gambut" },
+              };
+              const r = riskInfo[selParcel.status];
+              if (!r) return null;
+              const colorMap = {
+                blue:   { bg:"bg-blue-50",   border:"border-blue-200",   text:"text-blue-800",   sub:"text-blue-600"   },
+                amber:  { bg:"bg-amber-50",  border:"border-amber-200",  text:"text-amber-800",  sub:"text-amber-600"  },
+                red:    { bg:"bg-red-50",     border:"border-red-200",    text:"text-red-800",    sub:"text-red-600"    },
+                orange: { bg:"bg-orange-50", border:"border-orange-200", text:"text-orange-800", sub:"text-orange-600" },
+              };
+              const c = colorMap[r.color];
+              return (
+                <div className={`rounded-xl border px-3 py-2.5 mb-3 ${c.bg} ${c.border}`}>
+                  <p className={`text-xs font-bold mb-1 ${c.text}`}>{r.icon} {t.land.alerts?.[selParcel.status] || selParcel.status.toUpperCase()}</p>
+                  <p className={`text-xs mb-1.5 ${c.sub}`}>💨 <strong>Gas dilepas:</strong> {r.gasInfo}</p>
+                  <p className={`text-xs font-bold ${c.text}`}>⚡ Tindakan: {r.action}</p>
+                </div>
+              );
+            })()}
             <div className="flex gap-2">
               <button onClick={() => { setSelParcel(selParcel); setSimModal(true); }}
                 className="flex-1 bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-100">
@@ -289,4 +313,3 @@ export function LandPage({ parcels, setParcels, t, lang }) {
     </div>
   );
 }
-
