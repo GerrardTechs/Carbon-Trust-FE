@@ -68,10 +68,9 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "land":    return <LandPage    parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
       case "calc":    return <CalcPage    t={t} setPage={setPage} />;
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
-      case "market":  return <MarketPage t={t} setPage={setPage} setActiveTx={setActiveTx} projects={projects} setProjects={setProjects} />;
+      case "market":  return <MarketPage t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;
       case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
-      case "profile": case "profile": 
-      return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
+      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
