@@ -12,7 +12,9 @@ function RootApp() {
   });
 
   // 2. Status untuk mengecek apakah user sedang membuka dashboard atau di luar aplikasi
-  const [isAppActive, setIsAppActive] = useState(false);
+  const [isAppActive, setIsAppActive] = useState(() => {
+    return !!localStorage.getItem("carbon_session");
+  });
 
   // Fungsi saat login/register berhasil
   const handleLogin = (role, user, lang, token) => {

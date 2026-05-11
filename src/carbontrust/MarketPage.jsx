@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { COMPANY_ID, apiFetch, MOCK_PROJECTS, Modal, Spinner, Ic } from "./shared.jsx";
+import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
 
 export function MarketPage({ t, company, parcels }) {
   const [search, setSearch]           = useState("");

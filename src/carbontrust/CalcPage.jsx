@@ -5,7 +5,7 @@
  * Scope 3: jarak pengiriman bahan bakar (km) + freight
  */
 import { useState, useMemo } from "react";
-import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE } from "./shared.jsx";
+import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR } from "./shared.jsx";
 
 // ─── liter solar → kg CO₂ conversion helper ─────────────────
 // Solar (HSD) density ≈ 0.832 kg/liter (Pertamina standard)
@@ -33,7 +33,7 @@ function groupByCategory(keys) {
   return groups;
 }
 
-export function CalcPage({ t }) {
+export function CalcPage({ t = TR.en}) {
   const [inputs, setInputs]       = useState(Object.fromEntries(Object.keys(EF).map(k => [k, ""])));
   const [result, setResult]       = useState(null);
   const [activeScope, setScope]   = useState(1);

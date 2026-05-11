@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { COMPANY_ID, apiFetch, Modal, Spinner, Ic } from "./shared.jsx";
+import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
 
 // ─── Data kuesioner inline (atau ganti dengan: import qData from "./quisioner.json") ───
 const Q_DATA = {
