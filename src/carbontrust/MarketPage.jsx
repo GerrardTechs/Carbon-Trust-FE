@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { COMPANY_ID, apiFetch, MOCK_PROJECTS, Modal, Spinner, Ic } from "./shared.jsx";
 
-export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
+export function MarketPage({ t, company, parcels }) {
   const [search, setSearch]           = useState("");
   const [detailProject, setDetail]    = useState(null);
-  const [matchModal, setMatchModal]   = useState(false);
-  const [matching, setMatching]       = useState(false);
-  const [matchResult, setMatchResult] = useState(null);
+  const [bidModal, setBidModal]   = useState(null);
+  const [bidPrice, setBidPrice]   = useState("");
+  const [bids, setBids]           = useState({});
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     apiFetch(`/projects?search=${encodeURIComponent(search)}`).then(d => {
@@ -28,12 +29,6 @@ export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
     ));
   }
 
-  async function runMatch() {
-    setMatchModal(true); setMatching(true); setMatchResult(null);
-    const res = await apiFetch("/match", { method:"POST", body: JSON.stringify({ companyId: COMPANY_ID, volumeNeeded: 500 }) });
-    setTimeout(() => { setMatching(false); setMatchResult(res?.best || sorted[0]); }, 2200);
-  }
-
   // Kunci proyek di state lokal agar langsung berubah di UI
   function lockProject(projId) {
     setProjects(prev => prev.map(p => p.id === projId ? { ...p, isLocked: true } : p));
@@ -41,33 +36,22 @@ export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
     setDetail(prev => prev && prev.id === projId ? { ...prev, isLocked: true } : prev);
   }
 
-  async function startTransaction(proj) {
-    // 1. Kunci proyek di UI agar tidak dibeli 2x (Anti-Fraud)
-    lockProject(proj.id);
-  
-    // 2. Generate Hash palsu untuk simulasi Blockchain Trace
-    const blockHash = "0x" + Array.from({ length: 32 }, () =>
-      Math.floor(Math.random() * 16).toString(16)).join("");
-  
-    // 3. Gabungkan data proyek ke dalam object transaksi
-    // Kita set status: 0 agar animasi escrow dimulai dari tahap awal
-    const tx = {
-      id: "TXN-" + Math.floor(Math.random() * 900000 + 100000),
-      project: proj, // Simpan objek project utuh di sini agar TxPage bisa baca detailnya
-      buyer: "PT. Nusantara Hijau Tbk",
-      seller: proj.company,
-      projectId: proj.id,
-      volume: 500,
-      pricePerTon: proj.price,
-      totalUSD: 500 * proj.price,
-      status: 0, // <--- Mulai dari Escrow
-      blockHash,
-      timestamp: new Date().toISOString(),
+  function submitBid(proj) {
+    const price = parseFloat(bidPrice);
+    if (!price || price <= 0) return;
+    const newBid = {
+      bidder: company?.name || "PT. Anda",
+      companyId: company?.id,
+      price,
+      time: new Date().toLocaleString("id-ID"),
     };
-  
-    // 4. Set ke state global dan pindah halaman
-    setActiveTx(tx);
-    setPage("tx");
+    setBids(prev => ({
+      ...prev,
+      [proj.id]: [...(prev[proj.id] || []), newBid].sort((a,b) => b.price - a.price),
+    }));
+    setBidPrice("");
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
   }
 
   const projIcon = (type) =>
@@ -78,7 +62,25 @@ export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
 
   return (
     <div className="flex flex-col pb-4 fade-up">
-      {/* Sticky search bar */}
+      // GANTI blok sticky search bar, tambah sebelum input:
+<div className="px-4 pt-4 pb-2 bg-white sticky top-0 z-10 border-b border-gray-100">
+  <div className="rounded-xl bg-green-50 border border-green-200 px-3 py-2 mb-3 flex items-start gap-2">
+    <span className="text-base">🏷️</span>
+    <div>
+      <p className="text-xs font-bold text-green-800">Carbon Credit Marketplace</p>
+      <p className="text-xs text-green-600">
+        Lihat profil penjual & kredit yang ditawarkan. Ajukan bid harga untuk membeli.
+      </p>
+    </div>
+  </div>
+  <input
+    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:border-green-400"
+    placeholder={`🔍 ${t.market?.search || "Cari project..."}`}
+    value={search}
+    onChange={e => setSearch(e.target.value)}
+  />
+  <p className="text-xs text-gray-400 mt-2">{sorted.length} project · klik untuk bid</p>
+</div>
       <div className="px-4 pt-4 pb-3 bg-white sticky top-0 z-10 border-b border-gray-100">
         <input
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:border-green-400"
@@ -140,127 +142,131 @@ export function MarketPage({ t, setPage, setActiveTx, projects, setProjects }) {
                 )}
 
                 <div className="flex items-center gap-2 mt-2">
-                  {proj.verified
-                    ? <span className="flex items-center gap-0.5 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200 font-bold"><Ic.Shield />ISO 14064</span>
-                    : <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">⏳ Pending</span>
-                  }
-                  <button
-                    disabled={proj.isLocked}
-                    onClick={() => !proj.isLocked && setDetail(proj)}
-                    className={`ml-auto text-xs px-3 py-1.5 rounded-xl font-bold transition-all
-                      ${proj.isLocked
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "text-white active:scale-95"
-                      }`}
-                    style={proj.isLocked ? {} : { background: "linear-gradient(135deg,#166534,#0f766e)" }}
-                  >
-                    {proj.isLocked ? "Terkunci" : t.market.detail}
-                  </button>
-                </div>
+  {proj.verified
+    ? <span className="flex items-center gap-0.5 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200 font-bold">✅ ISO 14064</span>
+    : <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">⏳ Pending</span>
+  }
+  {/* Bid count badge */}
+  {bids[proj.id]?.length > 0 && (
+    <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+      {bids[proj.id].length} bid
+    </span>
+  )}
+  <button
+    onClick={() => { setDetail(proj); setSubmitted(false); }}
+    className="ml-auto text-xs px-3 py-1.5 rounded-xl font-bold text-white active:scale-95 transition-all"
+    style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+    Lihat & Bid →
+  </button>
+</div>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* AI Matching FAB */}
-      <div className="fixed bottom-20 right-4 z-40">
-        <button onClick={runMatch}
-          className="text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-sm active:scale-95 transition-all"
-          style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-          <Ic.Bot />{t.market.aiMatch}
-        </button>
-      </div>
-
       {/* Project Detail Modal */}
       <Modal open={!!detailProject} onClose={() => setDetail(null)} title={`🌿 ${detailProject?.company}`}>
-        {detailProject && (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { l:"Country",     v:`${detailProject.flag} ${detailProject.country}` },
-                { l:"Type",        v:detailProject.type },
-                { l:"Price",       v:`$${detailProject.price}/tCO₂` },
-                { l:"Available",   v:`${detailProject.available?.toLocaleString()} t` },
-                ...(detailProject.ndvi ? [
-                  { l:"NDVI",        v:detailProject.ndvi },
-                  { l:"Absorption",  v:`${detailProject.absRate} tCO₂/ha/yr` },
-                ] : []),
-                { l:"Rating",      v:`⭐ ${detailProject.rating}` },
-                { l:"Certified",   v:detailProject.verified ? "✅ ISO 14064" : "⏳ Pending" },
-              ].map((item, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400">{item.l}</p>
-                  <p className="font-bold text-sm text-gray-800">{item.v}</p>
-                </div>
-              ))}
-            </div>
-            <div className="bg-green-50 rounded-xl p-3">
-              <p className="text-xs text-gray-400 mb-1">{t.market.est500}</p>
-              <p className="text-2xl font-black text-green-700">${(500 * detailProject.price).toLocaleString()} USD</p>
-              <p className="text-xs text-green-600">
-                = 500 carbon credits ·{" "}
-                {detailProject.absRate > 0
-                  ? `${(500 / (detailProject.absRate || 1)).toFixed(1)} ${t.market.eqArea}`
-                  : t.market.renewableProj}
-              </p>
-            </div>
-            <button
-              disabled={detailProject.isLocked}
-              onClick={() => { if (!detailProject.isLocked) { startTransaction(detailProject); setDetail(null); } }}
-              className={`w-full py-3 rounded-xl font-bold text-white transition-all
-                ${detailProject.isLocked ? "opacity-50 cursor-not-allowed bg-gray-400" : "active:scale-95"}`}
-              style={detailProject.isLocked ? {} : { background: "linear-gradient(135deg,#166534,#0f766e)" }}
-            >
-              {detailProject.isLocked ? "🔒 Proyek Sedang Ditinjau" : `${t.market.transact} →`}
-            </button>
-          </div>
-        )}
-      </Modal>
+  {detailProject && (
+    <div className="flex flex-col gap-4">
 
-      {/* AI Match Modal */}
-      <Modal open={matchModal} onClose={() => setMatchModal(false)} title="🤖 AI Carbon Matching Engine">
-        {matching ? (
-          <div className="flex flex-col items-center py-6 gap-4">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 border-4 border-green-200 rounded-full" />
-              <div className="absolute inset-0 border-4 border-green-600 border-t-transparent rounded-full spin" />
+      {/* Profil penjual */}
+      <div className="bg-slate-50 rounded-xl p-3">
+        <p className="text-xs font-bold text-gray-500 uppercase mb-2">Profil Penjual</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { l:"Negara",     v:`${detailProject.flag} ${detailProject.country}` },
+            { l:"Tipe",       v:detailProject.type },
+            { l:"Harga ask",  v:`$${detailProject.price}/tCO₂` },
+            { l:"Stok",       v:`${detailProject.available?.toLocaleString()} t` },
+            ...(detailProject.ndvi ? [
+              { l:"NDVI",     v:detailProject.ndvi },
+              { l:"Serapan",  v:`${detailProject.absRate} tCO₂/ha/yr` },
+            ] : []),
+            { l:"Rating",     v:`⭐ ${detailProject.rating}` },
+            { l:"Sertifikat", v:detailProject.verified ? "✅ ISO 14064" : "⏳ Pending" },
+          ].map((item, i) => (
+            <div key={i} className="bg-white rounded-lg p-2.5">
+              <p className="text-xs text-gray-400">{item.l}</p>
+              <p className="font-bold text-sm text-gray-800">{item.v}</p>
             </div>
-            <p className="text-gray-600 text-sm">{t.market.analyzing}</p>
-            <p className="text-xs text-gray-400">Analyzing: price · volume · location · NDVI · certification</p>
-          </div>
-        ) : matchResult ? (
-          <div className="flex flex-col gap-4">
-            <div className="bg-green-50 rounded-xl p-4 text-center">
-              <p className="text-4xl font-black text-green-700">{matchResult.score || 97.4}%</p>
-              <p className="text-xs text-gray-500">{t.market.score}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">{t.market.buyer}</p><p className="text-xs font-bold">PT. Nusantara Hijau Tbk</p></div>
-              <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">{t.market.seller}</p><p className="text-xs font-bold">{matchResult.company}</p></div>
-            </div>
-            <div className="bg-green-50 rounded-xl p-3 text-sm">
-              <p className="text-xs text-gray-400 mb-1">MRV Data</p>
-              <p className="font-bold">{matchResult.company}</p>
-              {matchResult.ndvi && <p className="text-xs text-green-700 mt-1">NDVI {matchResult.ndvi} · Abs. {matchResult.absRate} tCO₂/ha/yr</p>}
-              <div className="flex justify-between mt-2 text-xs">
-                <span>Volume: <strong>500 t</strong></span>
-                <span>Price: <strong>${matchResult.price}/t</strong></span>
-              </div>
-              <p className="text-green-700 font-black mt-1">Total: ${(500 * matchResult.price).toLocaleString()} USD</p>
-            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sertifikat karbon (total 3 project - emisi) */}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-green-700 mb-1">📜 Sertifikat Kredit Karbon</p>
+        <p className="text-xs text-green-600">
+          Total serapan 3 lahan dikurangi emisi operasional →{" "}
+          <strong>{detailProject.available?.toLocaleString()} kredit karbon</strong> tersertifikasi ISO 14064
+        </p>
+        {detailProject.verified && (
+          <span className="inline-block mt-1.5 text-xs bg-green-700 text-white px-2 py-0.5 rounded-full font-bold">
+            ✅ Terverifikasi & dapat dibid
+          </span>
+        )}
+        {!detailProject.verified && (
+          <span className="inline-block mt-1.5 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+            ⏳ Belum upload sertifikat ISO — tidak bisa dibid
+          </span>
+        )}
+      </div>
+
+      {/* Form bid */}
+      {detailProject.verified ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold text-gray-700">Ajukan Harga Bid (USD/tCO₂)</p>
+          <div className="flex gap-2">
+            <input
+              type="number" min="0" step="0.1"
+              placeholder={`Harga ask: $${detailProject.price}`}
+              value={bidPrice}
+              onChange={e => setBidPrice(e.target.value)}
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
+            />
             <button
-              disabled={matchResult.isLocked}
-              onClick={() => { if (!matchResult.isLocked) { startTransaction(matchResult); setMatchModal(false); } }}
-              className={`w-full py-3 rounded-xl font-bold text-white
-                ${matchResult.isLocked ? "opacity-50 cursor-not-allowed bg-gray-400" : ""}`}
-              style={matchResult.isLocked ? {} : { background: "linear-gradient(135deg,#166634,#0f766e)" }}
-            >
-              {matchResult.isLocked ? "🔒 Proyek Terkunci" : t.market.proceed}
+              onClick={() => submitBid(detailProject)}
+              disabled={!bidPrice || submitted}
+              className="px-4 py-2 rounded-xl font-bold text-white text-xs disabled:opacity-50 transition-all active:scale-95"
+              style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+              {submitted ? "✓ Terkirim" : "Bid"}
             </button>
           </div>
-        ) : null}
-      </Modal>
+          {bidPrice && parseFloat(bidPrice) < detailProject.price && (
+            <p className="text-xs text-amber-600">
+              Bid kamu di bawah harga ask — penjual bisa menolak
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 font-bold text-center">
+          Penjual belum upload sertifikat ISO verifikasi. Tidak dapat dibid.
+        </div>
+      )}
+
+      {/* Daftar bid masuk */}
+      {bids[detailProject.id]?.length > 0 && (
+        <div>
+          <p className="text-xs font-bold text-gray-600 mb-2">Bid Masuk (tertinggi dulu)</p>
+          <div className="flex flex-col gap-1.5">
+            {bids[detailProject.id].map((b, i) => (
+              <div key={i} className={`flex items-center justify-between px-3 py-2 rounded-xl ${i === 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"}`}>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">{b.bidder}</p>
+                  <p className="text-xs text-gray-400">{b.time}</p>
+                </div>
+                <p className={`font-black text-sm ${i === 0 ? "text-green-700" : "text-gray-600"}`}>
+                  ${b.price}/t {i === 0 && "👑"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+</Modal>
     </div>
   );
 }

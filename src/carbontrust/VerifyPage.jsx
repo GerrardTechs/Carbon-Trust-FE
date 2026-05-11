@@ -5,11 +5,29 @@
 import { useState } from "react";
 import { useInterval, Spinner, Ic } from "./shared.jsx";
 
+
 export function VerifyPage({ t, parcels }) {
+  const [isoCert, setIsoCert]     = useState(null);
+const [certError, setCertError] = useState("");
+const [verified, setVerified]   = useState(false);
   const [dl, setDl] = useState(false);
   const [done, setDone] = useState(false);
   const [scanLine, setScanLine] = useState(0);
   useInterval(() => setScanLine(l => (l + 1) % 100), 30);
+
+  function handleIsoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowed = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowed.includes(file.type)) {
+      setCertError("File ditolak — harus PDF atau JPG/PNG");
+      setIsoCert(null);
+      return;
+    }
+    setIsoCert(file);
+    setCertError("");
+    setVerified(false);
+  }
 
   const geoLog = [
     { date: "2024-06-12 08:14", type: "IoT", msg: "Sensor C-12: CO₂ flux = 2.14 tCO₂/ha/day ✓", st: "ok" },
@@ -89,6 +107,41 @@ export function VerifyPage({ t, parcels }) {
           ))}
         </div>
       </div>
+      
+      {/* ISO Cert Upload */}
+<div className="card p-4 flex flex-col gap-3">
+  <div className="flex items-center justify-between">
+    <p className="text-sm font-bold text-gray-800">📋 Upload Sertifikat Verifikasi ISO</p>
+    {verified && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">✅ Verified</span>}
+  </div>
+  <p className="text-xs text-gray-500">
+    Upload sertifikat ISO 14064 dari lembaga verifikasi. Wajib agar kredit karbon bisa ditawarkan di market.
+  </p>
+
+  <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
+    ${isoCert ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}>
+    <span className="text-2xl">{isoCert ? "📄" : "⬆️"}</span>
+    <div className="flex-1">
+      <p className="text-xs font-bold text-gray-700">
+        {isoCert ? isoCert.name : "Upload Sertifikat ISO 14064"}
+      </p>
+      <p className="text-xs text-gray-400">PDF / JPG / PNG · maks 10MB</p>
+    </div>
+    {isoCert && <span className="text-green-600 font-bold text-xs">✓</span>}
+    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleIsoUpload} />
+  </label>
+
+  {certError && <p className="text-xs text-red-600">{certError}</p>}
+
+  {isoCert && !verified && (
+    <button
+      onClick={() => setVerified(true)}
+      className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
+      style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+      Submit untuk Verifikasi
+    </button>
+  )}
+</div>
 
       <button onClick={() => { setDl(true); setTimeout(() => { setDl(false); setDone(true); }, 2500); }} disabled={dl}
         className={`flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-bold transition-all ${done ? "bg-green-50 text-green-700 border border-green-200" : "text-white active:scale-95"} disabled:opacity-60`}
