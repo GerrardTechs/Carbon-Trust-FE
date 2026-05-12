@@ -458,7 +458,7 @@ export function SparkLine({ data, color = "#22c55e", h = 36 }) {
 export function Logo({ size = 38 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <img src={logoJpg} alt="Logo CarbonTrust" style={{ width: size, height: size }}
+      <img src={/public/logo.jpg} alt="Logo CarbonTrust" style={{ width: size, height: size }}
         className="object-contain rounded-lg shadow-sm" />
       <div>
         <div className="leading-none">
