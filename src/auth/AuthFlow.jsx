@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
+import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "../carbontrust/shared.jsx";
 
 // ─── Data kuesioner inline (atau ganti dengan: import qData from "./quisioner.json") ───
 const Q_DATA = {
