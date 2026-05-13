@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-<img src="/logo.jpg" alt="Logo CarbonTrust" style={{ width: size, height: size }} />
+<img src="../public/logo.jpg" alt="Logo CarbonTrust" style={{ width: size, height: size }} />
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 export const API = "https://carbon-trust-be.onrender.com/api";
