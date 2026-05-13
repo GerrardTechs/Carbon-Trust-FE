@@ -134,7 +134,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   const si   = STAGES.findIndex(s => txCount >= s.mn && txCount <= s.mx);
   const cs   = STAGES[si] || STAGES[STAGES.length - 1];
   const prog = cs.nxt ? Math.min(((txCount - cs.mn) / (cs.nxt - cs.mn)) * 100, 100) : 100;
-  const esgColor = company.esgScore >= 70 ? "text-green-700" : company.esgScore >= 50 ? "text-amber-600" : "text-red-600";
+  const esgColor = company?.esgscore >= 70 ? "text-green-700" : company?.esgscore >= 50 ? "text-amber-600" : "text-red-600";
 
   // ─── Helper: answer change ────────────────────────────────────────────────
   const handleQAnswer = (key, val) => setQAnswers(prev => ({ ...prev, [key]: val }));
@@ -357,14 +357,14 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
             {t.profile?.esgStatus?.[company.esgStatus || "not_started"] || company.esgStatus}
           </span>
         </div>
-        {company.esgScore !== null ? (
+        {company?.esgscore !== null ? (
           <div className="flex items-center gap-3">
-            <p className={`text-4xl font-black ${esgColor}`}>{company.esgScore}</p>
+            <p className={`text-4xl font-black ${esgColor}`}>{company?.esgscore}</p>
             <div className="flex-1">
               <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-500
-                  ${company.esgScore >= 70 ? "bg-green-500" : company.esgScore >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                  style={{ width:`${company.esgScore}%` }} />
+                  ${company?.esgscore >= 70 ? "bg-green-500" : company?.esgscore >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                  style={{ width:`${company?.esgscore}%` }} />
               </div>
               <p className="text-xs text-gray-400 mt-1">{t.profile?.esgVerified || "AI-verified · Scale 0–100"}</p>
             </div>
