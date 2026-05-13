@@ -409,9 +409,9 @@ export const MOCK_PROJECTS = [
   { id:"PRJ-004",company:"Amazon Blue Carbon Ltd",country:"Brazil",flag:"🇧🇷",price:22.0,available:950,type:"Blue Carbon",verified:false,rating:4.8,ndvi:0.72,absRate:11.4, isLocked: false },
 ];
 
-if (proj) proj.isLocked = true;
 export function lockProject(id) {
   const proj = MOCK_PROJECTS.find(p => p.id === id);
+  if (proj) proj.isLocked = true;
 }
 // ─── SHARED UI ─────────────────────────────────────────────────────────────
 export function Modal({ open, onClose, title, children, wide }) {
