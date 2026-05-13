@@ -67,7 +67,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   const [saved, setSaved] = useState(false);
 
   // ── Virtual tree ──────────────────────────────────────────────────────────
-  const [txCount, setTxCount] = useState(company.totalTransactions || 14);
+  const [txCount, setTxCount] = useState(company?.totalTransactions || 14);
   const [glowing, setGlowing] = useState(false);
 
   // ── Questionnaire local answers ───────────────────────────────────────────
