@@ -134,7 +134,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   const si   = STAGES.findIndex(s => txCount >= s.mn && txCount <= s.mx);
   const cs   = STAGES[si] || STAGES[STAGES.length - 1];
   const prog = cs.nxt ? Math.min(((txCount - cs.mn) / (cs.nxt - cs.mn)) * 100, 100) : 100;
-  const esgColor = company?.esgScore >= 70 ? "text-green-700" : company??.esgscore >= 50 ? "text-amber-600" : "text-red-600";
+  const esgColor = company?.esgScore >= 70 ? "text-green-700" : company?.esgscore >= 50 ? "text-amber-600" : "text-red-600";
 
   // ─── Helper: answer change ────────────────────────────────────────────────
   const handleQAnswer = (key, val) => setQAnswers(prev => ({ ...prev, [key]: val }));
