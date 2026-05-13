@@ -120,25 +120,41 @@ async function handleDismiss(alertId) {
       </div>
 
       {/* KPI cards */}
-      <div className="px-4 grid grid-cols-3 gap-2">
-        {[
-          { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
-          { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
-          { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
-        ].map((k, i) => (
-          <div key={i} className="card p-3 text-center">
-            <p className="text-xl mb-0.5">{k.icon}</p>
-            <p className={`font-black text-sm ${k.color === "emerald" ? "text-emerald-700" : k.color === "red" ? "text-red-600" : "text-teal-700"}`}>{k.v}</p>
-            <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
-            {k.delta !== 0 && (
-              <p className={`text-xs font-bold mt-0.5 ${k.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                ({k.delta > 0 ? "▲" : "▼"}{Math.abs(k.delta)}%)
-              </p>
-            )}
-            <p className="text-xs text-gray-500 leading-tight mt-0.5">{k.l}</p>
-          </div>
-        ))}
-      </div>
+<div className="px-4 grid grid-cols-3 gap-2">
+  {[
+    { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
+    { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
+    { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
+  ].map((k, i) => (
+    <div key={i} className="card p-3 text-center">
+      <p className="text-xl mb-0.5">{k.icon}</p>
+      <p className={`font-black text-sm ${k.color === "emerald" ? "text-emerald-700" : k.color === "red" ? "text-red-600" : "text-teal-700"}`}>
+        {k.v}
+      </p>
+      <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
+      {k.delta !== 0 && (
+        <p className={`text-xs font-bold mt-0.5 ${k.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+          ({k.delta > 0 ? "▲" : "▼"}{Math.abs(k.delta)}%)
+        </p>
+      )}
+      <p className="text-xs text-gray-500 leading-tight mt-0.5">{k.l}</p>
+    </div>
+  ))}
+</div>
+
+{/* Quick links */}
+<div className="px-4 grid grid-cols-2 gap-2">
+  <button 
+    onClick={() => setPage("certificate")}
+    className="card p-3 flex items-center gap-2 active:scale-95 transition-all"
+  >
+    <span className="text-xl">📜</span>
+    <div className="text-left">
+      <p className="text-xs font-bold text-gray-700">Sertifikat</p>
+      <p className="text-xs text-gray-400">Kredit karbon</p>
+    </div>
+  </button>
+</div>
 
       {/* Credits */}
       <div className="px-4 grid grid-cols-2 gap-2">

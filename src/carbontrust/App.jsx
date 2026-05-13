@@ -29,6 +29,8 @@ import {MarketPage} from "./MarketPage.jsx";
 import {TxPage}     from "./TxPage.jsx";
 import {VerifyPage} from "./VerifyPage.jsx";
 import {ProfilePage} from "./ProfilePage.jsx";
+import { CertificatePage }    from "./CertificatePage.jsx";
+
 
 export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
@@ -68,8 +70,10 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "land":    return <LandPage    parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
       case "calc":    return <CalcPage    t={t} setPage={setPage} />;
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
-      case "market":  return <MarketPage t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;
-      case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
+      case "market":  return <MarketPage t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;      
+      case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} />;
+case "projects":    return <ActiveProjectPage t={t} company={company} />;
+case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
       case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;

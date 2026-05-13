@@ -13,7 +13,7 @@ export function LandPage({ parcels, setParcels, t, lang }) {
   const [addModal, setAddModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
   const [selParcel, setSelParcel] = useState(null);
-  const [form, setForm] = useState({ name: "", type: "forest", area: "", lat: "", lng: "", depth: "" });
+  const [form, setForm] = useState({ name: "", type: "forest", area: "", lat: "", lng: "", depth: "", humidity: "", locType: "site"});
   const [saving, setSaving] = useState(false);
   const [scanLine, setScanLine] = useState(0);
   const [viewAll, setViewAll] = useState(false);
@@ -45,7 +45,7 @@ export function LandPage({ parcels, setParcels, t, lang }) {
     setSimModal(false);
   }
 
-  const LF = { forest: "#166534", peatland: "#92400e", mangrove: "#0e7490", agricultural: "#a16207", industrial: "#475569" };
+  const LF = { forest: "#166534", peatland: "#92400e", mangrove: "#0e7490", agricultural: "#a16207", industrial: "#475569", seawater: "#0369a1"};
   const SS = { healthy: "#22c55e", flooded: "#60a5fa", degraded: "#f59e0b", burned: "#ef4444", drying: "#fb923c" };
   const displayParcels = viewAll ? parcels : parcels.slice(0, 3);
 
@@ -161,6 +161,7 @@ export function LandPage({ parcels, setParcels, t, lang }) {
                 { l: "Lat", v: selParcel.lat },
                 { l: "Lng", v: selParcel.lng },
                 ...(selParcel.depth ? [{ l: "Depth", v: `${selParcel.depth}m` }] : []),
+                ...(selParcel.humidity != null ? [{ l:"Humidity", v:`${selParcel.humidity}%`, c: selParcel.humidity < 40 ? "text-red-600" : selParcel.humidity > 70 ? "text-blue-600" : "text-green-700" }] : []),
               ].map((item, i) => (
                 <div key={i} className="bg-gray-50 rounded-xl p-2 text-center">
                   <p className="text-xs text-gray-400">{item.l}</p>
@@ -193,6 +194,32 @@ export function LandPage({ parcels, setParcels, t, lang }) {
                 </div>
               );
             })()}
+            {selParcel.type === "peatland" && (
+              <div className={`rounded-xl border px-3 py-2.5 mb-3 ${
+                (selParcel.humidity ?? 60) < 40
+                  ? "bg-red-50 border-red-200"
+                  : (selParcel.humidity ?? 60) < 60
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-blue-50 border-blue-200"
+              }`}>
+                <p className="text-xs font-bold mb-1 text-gray-700">
+                  💧 Kelembaban Gambut: {selParcel.humidity ?? "—"}%
+                </p>
+                {(selParcel.humidity ?? 60) < 40 ? (
+                  <p className="text-xs text-red-600">
+                    ⚠️ Gambut <strong>sangat kering</strong> — melepas CO₂ & CH₄ aktif. Segera rewetting.
+                  </p>
+                ) : (selParcel.humidity ?? 60) < 60 ? (
+                  <p className="text-xs text-amber-600">
+                    Kelembaban mulai turun — risiko emisi meningkat.
+                  </p>
+                ) : (
+                  <p className="text-xs text-blue-600">
+                    Kelembaban optimal — gambut menyerap CO₂ dengan baik.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex gap-2">
               <button onClick={() => { setSelParcel(selParcel); setSimModal(true); }}
                 className="flex-1 bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-100">
@@ -217,7 +244,7 @@ export function LandPage({ parcels, setParcels, t, lang }) {
               className={`card flex items-center gap-3 p-3 text-left transition-all ${selParcel?.id === p.id ? "border-2 border-green-400 shadow-md" : ""}`}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
                 style={{ background: LF[p.type] + "22" }}>
-                {p.type === "forest" ? "🌲" : p.type === "peatland" ? "🌾" : p.type === "mangrove" ? "🌴" : "🏞️"}
+                {p.type === "forest" ? "🌲" : p.type === "seawater" ? "🌊" : p.type === "peatland" ? "🌾" : p.type === "mangrove" ? "🌴" : "🏞️"}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-800 text-sm">{p.name}</p>
@@ -268,11 +295,30 @@ export function LandPage({ parcels, setParcels, t, lang }) {
       {/* Add Parcel Modal */}
       <Modal open={addModal} onClose={() => setAddModal(false)} title={`➕ ${t.land.addParcel}`}>
         <div className="flex flex-col gap-3">
-          {[
+        <div>
+      <label className="text-xs font-bold text-gray-600 block mb-1">Tipe Lokasi</label>
+      <div className="flex gap-2">
+        {[
+          { val:"site",   label:"🌿 Site / Lahan" },
+          { val:"office", label:"🏢 Kantor" },
+        ].map(opt => (
+          <button key={opt.val} type="button"
+            onClick={() => setForm(p => ({ ...p, locType: opt.val }))}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all
+              ${(form.locType || "site") === opt.val
+                ? "bg-slate-800 text-white border-slate-800"
+                : "bg-white border-gray-200 text-gray-600"}`}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+          {[         
             { l: t.land.name, k: "name", ph: "e.g. Borneo Forest Block C" },
             { l: t.land.area, k: "area", ph: "450", type: "number" },
             { l: t.land.lat, k: "lat", ph: "-1.2412", type: "number" },
             { l: t.land.lng, k: "lng", ph: "113.9213", type: "number" },
+            { l: "Humidity Sensor (%)", k: "humidity", ph: "65", type: "number" },
           ].map(f => (
             <div key={f.k}>
               <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
@@ -296,6 +342,16 @@ export function LandPage({ parcels, setParcels, t, lang }) {
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
             </div>
           )}
+          {form.type === "seawater" && (
+  <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
+    <p className="text-xs font-bold text-blue-700 mb-1">🌊 Catatan Lahan Laut</p>
+    <p className="text-xs text-blue-600">
+      Lahan laut/pesisir adalah penyerap karbon terbesar (Blue Carbon).
+      Metode equity tidak berlaku — kepemilikan berdasarkan batas wilayah yang diizinkan.
+      Kaitkan dengan proyek mangrove jika ada.
+    </p>
+  </div>
+)}
           {/* GMaps preview link */}
           {form.lat && form.lng && (
             <a href={`https://www.google.com/maps?q=${form.lat},${form.lng}&t=k`} target="_blank" rel="noreferrer"

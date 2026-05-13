@@ -297,6 +297,7 @@ export const ABS_RATES = {
   forest:       { healthy:8.5, flooded:3.2, degraded:1.5, burned:-50,  drying:0    },
   peatland:     { healthy:2.1, flooded:0.8, degraded:-15, burned:-120, drying:-25  },
   mangrove:     { healthy:11.4,flooded:4.5, degraded:2.0, burned:-30,  drying:0    },
+  seawater:     { healthy: 14.0, flooded: 14.0, degraded: 5.0, burned: -20.0, drying: 0 },
   agricultural: { healthy:1.2, flooded:0.2, degraded:0.5, burned:-5,   drying:0    },
   industrial:   { healthy:0.0, flooded:0.0, degraded:0.0, burned:0,    drying:0    },
 };
