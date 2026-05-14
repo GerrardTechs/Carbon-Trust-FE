@@ -11,9 +11,6 @@ import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR } from "./shared.jsx";
 // Solar (HSD) density ≈ 0.832 kg/liter (Pertamina standard)
 // EF solar = 2.68 kg CO₂/liter  →  already per-liter, no extra conversion needed
 // We show the intermediate kg mass to the user for transparency
-function literToKg(liters, density = 0.832) {
-  return +(liters * density).toFixed(2);
-}
 
 // Group EF keys by scope then category
 const SCOPE_KEYS = { 1: [], 2: [], 3: [] };
@@ -43,6 +40,10 @@ export function CalcPage({ t = TR.en}) {
   const [certFile, setCertFile]     = useState(null);
   const [certError, setCertError]   = useState("");
   const [certOk, setCertOk]       = useState(false);
+  const [freightTons, setFreightTons] = useState({
+    freightRoad: "",
+    freightShip: "",
+  });
 
 function handleCertUpload(e) {
   const file = e.target.files[0];
@@ -70,11 +71,15 @@ function handleCertUpload(e) {
 
     Object.entries(EF).forEach(([k, ef]) => {
       const raw = parseFloat(inputs[k]) || 0;
+      
       if (raw <= 0) return;
 
       // For stationary/mobile diesel (liter input), show kg intermediate
-      const kgMass = ef.litToKg ? literToKg(raw, ef.litToKg) : null;
-      const em = +(raw * ef.ef * eqFactor).toFixed(3);
+      const isTkm = (k === "freightRoad" || k === "freightShip");
+const tons  = isTkm ? (parseFloat(freightTons[k]) || 0) : 1;
+if (isTkm && tons <= 0) return;
+const effectiveVal = isTkm ? raw * tons : raw;
+const em = +(effectiveVal * ef.ef * eqFactor).toFixed(3);
 
 
       if (ef.scope === 1) s1 += em;
@@ -82,11 +87,11 @@ function handleCertUpload(e) {
       else s3 += em;
 
       breakdown.push({
-        key: k, val: raw, ef: ef.ef, unit: ef.unit,
-        emission: em, scope: ef.scope,
-        category: ef.category,
-        kgMass,
-        source: ef.source || EF_LABELS[k],
+        key: k, val: raw, ef: ef.ef,
+  unit: isTkm ? `km × ${tons} ton = ${+(raw*tons).toFixed(1)} tkm` : ef.unit,
+  emission: em, scope: ef.scope,
+  category: ef.category,
+  source: ef.source || EF_LABELS[k],
       });
     });
 
@@ -263,12 +268,11 @@ function handleCertUpload(e) {
                     </div>
 
                     {/* Live conversion preview: liter → kg bahan bakar → kg CO₂ */}
-                    {kgPreview && (
-                      <p className="text-xs text-amber-600 mt-1 bg-amber-50 rounded-lg px-2 py-1">
-                        {raw} liter × 0.832 = <strong>{kgPreview} kg</strong> solar →{" "}
-                        <strong>{emPreview} kg CO₂</strong>
-                      </p>
-                    )}
+                    {ef.unit === "liter" && emPreview && (
+  <p className="text-xs text-amber-600 mt-1 bg-amber-50 rounded-lg px-2 py-1">
+    {raw} liter × EF {ef.ef} = <strong>{emPreview} kg CO₂e</strong>
+  </p>
+)}
                     {/* Live emission preview for non-liter inputs */}
                     {!kgPreview && emPreview && (
                       <p className="text-xs text-slate-500 mt-1">
@@ -278,11 +282,11 @@ function handleCertUpload(e) {
 
                     {/* Scope 2 helper */}
                     {cat === "electricity" && raw > 0 && (
-                      <p className="text-xs text-blue-600 mt-1 bg-blue-50 rounded-lg px-2 py-1">
-                        {raw} kWh × EF PLN 0.87 = <strong>{emPreview} kg CO₂e</strong>{" "}
-                        <span className="text-blue-400">(grid Indonesia)</span>
-                      </p>
-                    )}
+  <p className="text-xs text-blue-600 mt-1 bg-blue-50 rounded-lg px-2 py-1">
+    {raw} kWh × EF 0.87 = <strong>{emPreview} kg CO₂e</strong>{" "}
+    <span className="text-blue-400">· Grid PLN Indonesia (Sumber: ESDM 2023)</span>
+  </p>
+)}
 
                     {/* Scope 3 freight/delivery helper */}
                     {(k === "fuelDelivery") && raw > 0 && (
@@ -291,6 +295,28 @@ function handleCertUpload(e) {
                         <span className="text-yellow-500">(ongkir BB darat)</span>
                       </p>
                     )}
+
+                    {/* Setelah input field biasa, tambah field ton untuk freight */}
+{(k === "freightRoad" || k === "freightShip") && (
+  <div className="mt-2">
+    <div className="flex items-center justify-between mb-1">
+      <label className="text-xs font-bold text-gray-700">Berat Muatan</label>
+      <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">ton</span>
+    </div>
+    <input
+      type="number" min="0" placeholder="e.g. 5"
+      value={freightTons[k]}
+      onChange={e => setFreightTons(f => ({ ...f, [k]: e.target.value }))}
+      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
+    />
+    {inputs[k] && freightTons[k] && (
+      <p className="text-xs text-yellow-700 mt-1 bg-yellow-50 rounded-lg px-2 py-1">
+        {inputs[k]} km × {freightTons[k]} ton = <strong>{+(parseFloat(inputs[k]) * parseFloat(freightTons[k])).toFixed(1)} tkm</strong>
+        {" × EF "}{ef.ef} = <strong>{+(parseFloat(inputs[k]) * parseFloat(freightTons[k]) * ef.ef).toFixed(2)} kg CO₂e</strong>
+      </p>
+    )}
+  </div>
+)}
                   </div>
                 );
               })}
@@ -363,9 +389,7 @@ function handleCertUpload(e) {
                     <div>
                       <p className="text-xs font-semibold text-gray-700">{b.source}</p>
                       <p className="text-xs text-gray-400">
-                        Scope {b.scope} · {b.val} {b.unit}
-                        {b.kgMass ? ` → ${b.kgMass} kg bahan bakar` : ""}
-                        {" × EF "}{b.ef}
+                        Scope {b.scope} · {b.val} {b.unit} × EF {b.ef}
                       </p>
                     </div>
                     <p className="font-bold text-red-600 text-sm">{b.emission.toLocaleString()} kg</p>

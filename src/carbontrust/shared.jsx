@@ -303,14 +303,14 @@ export const ABS_RATES = {
 // Solar/HSD conversion: input liter → auto convert to kg (×0.832) internally
 export const EF = {
   // ── Scope 1: Stationary Combustion ──────────────────────────
-  genset:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Genset (Solar/HSD)" },
-  boiler:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Boiler (Solar/HSD)" },
-  furnace:     { ef:2.68,  unit:"liter", scope:1, category:"stationary", litToKg:0.832, source:"Furnace (Solar/HSD)" },
+  genset:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Genset (Solar/HSD)" },
+  boiler:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Boiler (Solar/HSD)" },
+  furnace:     { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Furnace (Solar/HSD)" },
   lpg:         { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"LPG" },
   naturalGas:  { ef:2.04,  unit:"m³",   scope:1, category:"stationary", source:"Natural Gas" },
   coal:        { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Coal / Batubara" },
   // ── Scope 1: Mobile Combustion / Transport ──────────────────
-  diesel:      { ef:2.68,  unit:"liter", scope:1, category:"mobile", litToKg:0.832, source:"Diesel (kendaraan)" },
+  diesel:      { ef:2.68,  unit:"liter", scope:1, category:"mobile", source:"Diesel (kendaraan)" },
   petrol:      { ef:2.31,  unit:"liter", scope:1, category:"mobile", source:"Bensin/Premium" },
   truck:       { ef:0.120, unit:"km",    scope:1, category:"mobile", source:"Truk besar / Fuso" },
   smallTruck:  { ef:0.085, unit:"km",    scope:1, category:"mobile", source:"Truk kecil / Pick-up" },
@@ -342,6 +342,12 @@ export const EF_LABELS = {
   freightRoad:"Pengiriman darat", freightShip:"Pengiriman laut",
   fuelDelivery:"Ongkir bahan bakar",
   waste:"Limbah operasional",
+  truck:      "Truk Besar / Fuso (>5 ton)",
+smallTruck: "Truk Kecil / Pick-up (<5 ton)",
+opCar:      "Mobil Operasional (BBM/Bensin)",
+bus:        "Bus / Minibus Penumpang",
+diesel:     "Kendaraan Diesel (umum)",
+petrol:     "Kendaraan Bensin (umum)",
 };
 
 // Category labels for grouping in CalcPage
