@@ -106,7 +106,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   }
 
   async function generateWallet() {
-    if (company.walletGenerated) return;
+    if (company?.walletGenerated) return;
     const res = await apiFetch(`/company/${COMPANY_ID}/generate-wallet`, { method:"POST" });
     if (res?.walletId) setCompany(c => ({ ...c, walletId:res.walletId, walletGenerated:true }));
   }
@@ -167,12 +167,12 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
           {/* Avatar initials */}
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white shadow-md flex-shrink-0"
             style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-            {company.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
+            {company?.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-black text-gray-800 text-lg leading-tight">{company.name}</h2>
-            <p className="text-green-600 text-sm font-semibold">{company.entity}</p>
-            <p className="text-gray-400 text-xs truncate">{company.location}</p>
+            <h2 className="font-black text-gray-800 text-lg leading-tight">{company?.name}</h2>
+            <p className="text-green-600 text-sm font-semibold">{company?.entity}</p>
+            <p className="text-gray-400 text-xs truncate">{company?.location}</p>
           </div>
           {/* Exit + Settings buttons */}
           <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-gray-50 rounded-xl p-2">
             <p className="text-gray-400">{t.profile?.bizTypeLabel || "Business Type"}</p>
-            <p className="font-bold text-gray-700">{company.bizType}</p>
+            <p className="font-bold text-gray-700">{company?.bizType}</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-2">
             <p className="text-gray-400">{t.profile?.txCount || "Transactions"}</p>
@@ -199,7 +199,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
           </div>
           <div className="bg-gray-50 rounded-xl p-2 col-span-2">
             <p className="text-gray-400">{t.profile?.removalProjectLabel || "Removal Project"}</p>
-            <p className="font-bold text-gray-700">{company.removalProject}</p>
+            <p className="font-bold text-gray-700">{company?.removalProject}</p>
           </div>
         </div>
       </div>
@@ -330,7 +330,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       <div className="card p-4">
         <div className="flex items-center justify-between mb-2">
           <p className="font-bold text-gray-800 text-sm">{t.profile?.wallet || "Blockchain Wallet ID"}</p>
-          {!company.walletGenerated && (
+          {!company?.walletGenerated && (
             <button onClick={() => setWalletModal(true)}
               className="text-xs text-white px-3 py-1.5 rounded-xl font-bold"
               style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
@@ -338,9 +338,9 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
             </button>
           )}
         </div>
-        {company.walletGenerated ? (
+        {company?.walletGenerated ? (
           <div className="bg-teal-50 border border-teal-200 rounded-xl p-3">
-            <p className="font-mono text-xs text-teal-700 break-all">{company.walletId}</p>
+            <p className="font-mono text-xs text-teal-700 break-all">{company?.walletId}</p>
             <p className="text-xs text-teal-600 mt-1">{t.profile?.walletStored || "✓ Permanently stored"}</p>
           </div>
         ) : (
@@ -353,8 +353,8 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
         <div className="flex items-center justify-between mb-2">
           <p className="font-bold text-gray-800 text-sm">{t.profile?.esg || "ESG Score"}</p>
           <span className={`text-xs px-2 py-0.5 rounded-full font-bold
-            ${company.esgStatus === "verified" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-            {t.profile?.esgStatus?.[company.esgStatus || "not_started"] || company.esgStatus}
+            ${company?.esgStatus === "verified" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+            {t.profile?.esgStatus?.[company?.esgStatus || "not_started"] || company?.esgStatus}
           </span>
         </div>
         {company?.esgScore !== null ? (

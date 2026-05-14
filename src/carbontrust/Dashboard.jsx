@@ -106,7 +106,7 @@ async function handleDismiss(alertId) {
       {/* Hero */}
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg,#14532d 0%,#0f766e 100%)" }}>
         <div className="p-4">
-          <p className="text-green-200 text-xs font-bold uppercase tracking-widest">{company.name}</p>
+          <p className="text-green-200 text-xs font-bold uppercase tracking-widest">{company?.name}</p>
           <p className="text-white/80 text-xs mt-0.5">{t.dash.tagline}</p>
           <div className="flex gap-1 mt-3">
             {["t","kt","Mt","kg"].map(u => (
