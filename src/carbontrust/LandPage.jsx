@@ -6,7 +6,7 @@ import { useState } from "react";
 import {
   COMPANY_ID, apiFetch, ABS_RATES,
   calcAbsorption, useInterval,
-  Modal, SBadge, Ic,
+  Modal, SBadge, Ic, Spinner
 } from "./shared.jsx";
 
 export function LandPage({ parcels, setParcels, t, lang }) {
@@ -294,13 +294,15 @@ export function LandPage({ parcels, setParcels, t, lang }) {
 
       {/* Add Parcel Modal */}
       <Modal open={addModal} onClose={() => setAddModal(false)} title={`➕ ${t.land.addParcel}`}>
-        <div className="flex flex-col gap-3">
-        <div>
+  <div className="flex flex-col gap-3">
+    
+    {/* Tipe Lokasi */}
+    <div>
       <label className="text-xs font-bold text-gray-600 block mb-1">Tipe Lokasi</label>
       <div className="flex gap-2">
         {[
-          { val:"site",   label:"🌿 Site / Lahan" },
-          { val:"office", label:"🏢 Kantor" },
+          { val: "site", label: "🌿 Site / Lahan" },
+          { val: "office", label: "🏢 Kantor" },
         ].map(opt => (
           <button key={opt.val} type="button"
             onClick={() => setForm(p => ({ ...p, locType: opt.val }))}
@@ -313,59 +315,98 @@ export function LandPage({ parcels, setParcels, t, lang }) {
         ))}
       </div>
     </div>
-          {[         
-            { l: t.land.name, k: "name", ph: "e.g. Borneo Forest Block C" },
-            { l: t.land.area, k: "area", ph: "450", type: "number" },
-            { l: t.land.lat, k: "lat", ph: "-1.2412", type: "number" },
-            { l: t.land.lng, k: "lng", ph: "113.9213", type: "number" },
-            { l: "Humidity Sensor (%)", k: "humidity", ph: "65", type: "number" },
-          ].map(f => (
-            <div key={f.k}>
-              <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
-              <input type={f.type || "text"} placeholder={f.ph} value={form[f.k]}
-                onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
-            </div>
-          ))}
-          <div>
-            <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
-            <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-              {Object.entries(t.land.types).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+
+    {/* Form Fields berdasarkan locType */}
+    {(form.locType || "site") === "office" ? (
+      <div>
+        <label className="text-xs font-bold text-gray-600 block mb-1">Alamat Kantor</label>
+        <input 
+          type="text" 
+          placeholder="e.g. Jl. Sudirman No. 1, Jakarta"
+          value={form.officeAddress || ""}
+          onChange={e => setForm(p => ({ ...p, officeAddress: e.target.value }))}
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
+        />
+      </div> 
+    ) : (
+      <>
+        {/* Input Standard Lahan */}
+        {[
+          { l: t.land.name, k: "name", ph: "e.g. Borneo Forest Block C" },
+          { l: t.land.area, k: "area", ph: "450", type: "number" },
+          { l: t.land.lat, k: "lat", ph: "-1.2412", type: "number" },
+          { l: t.land.lng, k: "lng", ph: "113.9213", type: "number" },
+          { l: "Humidity Sensor (%)", k: "humidity", ph: "65", type: "number" },
+        ].map(f => (
+          <div key={f.k}>
+            <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
+            <input 
+              type={f.type || "text"} 
+              placeholder={f.ph} 
+              value={form[f.k] || ""} 
+              onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
+            />
           </div>
-          {form.type === "peatland" && (
-            <div>
-              <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.depth}</label>
-              <input type="number" placeholder="4.5" value={form.depth}
-                onChange={e => setForm(p => ({ ...p, depth: e.target.value }))}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
-            </div>
-          )}
-          {form.type === "seawater" && (
-  <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
-    <p className="text-xs font-bold text-blue-700 mb-1">🌊 Catatan Lahan Laut</p>
-    <p className="text-xs text-blue-600">
-      Lahan laut/pesisir adalah penyerap karbon terbesar (Blue Carbon).
-      Metode equity tidak berlaku — kepemilikan berdasarkan batas wilayah yang diizinkan.
-      Kaitkan dengan proyek mangrove jika ada.
-    </p>
-  </div>
-)}
-          {/* GMaps preview link */}
-          {form.lat && form.lng && (
-            <a href={`https://www.google.com/maps?q=${form.lat},${form.lng}&t=k`} target="_blank" rel="noreferrer"
-              className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-              <Ic.Map />Preview on Google Maps →
-            </a>
-          )}
-          <button onClick={addParcel} disabled={saving || !form.name || !form.area || !form.lat || !form.lng}
-            className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-40 flex items-center justify-center gap-2"
-            style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-            {saving ? <Spinner /> : null}{t.common.add}
-          </button>
+        ))}
+
+        {/* Tipe Lahan Select */}
+        <div>
+          <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
+          <select value={form.type || ""} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+            {Object.entries(t.land.types || {}).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
         </div>
-      </Modal>
+
+        {/* Peatland Depth */}
+        {form.type === "peatland" && (
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.depth}</label>
+            <input type="number" placeholder="4.5" value={form.depth || ""}
+              onChange={e => setForm(p => ({ ...p, depth: e.target.value }))}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+          </div>
+        )}
+
+        {/* Seawater Notes */}
+        {form.type === "seawater" && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
+            <p className="text-xs font-bold text-blue-700 mb-1">🌊 Catatan Lahan Laut</p>
+            <p className="text-xs text-blue-600">
+              Lahan laut/pesisir adalah penyerap karbon terbesar (Blue Carbon).
+              Metode equity tidak berlaku — kepemilikan berdasarkan batas wilayah yang diizinkan.
+              Kaitkan dengan proyek mangrove jika ada.
+            </p>
+          </div>
+        )}
+
+        {/* GMaps preview link */}
+        {form.lat && form.lng && (
+          <a href={`https://maps.google.com/?q=${form.lat},${form.lng}&t=k`} target="_blank" rel="noreferrer"
+            className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1">
+            <Ic.Map />Preview on Google Maps →
+          </a>
+        )}
+      </>
+    )}
+
+    {/* Tombol Submit dipindah ke luar kondisi agar selalu muncul */}
+    <button 
+      onClick={addParcel} 
+      disabled={
+        saving || 
+        ((form.locType || "site") === "office" 
+          ? !form.officeAddress 
+          : (!form.name || !form.area || !form.lat || !form.lng))
+      }
+      className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-40 flex items-center justify-center gap-2 mt-2 transition-all hover:opacity-90"
+      style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+      {saving ? <Spinner /> : null}{t.common.add}
+    </button>
+
+  </div>
+</Modal>
     </div>
   );
 }
