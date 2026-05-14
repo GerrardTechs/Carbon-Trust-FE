@@ -524,7 +524,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       </Modal>
 
       {/* Exit Modal */}
-      <Modal open={exitModal} onClose={() => setExitModal(false)} title={`🚪 ${t.exit?.title || "Exit Application"}`}>
+      <Modal open={exitModal} onClose={() => setExitModal(true)} title={`🚪 ${t.exit?.title || "Exit Application"}`}>
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-500 text-center">{t.exit?.desc || "What would you like to do?"}</p>
           

@@ -74,7 +74,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} />;
 case "projects":    return <ActiveProjectPage t={t} company={company} />;
 case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
-      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
+      case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
