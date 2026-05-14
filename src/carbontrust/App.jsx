@@ -41,7 +41,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   const [projects, setProjects] = useState(MOCK_PROJECTS);
   const [activeTx, setActiveTx] = useState(null);
 
-  const t = TR[lang] || TR.en;
+  const t = TR[lang] ?? TR["en"];
 
   // Load real data from backend (fallback: mock data stays)
   useEffect(() => {
@@ -72,8 +72,8 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
       case "market":  return <MarketPage t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;      
       case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} />;
-case "projects":    return <ActiveProjectPage t={t} company={company} />;
-case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
+      case "projects":    return <ActiveProjectPage t={t} company={company} />;
+      case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
       case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
       default:        return <Dashboard   parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;

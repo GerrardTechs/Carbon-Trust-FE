@@ -501,7 +501,7 @@ export const Ic = {
 // ─── LANG SELECTOR ─────────────────────────────────────────────────────────
 export function LangSel({ lang, setLang }) {
   const [open, setOpen] = useState(false);
-  const t = TR[lang];
+  const t = TR[lang] ?? TR["en"];
   return (
     <div className="relative">
       <button onClick={() => setOpen(o => !o)}

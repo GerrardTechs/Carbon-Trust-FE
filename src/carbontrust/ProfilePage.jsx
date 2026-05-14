@@ -51,6 +51,8 @@ const Q_DATA = {
 };
 
 export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qStatus, updateQStatus }) {
+  console.log("ProfilePage t:", t);
+  console.log("ProfilePage onExit:", onExit);
   // ── Modal states ──────────────────────────────────────────────────────────
   const [settingsModal, setSettingsModal] = useState(false);
   const [esgModal,      setEsgModal]      = useState(false);
