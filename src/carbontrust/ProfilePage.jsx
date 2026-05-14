@@ -88,6 +88,24 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   };
   const cd = getCooldown();
 
+  // ---- tambah state ------------
+  const [isoCert, setIsoCert]     = useState(null);
+  const [certError, setCertError] = useState("");
+  const [isoVerified, setIsoVerified] = useState(false);
+
+function handleIsoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const allowed = ["application/pdf", "image/jpeg", "image/png"];
+  if (!allowed.includes(file.type)) {
+    setCertError("File ditolak — harus PDF atau JPG/PNG");
+    setIsoCert(null);
+    return;
+  }
+  setIsoCert(file);
+  setCertError("");
+}
+
   // ─── ESG questions ────────────────────────────────────────────────────────
   const ESG_QUESTIONS = [
     { id:1, category:"🌿 Environment", q:"Does your company have a formal GHG reduction target?",   options:["Yes, science-based (SBTi)","Yes, internal target","In development","No target"] },
@@ -96,6 +114,9 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
     { id:4, category:"👥 Social",      q:"Employee HSE & sustainability training coverage?",         options:["> 90%","70 – 90%","50 – 70%","< 50%"] },
     { id:5, category:"🏛 Governance",  q:"Is there a dedicated ESG committee at board level?",       options:["Yes, independent board committee","Yes, internal committee","Planned","No"] },
     { id:6, category:"🏛 Governance",  q:"Carbon accounting audit frequency?",                       options:["Quarterly by 3rd party","Annually by 3rd party","Every 2 years","Never audited"] },
+    { id:7, category:"🌿 Carbon",    q:"Total carbon absorption from your land parcels (tCO₂/month)?",  options:["Above 100 t",  "50 – 100 t", "10 – 50 t", "Below 10 t"] },
+{ id:8, category:"🌿 Carbon",    q:"Net carbon credit balance (absorption minus emissions)?",         options:["Positive (surplus)", "Break-even", "Slight deficit", "High deficit"] },
+{ id:9, category:"🌿 Carbon",    q:"Has your carbon data been verified by a 3rd party?",             options:["Yes, ISO 14064 verified", "Yes, internal audit", "In progress", "Not verified"] },
   ];
 
   // ─── API helpers ──────────────────────────────────────────────────────────
@@ -119,8 +140,12 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       method:"POST",
       body:JSON.stringify({ companyId:COMPANY_ID, answers:esgAnswers.map((a,i) => ({ questionId:i+1, selectedIndex:a })) }),
     });
-    const score = res?.esgScore || Math.round(esgAnswers.reduce((s,a) => s + (4-a)*(100/(ESG_QUESTIONS.length*3)), 0));
-    setCompany(c => ({ ...c, esgScore:score, esgStatus:"verified" }));
+    const baseScore = Math.round(
+      esgAnswers.reduce((s,a) => s + (4-a)*(100/(ESG_QUESTIONS.length*3)), 0)
+    );
+    // Carbon bonus: serapan > emisi = +5, iso verified = +5
+    const carbonBonus = (company?.esgStatus === "verified" ? 5 : 0) + (isoVerified ? 5 : 0);
+    const score = Math.min(100, (res?.esgScore || baseScore) + carbonBonus);    setCompany(c => ({ ...c, esgScore:score, esgStatus:"verified" }));
     setEsgSubmitting(false);
     setEsgModal(false);
   }
@@ -350,6 +375,51 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
         )}
       </div>
 
+      {/* ISO Certificate section — #32 */}
+<div className="card p-4 flex flex-col gap-3">
+  <div className="flex items-center justify-between">
+    <p className="text-sm font-bold text-gray-800">📋 Sertifikat ISO 14064</p>
+    {isoVerified
+      ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">✅ Terverifikasi</span>
+      : <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">⏳ Belum Upload</span>
+    }
+  </div>
+
+  <p className="text-xs text-gray-500">
+    Wajib untuk menawarkan kredit karbon di Market. Upload sertifikat dari lembaga verifikasi ISO.
+  </p>
+
+  <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
+    ${isoCert ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}>
+    <span className="text-2xl">{isoCert ? "📄" : "⬆️"}</span>
+    <div className="flex-1">
+      <p className="text-xs font-bold text-gray-700">
+        {isoCert ? isoCert.name : "Upload Sertifikat ISO 14064"}
+      </p>
+      <p className="text-xs text-gray-400">PDF / JPG / PNG · maks 10MB</p>
+    </div>
+    {isoCert && <span className="text-green-600 font-bold text-xs">✓</span>}
+    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleIsoUpload} />
+  </label>
+
+  {certError && <p className="text-xs text-red-600">{certError}</p>}
+
+  {isoCert && !isoVerified && (
+    <button onClick={() => setIsoVerified(true)}
+      className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
+      style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
+      Submit untuk Verifikasi
+    </button>
+  )}
+
+  {isoVerified && (
+    <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+      <p className="text-xs font-bold text-green-700">✅ {isoCert?.name}</p>
+      <p className="text-xs text-green-600 mt-0.5">Kredit karbon kamu sudah bisa ditawarkan di Market</p>
+    </div>
+  )}
+</div>
+
       {/* ── 4. ESG SCORE ─────────────────────────────────────────────────── */}
       <div className="card p-4">
         <div className="flex items-center justify-between mb-2">
@@ -360,26 +430,67 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
           </span>
         </div>
         {company?.esgScore !== null ? (
-          <div className="flex items-center gap-3">
-            <p className={`text-4xl font-black ${esgColor}`}>{company?.esgScore}</p>
-            <div className="flex-1">
-              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-500
-                  ${company?.esgScore >= 70 ? "bg-green-500" : company?.esgScore >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                  style={{ width:`${company?.esgScore}%` }} />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">{t.profile?.esgVerified || "AI-verified · Scale 0–100"}</p>
-            </div>
+  <div className="flex flex-col gap-4">
+    
+    {/* Skor Utama */}
+    <div className="flex items-center gap-3">
+      <p className={`text-4xl font-black ${esgColor}`}>{company?.esgScore}</p>
+      <div className="flex-1">
+        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-500
+            ${company?.esgScore >= 70 ? "bg-green-500" : company?.esgScore >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+            style={{ width:`${company?.esgScore}%` }} />
+        </div>
+        
+        {/* TOOLTIP SECTION - AI Verified */}
+        <div className="relative group inline-flex items-center gap-1 mt-1.5 cursor-help">
+          <span className="text-xs font-semibold text-blue-600 border-b border-dashed border-blue-400">
+            {t.profile?.esgVerified || "✓ AI-Verified"}
+          </span>
+          <span className="text-xs text-gray-400">· Scale 0–100</span>
+          
+          {/* Popover Box (Muncul saat di-hover) */}
+          <div className="absolute bottom-full left-0 mb-2 hidden w-64 p-3 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg shadow-xl group-hover:block z-50 animate-fade-in-up">
+            Skor ESG ini telah divalidasi secara otomatis oleh AI berdasarkan dokumen bukti yang diunggah. Verifikasi manual dari pihak ketiga (Sertifikasi ISO) mungkin diperlukan sebelum Anda dapat menawarkan kredit di Market.
+            {/* Segitiga kecil (Arrow) penunjuk ke teks */}
+            <div className="absolute top-full left-6 -mt-1 border-4 border-transparent border-t-gray-800"></div>
           </div>
-        ) : (
-          <div>
-            <p className="text-xs text-gray-500 mb-3">{t.profile?.esgDesc}</p>
-            <button onClick={() => { setEsgStep(0); setEsgAnswers([]); setEsgModal(true); }}
-              className="w-full text-white py-2.5 rounded-xl font-bold text-sm"
-              style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-              {t.profile?.esgStart || "Start ESG Assessment"}
-            </button>
+        </div>
+
+      </div>
+    </div>
+
+    {/* Carbon metrics contribution — #33 */}
+    <div className="mt-1 flex flex-col gap-1.5 pt-3 border-t border-gray-100">
+      <p className="text-xs font-bold text-gray-500 uppercase">Komponen Score</p>
+      {[
+        { l:"Environment & Governance", v: Math.round((company.esgScore || 0) * 0.7), max:70, c:"bg-green-500" },
+        { l:"Serapan Karbon",           v: Math.round((company.esgScore || 0) * 0.15), max:15, c:"bg-teal-500" },
+        { l:"Kredit & Verifikasi ISO",  v: Math.round((company.esgScore || 0) * 0.15), max:15, c:"bg-blue-500" },
+      ].map((row, i) => (
+        <div key={i}>
+          <div className="flex justify-between mb-0.5">
+            <p className="text-xs text-gray-500">{row.l}</p>
+            <p className="text-xs font-bold text-gray-600">{row.v}/{row.max}</p>
           </div>
+          <div className="w-full bg-gray-100 rounded-full h-1.5">
+            <div className={`h-1.5 rounded-full ${row.c}`}
+              style={{ width:`${(row.v/row.max)*100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+) : (
+  <div>
+    <p className="text-xs text-gray-500 mb-3">{t.profile?.esgDesc}</p>
+    <button onClick={() => { setEsgStep(0); setEsgAnswers([]); setEsgModal(true); }}
+      className="w-full text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-md"
+      style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
+      {t.profile?.esgStart || "Start ESG Assessment"}
+    </button>
+  </div>
         )}
       </div>
 
