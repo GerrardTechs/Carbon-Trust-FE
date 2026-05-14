@@ -39,9 +39,10 @@ export function CalcPage({ t = TR.en}) {
   const [activeScope, setScope]   = useState(1);
   const [expanded, setExpanded]   = useState({});
   const [method, setMethod]         = useState("operational"); // "operational" | "equity"
-const [equityPct, setEquityPct]   = useState("");
-const [certFile, setCertFile]     = useState(null);
-const [certError, setCertError]   = useState("");
+  const [equityPct, setEquityPct]   = useState("");
+  const [certFile, setCertFile]     = useState(null);
+  const [certError, setCertError]   = useState("");
+  const [certOk, setCertOk]       = useState(false);
 
 function handleCertUpload(e) {
   const file = e.target.files[0];
@@ -49,10 +50,12 @@ function handleCertUpload(e) {
   const allowed = ["application/pdf","image/jpeg","image/png","image/jpg"];
   if (!allowed.includes(file.type)) {
     setCertFile(null);
+    setCertOk(false);
     setCertError(t.calc?.ownershipReject || "File ditolak — harus PDF atau gambar");
     return;
   }
   setCertFile(file);
+  setCertOk(true);
   setCertError("");
 }
 
@@ -62,7 +65,7 @@ function handleCertUpload(e) {
 
   function calculate() {
     const eqFactor = method === "equity" ? (parseFloat(equityPct) || 100) / 100 : 1;
-let s1 = 0, s2 = 0, s3 = 0;
+    let s1 = 0, s2 = 0, s3 = 0;
     const breakdown = [];
 
     Object.entries(EF).forEach(([k, ef]) => {
@@ -126,62 +129,88 @@ let s1 = 0, s2 = 0, s3 = 0;
         ))}
       </div>
 
-      {/* Method selector — #3 */}
+{/* Method selector — Operational vs Equity */}
 <div className="card p-4 flex flex-col gap-3">
-  <p className="text-xs font-bold text-gray-700">{t.calc?.method || "Metode Kalkulasi"}</p>
+  <p className="text-xs font-bold text-gray-700">
+    {t.calc?.method || "Calculation Method"}
+  </p>
   <div className="flex gap-2">
     {[
-      { val: "operational", label: t.calc?.methodOp || "Operational Control" },
-      { val: "equity",      label: t.calc?.methodEq || "Equity Share" },
+      { val:"operational", label:"Operational / Activity" },
+      { val:"equity",      label:"Equity Share" },
     ].map(m => (
-      <button key={m.val} onClick={() => setMethod(m.val)}
-        className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all
-          ${method === m.val ? "bg-slate-800 text-white border-slate-800" : "bg-white border-gray-200 text-gray-600"}`}>
+      <button key={m.val} type="button" onClick={() => setMethod(m.val)}
+        className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all
+          ${method === m.val
+            ? "bg-slate-800 text-white border-slate-800"
+            : "bg-white border-gray-200 text-gray-600"}`}>
         {m.label}
       </button>
     ))}
   </div>
 
+  {/* Equity method — muncul hanya jika pilih equity */}
   {method === "equity" && (
-    <div className="flex flex-col gap-3 fade-up">
+    <div className="flex flex-col gap-3 pt-1">
+
       {/* % kepemilikan */}
       <div>
         <label className="text-xs font-bold text-gray-600 block mb-1">
-          {t.calc?.equityPct || "Persentase Kepemilikan (%)"}
+          {t.calc?.equityPct || "Equity Share (%)"}
         </label>
         <div className="flex gap-2 items-center">
-          <input type="number" min="0" max="100" placeholder="e.g. 40"
+          <input
+            type="number" min="0" max="100" placeholder="e.g. 40"
             value={equityPct}
             onChange={e => setEquityPct(e.target.value)}
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
-          <span className="text-sm font-bold text-gray-500">%</span>
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
+          />
+          <span className="text-sm font-bold text-gray-500 bg-gray-100 px-3 py-2 rounded-xl">%</span>
         </div>
         {equityPct && (
-          <p className="text-xs text-blue-600 mt-1">
-            Emisi dihitung × {equityPct}% dari total operasional
+          <p className="text-xs text-blue-600 mt-1.5 bg-blue-50 rounded-lg px-2 py-1">
+            Emisi dikalikan <strong>{equityPct}%</strong> dari total operasional
           </p>
         )}
       </div>
 
-      {/* Upload sertifikat */}
+      {/* Upload sertifikat kepemilikan */}
       <div>
         <label className="text-xs font-bold text-gray-600 block mb-1">
-          {t.calc?.ownershipCert || "Upload Ownership Certificate"}
+          Upload Your Ownership Certificate
         </label>
         <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
-          ${certFile ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}>
-          <span className="text-2xl">{certFile ? "📄" : "⬆️"}</span>
+          ${certOk
+            ? "border-green-400 bg-green-50"
+            : certError
+            ? "border-red-400 bg-red-50"
+            : "border-gray-200 hover:border-gray-300 bg-gray-50"}`}>
+          <span className="text-2xl">{certOk ? "📄" : "⬆️"}</span>
           <div className="flex-1">
             <p className="text-xs font-bold text-gray-700">
-              {certFile ? certFile.name : (t.calc?.ownershipCert || "Upload ownership certificate")}
+              {certFile ? certFile.name : "Upload Your Ownership Certificate"}
             </p>
-            <p className="text-xs text-gray-400">{t.calc?.ownershipHint || "PDF / JPG / PNG"}</p>
+            <p className="text-xs text-gray-400">PDF / JPG / PNG</p>
           </div>
-          {certFile && <span className="text-green-600 text-xs font-bold">✓</span>}
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleCertUpload} />
+          {certOk && <span className="text-green-600 text-xs font-bold">✓ Valid</span>}
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={handleCertUpload}
+          />
         </label>
-        {certError && <p className="text-xs text-red-600 mt-1">{certError}</p>}
+        {certError && (
+          <p className="text-xs text-red-600 mt-1 font-bold">{certError}</p>
+        )}
       </div>
+
+      {/* Warning jika equity dipilih tapi belum upload */}
+      {!certOk && (
+        <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2 py-1.5">
+          ⚠️ Ownership certificate required for Equity Share method
+        </p>
+      )}
     </div>
   )}
 </div>
@@ -270,7 +299,7 @@ let s1 = 0, s2 = 0, s3 = 0;
         </div>
       ))}
 
-      <button onClick={calculate}
+      <button onClick={calculate} disabled={method === "equity" && !certOk}
         className="w-full text-white py-3 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all"
         style={{ background: "linear-gradient(135deg,#1e293b,#334155)" }}>
         {t.calc?.calculate || "Hitung Emisi"}
