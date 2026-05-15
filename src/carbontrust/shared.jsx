@@ -386,6 +386,10 @@ export const EF_CATEGORIES = {
 
 // ─── UTILS ─────────────────────────────────────────────────────────────────
 export function calcAbsorption(p) {
+  // Gambut dengan data humidity → pakai model matematis (#24)
+  if (p.type === "peatland" && p.humidity != null && p.status === "healthy") {
+    return calcPeatAbsorption(p.area, p.humidity);
+  }
   const r = ABS_RATES[p.type]?.[p.status] ?? 0;
   return parseFloat(((r * p.area) / 12).toFixed(2));
 }

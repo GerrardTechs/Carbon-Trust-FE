@@ -558,6 +558,23 @@ function handleIsoUpload(e) {
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(e => <option key={e}>{e}</option>)}
             </select>
+            <div className="flex flex-col gap-2">
+  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📍 Lokasi</p>
+  <div>
+    <label className="text-xs font-bold text-gray-600 block mb-1">🏢 Alamat Kantor</label>
+    <input type="text" placeholder="e.g. Jl. Sudirman No. 1, Jakarta Selatan"
+      value={form.location || ""}
+      onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+  </div>
+  <div>
+    <label className="text-xs font-bold text-gray-600 block mb-1">🌿 Alamat Site / Lahan</label>
+    <input type="text" placeholder="e.g. Kec. Kuala Kapuas, Kalimantan Tengah"
+      value={form.siteAddress || ""}
+      onChange={e => setForm(p => ({ ...p, siteAddress: e.target.value }))}
+      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+  </div>
+</div>
           </div>
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.bizTypeLabel || "Business Activity Type"}</label>
