@@ -13,7 +13,10 @@ export function LandPage({ parcels, setParcels, t, lang }) {
   const [addModal, setAddModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
   const [selParcel, setSelParcel] = useState(null);
-  const [form, setForm] = useState({ name: "", type: "forest", area: "", lat: "", lng: "", depth: "", humidity: "", locType: "site"});
+  const [form, setForm] = useState({ name: "", type: "forest", area: "", 
+  lat: "", lng: "", depth: "", 
+  humidity: "", locType: "site",
+  officeAddress: "", officePhone: "", officeFloor: "",});
   const [saving, setSaving] = useState(false);
   const [scanLine, setScanLine] = useState(0);
   const [viewAll, setViewAll] = useState(false);
@@ -28,15 +31,24 @@ export function LandPage({ parcels, setParcels, t, lang }) {
     });
     const newP = res || {
       id: "LP-" + String(parcels.length + 1).padStart(3, "0"),
-      ...form, area: parseFloat(form.area), lat: parseFloat(form.lat), lng: parseFloat(form.lng),
-      status: "healthy", ndvi: 0.70, depth: form.depth ? parseFloat(form.depth) : null,
+      ...form, area:     parseFloat(form.area) || 0,
+      lat:      parseFloat(form.lat)  || 0,
+      lng:      parseFloat(form.lng)  || 0,
+      depth:    form.depth    ? parseFloat(form.depth)    : null,
+      humidity: form.humidity ? parseFloat(form.humidity) : null,
+      locType:  form.locType  || "site",
+      status:   "healthy", ndvi: 0.70,
       absorptionMonthly: parseFloat(((ABS_RATES[form.type]?.healthy || 0) * parseFloat(form.area || 0) / 12).toFixed(2)),
     };
     setParcels(prev => [...prev, newP]);
     setSaving(false);
     setAddModal(false);
-    setForm({ name: "", type: "forest", area: "", lat: "", lng: "", depth: "" });
-  }
+    setForm({ 
+      name: "", type: "forest", area: "", 
+      lat: "", lng: "", depth: "", 
+      humidity: "", locType: "site",
+      officeAddress: "", officePhone: "", officeFloor: "",
+    });  }
 
   async function changeStatus(id, status) {
     await apiFetch(`/parcels/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
@@ -160,8 +172,15 @@ export function LandPage({ parcels, setParcels, t, lang }) {
                 { l: "CO₂/mo", v: `${abs}t`, c: isEm ? "text-red-600" : "text-green-700" },
                 { l: "Lat", v: selParcel.lat },
                 { l: "Lng", v: selParcel.lng },
-                ...(selParcel.depth ? [{ l: "Depth", v: `${selParcel.depth}m` }] : []),
-                ...(selParcel.humidity != null ? [{ l:"Humidity", v:`${selParcel.humidity}%`, c: selParcel.humidity < 40 ? "text-red-600" : selParcel.humidity > 70 ? "text-blue-600" : "text-green-700" }] : []),
+                ...(selParcel.depth != null ? [{
+  l: "Kedalaman",
+  v: `${selParcel.depth} m`,
+  c: selParcel.type === "peatland"
+    ? selParcel.depth >= 3 ? "text-green-700"   // dalam = cadangan karbon besar
+    : selParcel.depth >= 1 ? "text-amber-600"   // dangkal = risiko sedang
+    : "text-red-600"                             // sangat dangkal = risiko tinggi
+    : "text-gray-700"
+}] : []),
               ].map((item, i) => (
                 <div key={i} className="bg-gray-50 rounded-xl p-2 text-center">
                   <p className="text-xs text-gray-400">{item.l}</p>
@@ -296,25 +315,176 @@ export function LandPage({ parcels, setParcels, t, lang }) {
       <Modal open={addModal} onClose={() => setAddModal(false)} title={`➕ ${t.land.addParcel}`}>
   <div className="flex flex-col gap-3">
     
-    {/* Tipe Lokasi */}
-    <div>
-      <label className="text-xs font-bold text-gray-600 block mb-1">Tipe Lokasi</label>
-      <div className="flex gap-2">
-        {[
-          { val: "site", label: "🌿 Site / Lahan" },
-          { val: "office", label: "🏢 Kantor" },
-        ].map(opt => (
-          <button key={opt.val} type="button"
-            onClick={() => setForm(p => ({ ...p, locType: opt.val }))}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all
-              ${(form.locType || "site") === opt.val
-                ? "bg-slate-800 text-white border-slate-800"
-                : "bg-white border-gray-200 text-gray-600"}`}>
-            {opt.label}
-          </button>
-        ))}
-      </div>
+     {/* Tipe Lokasi selector */}
+  <div>
+    <label className="text-xs font-bold text-gray-600 block mb-1">Tipe Lokasi</label>
+    <div className="flex gap-2">
+      {[
+        { val:"site",   label:"🌿 Site / Lahan" },
+        { val:"office", label:"🏢 Kantor" },
+      ].map(opt => (
+        <button key={opt.val} type="button"
+          onClick={() => setForm(p => ({ ...p, locType: opt.val }))}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all
+            ${form.locType === opt.val
+              ? "bg-slate-800 text-white border-slate-800"
+              : "bg-white border-gray-200 text-gray-600"}`}>
+          {opt.label}
+        </button>
+      ))}
     </div>
+  </div>
+
+  {/* ── KANTOR ── */}
+  {form.locType === "office" ? (
+    <>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
+        <p className="text-xs font-bold text-blue-700 mb-0.5">🏢 Data Kantor / Office</p>
+        <p className="text-xs text-blue-600">
+          Lokasi kantor tidak dihitung sebagai lahan serapan karbon. 
+          Data ini digunakan untuk profil perusahaan.
+        </p>
+      </div>
+
+      {[
+        { l:"Nama Kantor / Gedung", k:"name",          ph:"e.g. Gedung Nusantara Lt. 12",   type:"text"   },
+        { l:"Alamat Lengkap",       k:"officeAddress",  ph:"e.g. Jl. Sudirman No. 1, Jakarta", type:"text" },
+        { l:"Nomor Telepon",        k:"officePhone",    ph:"e.g. +62 21 5555 1234",           type:"text"   },
+        { l:"Lantai / Unit",        k:"officeFloor",    ph:"e.g. Lantai 12, Unit B",          type:"text"   },
+        { l:"Latitude",             k:"lat",            ph:"-6.2088",                          type:"number" },
+        { l:"Longitude",            k:"lng",            ph:"106.8456",                         type:"number" },
+      ].map(f => (
+        <div key={f.k}>
+          <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
+          <input type={f.type || "text"} placeholder={f.ph}
+            value={form[f.k]}
+            onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+        </div>
+      ))}
+
+      {/* Preview Maps */}
+      {form.lat && form.lng && (
+        <a href={`https://www.google.com/maps?q=${form.lat},${form.lng}`}
+          target="_blank" rel="noreferrer"
+          className="flex items-center gap-2 text-xs text-blue-600 font-bold hover:underline">
+          🗺️ Preview lokasi kantor di Google Maps
+        </a>
+      )}
+    </>
+
+  ) : (
+    /* ── SITE / LAHAN ── */
+    <>
+      {/* Nama lahan */}
+      <div>
+        <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.name}</label>
+        <input type="text" placeholder="e.g. Borneo Forest Block C"
+          value={form.name}
+          onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+      </div>
+
+      {/* Tipe lahan */}
+      <div>
+        <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
+        <select value={form.type}
+          onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+          {["forest","peatland","mangrove","seawater","agricultural","industrial"].map(tp => (
+            <option key={tp} value={tp}>
+              {tp === "forest" ? "🌲 Hutan" : tp === "peatland" ? "🌾 Gambut" :
+               tp === "mangrove" ? "🌴 Mangrove" : tp === "seawater" ? "🌊 Laut / Pesisir" :
+               tp === "agricultural" ? "🌱 Pertanian" : "🏭 Industrial"}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Note seawater */}
+      {form.type === "seawater" && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
+          <p className="text-xs font-bold text-blue-700 mb-0.5">🌊 Lahan Laut / Blue Carbon</p>
+          <p className="text-xs text-blue-600">
+            Penyerap karbon terbesar (14 tCO₂/ha/yr). Metode equity tidak berlaku.
+            Kaitkan dengan proyek mangrove jika ada.
+          </p>
+        </div>
+      )}
+
+      {/* Luas + Kedalaman */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs font-bold text-gray-600 block mb-1">
+            {t.land.area} (ha)
+          </label>
+          <input type="number" placeholder="450"
+            value={form.area}
+            onChange={e => setForm(p => ({ ...p, area: e.target.value }))}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-600 block mb-1">
+            Kedalaman (m)
+            {form.type === "peatland" && <span className="text-red-500"> *</span>}
+          </label>
+          <input type="number" placeholder={form.type === "peatland" ? "4.5 (wajib)" : "opsional"}
+            value={form.depth}
+            onChange={e => setForm(p => ({ ...p, depth: e.target.value }))}
+            className={`w-full bg-gray-50 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400
+              ${form.type === "peatland" ? "border-amber-300" : "border-gray-200"}`} />
+        </div>
+      </div>
+
+      {/* Note kedalaman gambut */}
+      {form.type === "peatland" && (
+        <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2 py-1.5">
+          ⚠️ Kedalaman gambut wajib diisi — digunakan untuk menghitung cadangan karbon & risiko emisi saat kering.
+          Rata-rata gambut Indonesia: 2–8 meter.
+        </p>
+      )}
+
+      {/* Koordinat GPS */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.lat}</label>
+          <input type="number" placeholder="-1.2412"
+            value={form.lat}
+            onChange={e => setForm(p => ({ ...p, lat: e.target.value }))}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.lng}</label>
+          <input type="number" placeholder="113.9213"
+            value={form.lng}
+            onChange={e => setForm(p => ({ ...p, lng: e.target.value }))}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+        </div>
+      </div>
+
+      {/* Humidity */}
+      <div>
+        <label className="text-xs font-bold text-gray-600 block mb-1">
+          Humidity Sensor (%)
+          {form.type === "peatland" && <span className="text-amber-500"> — penting untuk gambut</span>}
+        </label>
+        <input type="number" min="0" max="100"
+          placeholder={form.type === "peatland" ? "e.g. 65 (optimal >60%)" : "e.g. 70"}
+          value={form.humidity}
+          onChange={e => setForm(p => ({ ...p, humidity: e.target.value }))}
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+      </div>
+
+      {/* Preview Maps */}
+      {form.lat && form.lng && (
+        <a href={`https://www.google.com/maps?q=${form.lat},${form.lng}&t=k`}
+          target="_blank" rel="noreferrer"
+          className="flex items-center gap-2 text-xs text-green-600 font-bold hover:underline">
+          🛰️ Preview lahan di Google Maps (Satellite)
+        </a>
+      )}
+    </>
+  )}
 
     {/* Form Fields berdasarkan locType */}
     {(form.locType || "site") === "office" ? (
@@ -394,12 +564,7 @@ export function LandPage({ parcels, setParcels, t, lang }) {
     {/* Tombol Submit dipindah ke luar kondisi agar selalu muncul */}
     <button 
       onClick={addParcel} 
-      disabled={
-        saving || 
-        ((form.locType || "site") === "office" 
-          ? !form.officeAddress 
-          : (!form.name || !form.area || !form.lat || !form.lng))
-      }
+      disabled={saving || !form.name || (form.locType === "site" && (!form.area || !form.lat || !form.lng))      }
       className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-40 flex items-center justify-center gap-2 mt-2 transition-all hover:opacity-90"
       style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
       {saving ? <Spinner /> : null}{t.common.add}
