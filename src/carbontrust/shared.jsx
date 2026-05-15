@@ -299,6 +299,28 @@ export const ABS_RATES = {
   agricultural: { healthy:1.2, flooded:0.2, degraded:0.5, burned:-5,   drying:0    },
   industrial:   { healthy:0.0, flooded:0.0, degraded:0.0, burned:0,    drying:0    },
 };
+
+export function calcPeatAbsorption(area, humidity) {
+  const h = parseFloat(humidity) || 60; // default 60% kalau tidak ada sensor
+  if (h >= 80) return +(( 2.8 * area) / 12).toFixed(2);  // sangat basah — serapan max
+  if (h >= 60) return +(( 2.1 * area) / 12).toFixed(2);  // optimal — serapan normal
+  if (h >= 50) return +(( 0.5 * area) / 12).toFixed(2);  // mulai kering — serapan turun
+  if (h >= 40) return +((-5.0 * area) / 12).toFixed(2);  // kering — mulai emit
+  if (h >= 30) return +((-15  * area) / 12).toFixed(2);  // sangat kering — emit aktif
+  return              +((-25  * area) / 12).toFixed(2);   // kritis — emit maksimal
+}
+
+// Label tingkat risiko berdasarkan humidity gambut
+export function peatHumidityRisk(humidity) {
+  const h = parseFloat(humidity) || 60;
+  if (h >= 80) return { label:"Sangat Basah",   color:"blue",   risk:"Rendah",   desc:"Serapan maksimal, risiko banjir perlu dipantau" };
+  if (h >= 60) return { label:"Optimal",         color:"green",  risk:"Rendah",   desc:"Kondisi ideal, gambut menyerap CO₂ aktif" };
+  if (h >= 50) return { label:"Mulai Kering",    color:"yellow", risk:"Sedang",   desc:"Serapan menurun, pantau muka air gambut" };
+  if (h >= 40) return { label:"Kering",          color:"amber",  risk:"Tinggi",   desc:"Gambut mulai mengoksidasi, emit CO₂ kecil" };
+  if (h >= 30) return { label:"Sangat Kering",   color:"orange", risk:"Kritis",   desc:"Emisi CO₂ & CH₄ aktif, rewetting segera" };
+  return               { label:"Kritis / Kebakaran", color:"red", risk:"Ekstrem", desc:"Risiko kebakaran sangat tinggi, darurat" };
+}
+
 // Diesel density: 1 liter = 0.832 kg → EF 2.68 kg CO₂/liter (IPCC 2006)
 // Solar/HSD conversion: input liter → auto convert to kg (×0.832) internally
 export const EF = {

@@ -9,7 +9,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import {
   COMPANY_ID, CREDIT_PRICE, apiFetch,
   calcAbsorption, convertUnit, useInterval,
-  Modal, SBadge, Spinner, SparkLine, Ic,
+  Modal, SBadge, Spinner, SparkLine, Ic, calcPeatAbsorption
 } from "./shared.jsx";
 
 export function Dashboard({ parcels, alerts, company, setPage, t }) {

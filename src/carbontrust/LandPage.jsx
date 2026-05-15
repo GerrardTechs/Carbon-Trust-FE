@@ -6,13 +6,45 @@ import { useState } from "react";
 import {
   COMPANY_ID, apiFetch, ABS_RATES,
   calcAbsorption, useInterval,
-  Modal, SBadge, Ic, Spinner
+  Modal, SBadge, Ic, Spinner, calcPeatAbsorption, peatHumidityRisk
 } from "./shared.jsx";
 
 export function LandPage({ parcels, setParcels, t, lang }) {
   const [addModal, setAddModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
   const [selParcel, setSelParcel] = useState(null);
+  const [ownershipDocs, setOwnershipDocs] = useState({}); // { parcelId: { file, country, type } }
+const [docError, setDocError]           = useState("");
+const [docUploaded, setDocUploaded]     = useState({});
+const FOREIGN_COUNTRIES = [
+  "Malaysia", "Papua New Guinea", "Brazil", "Colombia", "Peru",
+  "Congo", "Gabon", "Vietnam", "Cambodia", "Myanmar", "Other"
+];
+
+const DOC_TYPES = [
+  "Share Certificate (Sertifikat Saham)",
+  "Land Title / HGU",
+  "Concession Agreement",
+  "Joint Venture Agreement",
+  "Power of Attorney",
+  "Other Legal Document",
+];
+function handleOwnershipUpload(parcelId, e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const allowed = ["application/pdf", "image/jpeg", "image/png"];
+  if (!allowed.includes(file.type)) {
+    setDocError("File ditolak — harus PDF atau JPG/PNG");
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    setDocError("File terlalu besar — maks 10MB");
+    return;
+  }
+  setDocError("");
+  setOwnershipDocs(prev => ({ ...prev, [parcelId]: { ...prev[parcelId], file } }));
+  setDocUploaded(prev => ({ ...prev, [parcelId]: true }));
+}
   const [form, setForm] = useState({ name: "", type: "forest", area: "", 
   lat: "", lng: "", depth: "", 
   humidity: "", locType: "site",
@@ -214,31 +246,163 @@ export function LandPage({ parcels, setParcels, t, lang }) {
               );
             })()}
             {selParcel.type === "peatland" && (
-              <div className={`rounded-xl border px-3 py-2.5 mb-3 ${
-                (selParcel.humidity ?? 60) < 40
-                  ? "bg-red-50 border-red-200"
-                  : (selParcel.humidity ?? 60) < 60
-                  ? "bg-amber-50 border-amber-200"
-                  : "bg-blue-50 border-blue-200"
-              }`}>
-                <p className="text-xs font-bold mb-1 text-gray-700">
-                  💧 Kelembaban Gambut: {selParcel.humidity ?? "—"}%
+  (() => {
+    const risk = peatHumidityRisk(selParcel.humidity);
+    const colorMap = {
+      blue:   "bg-blue-50 border-blue-200 text-blue-700",
+      green:  "bg-green-50 border-green-200 text-green-700",
+      yellow: "bg-yellow-50 border-yellow-200 text-yellow-700",
+      amber:  "bg-amber-50 border-amber-200 text-amber-700",
+      orange: "bg-orange-50 border-orange-200 text-orange-700",
+      red:    "bg-red-50 border-red-200 text-red-700",
+    };
+    const cls = colorMap[risk.color];
+    return (
+      <div className={`rounded-xl border px-3 py-2.5 mb-3 ${cls.split(" ").slice(0,2).join(" ")}`}>
+        <div className="flex items-center justify-between mb-1">
+          <p className={`text-xs font-bold ${cls.split(" ")[2]}`}>
+            💧 Kelembaban Gambut: {selParcel.humidity ?? "—"}%
+          </p>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cls}`}>
+            {risk.label}
+          </span>
+        </div>
+        <p className={`text-xs ${cls.split(" ")[2]} opacity-80`}>{risk.desc}</p>
+        <div className="mt-2 flex justify-between text-xs">
+          <span className={cls.split(" ")[2]}>Risiko: <strong>{risk.risk}</strong></span>
+          <span className={cls.split(" ")[2]}>
+            Serapan: <strong>{calcPeatAbsorption(selParcel.area, selParcel.humidity)} t/bln</strong>
+          </span>
+        </div>
+      </div>
+    );
+  })()
+)}
+
+{/* Dokumen kepemilikan lahan luar negeri — #11 */}
+{(() => {
+  const INDONESIA_COORDS = { latMin: -11, latMax: 6, lngMin: 95, lngMax: 141 };
+  const isForeign = selParcel.lat && selParcel.lng && (
+    selParcel.lat < INDONESIA_COORDS.latMin ||
+    selParcel.lat > INDONESIA_COORDS.latMax ||
+    selParcel.lng < INDONESIA_COORDS.lngMin ||
+    selParcel.lng > INDONESIA_COORDS.lngMax
+  );
+
+  // Tampilkan section ini untuk lahan luar negeri ATAU jika user manual tandai
+  const showDoc = isForeign || ownershipDocs[selParcel.id]?.country;
+
+  return (
+    <div className="mb-3">
+      {/* Toggle untuk tandai lahan luar negeri */}
+      {!isForeign && (
+        <button
+          onClick={() => setOwnershipDocs(prev => ({
+            ...prev,
+            [selParcel.id]: { ...prev[selParcel.id], country: prev[selParcel.id]?.country ? "" : "Other" }
+          }))}
+          className="text-xs text-blue-600 font-bold hover:underline mb-2 block">
+          {ownershipDocs[selParcel.id]?.country ? "▼ Sembunyikan" : "▸ Lahan di luar Indonesia?"}
+        </button>
+      )}
+
+      {(isForeign || ownershipDocs[selParcel.id]?.country) && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col gap-3">
+          <div className="flex items-start gap-2">
+            <span className="text-base">🌍</span>
+            <div>
+              <p className="text-xs font-bold text-amber-800">Lahan Luar Negeri</p>
+              <p className="text-xs text-amber-600">
+                {isForeign
+                  ? "Koordinat terdeteksi di luar Indonesia — dokumen kepemilikan wajib dilampirkan."
+                  : "Lampirkan dokumen kepemilikan atau kerja sama untuk lahan di luar Indonesia."}
+              </p>
+            </div>
+          </div>
+
+          {/* Pilih negara */}
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-1">Negara Lokasi Lahan</label>
+            <select
+              value={ownershipDocs[selParcel.id]?.country || ""}
+              onChange={e => setOwnershipDocs(prev => ({
+                ...prev, [selParcel.id]: { ...prev[selParcel.id], country: e.target.value }
+              }))}
+              className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+              <option value="">Pilih negara...</option>
+              {FOREIGN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          {/* Pilih tipe dokumen */}
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Dokumen</label>
+            <select
+              value={ownershipDocs[selParcel.id]?.type || ""}
+              onChange={e => setOwnershipDocs(prev => ({
+                ...prev, [selParcel.id]: { ...prev[selParcel.id], type: e.target.value }
+              }))}
+              className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+              <option value="">Pilih jenis dokumen...</option>
+              {DOC_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+
+          {/* Upload dokumen */}
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-1">Upload Dokumen</label>
+            <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
+              ${docUploaded[selParcel.id]
+                ? "border-green-400 bg-green-50"
+                : docError
+                ? "border-red-400 bg-red-50"
+                : "border-amber-300 hover:border-amber-400 bg-white"}`}>
+              <span className="text-xl">
+                {docUploaded[selParcel.id] ? "📄" : "⬆️"}
+              </span>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-gray-700">
+                  {ownershipDocs[selParcel.id]?.file?.name || "Upload dokumen kepemilikan"}
                 </p>
-                {(selParcel.humidity ?? 60) < 40 ? (
-                  <p className="text-xs text-red-600">
-                    ⚠️ Gambut <strong>sangat kering</strong> — melepas CO₂ & CH₄ aktif. Segera rewetting.
-                  </p>
-                ) : (selParcel.humidity ?? 60) < 60 ? (
-                  <p className="text-xs text-amber-600">
-                    Kelembaban mulai turun — risiko emisi meningkat.
-                  </p>
-                ) : (
-                  <p className="text-xs text-blue-600">
-                    Kelembaban optimal — gambut menyerap CO₂ dengan baik.
-                  </p>
-                )}
+                <p className="text-xs text-gray-400">PDF / JPG / PNG · maks 10MB</p>
               </div>
-            )}
+              {docUploaded[selParcel.id] && (
+                <span className="text-green-600 text-xs font-bold">✓ Valid</span>
+              )}
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={e => handleOwnershipUpload(selParcel.id, e)}
+              />
+            </label>
+            {docError && <p className="text-xs text-red-600 mt-1">{docError}</p>}
+          </div>
+
+          {/* Status summary */}
+          {docUploaded[selParcel.id] && ownershipDocs[selParcel.id]?.country && (
+            <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+              <p className="text-xs font-bold text-green-700">✅ Dokumen Dilampirkan</p>
+              <p className="text-xs text-green-600 mt-0.5">
+                {ownershipDocs[selParcel.id].country} ·{" "}
+                {ownershipDocs[selParcel.id].type || "Dokumen kepemilikan"} ·{" "}
+                {ownershipDocs[selParcel.id].file?.name}
+              </p>
+            </div>
+          )}
+
+          {/* Warning jika belum lengkap */}
+          {!docUploaded[selParcel.id] && (
+            <p className="text-xs text-amber-700 font-bold">
+              ⚠️ Tanpa dokumen kepemilikan, kredit karbon lahan ini tidak dapat diverifikasi
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+})()}
+
             <div className="flex gap-2">
               <button onClick={() => { setSelParcel(selParcel); setSimModal(true); }}
                 className="flex-1 bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-100">

@@ -544,7 +544,6 @@ function handleIsoUpload(e) {
           {[
             { l: t.profile?.companyName || "Company Name",              k:"name",          type:"text"  },
             { l: t.profile?.emailLabel  || "Institutional Email",       k:"email",         type:"email" },
-            { l: t.profile?.locationLabel || "Location",                k:"location",      type:"text"  },
             { l: t.profile?.removalProjectLabel || "Carbon Removal Project", k:"removalProject", type:"text" },
           ].map(f => (
             <div key={f.k}>
