@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client"; 
 import "./index.css"
 import AuthFlow from "./auth/AuthFlow";
+import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
 
 function RootApp() {
@@ -246,6 +247,9 @@ function RootApp() {
   }
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
+  if (session.role === "admin") {
+    return <AdminApp onLogout={handleLogout} user={session.user} />;
+  }
   return (
     <CarbonTrust
       initialLang={session.lang}
