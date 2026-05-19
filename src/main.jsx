@@ -4,6 +4,8 @@ import "./index.css"
 import AuthFlow from "./auth/AuthFlow";
 import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
+import LandlordApp from "./carbontrust/LandlordApp.jsx";
+import PublicView from "./carbontrust/PublicView.jsx";
 
 function RootApp() {
   // 1. Ambil data dari localStorage saat pertama kali aplikasi dibuka
@@ -250,6 +252,9 @@ function RootApp() {
   if (session.role === "admin") {
     return <AdminApp onLogout={handleLogout} user={session.user} />;
   }
+  if (session.role === "landlord") {
+    return <LandlordApp onLogout={handleLogout} onExit={handleExit} user={session.user} lang={session.lang} />;
+  }
   return (
     <CarbonTrust
       initialLang={session.lang}
@@ -258,6 +263,14 @@ function RootApp() {
       onExit={handleExitApp}    // Mengirim fungsi tutup dashboard
     />
   );
+}
+
+function RootApp() {
+  const isPublic = window.location.pathname.startsWith("/public") ||
+                   new URLSearchParams(window.location.search).get("view") === "public";
+
+  if (isPublic) return <PublicView />;
+  return <App />;  // App = komponen utama main.jsx yang sudah ada
 }
 
 createRoot(document.getElementById("root")).render(
