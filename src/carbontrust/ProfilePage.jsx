@@ -75,6 +75,42 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   // ── Questionnaire local answers ───────────────────────────────────────────
   const [qAnswers, setQAnswers] = useState(qStatus?.answers || {});
 
+  // ── Multi-asset: Lahan & Perusahaan ───────────────────────────────────────
+  const [assetTab,      setAssetTab]      = useState("company"); // "company" | "land"
+  const [assetModal,    setAssetModal]    = useState(false);
+  const [assetEditItem, setAssetEditItem] = useState(null);
+  const [myCompanies,   setMyCompanies]   = useState([
+    { id: "c1", name: company?.name || "PT. Anda", type: company?.entity || "PT", bizType: company?.bizType || "Manufacturing", location: company?.location || "-", isMain: true },
+  ]);
+  const [myLands,  setMyLands]  = useState([]);
+  const [assetForm, setAssetForm] = useState({});
+
+  function openAddAsset() { setAssetEditItem(null); setAssetForm({}); setAssetModal(true); }
+  function openEditAsset(item) { setAssetEditItem(item); setAssetForm({ ...item }); setAssetModal(true); }
+
+  function saveAsset() {
+    if (!assetForm.name) return;
+    if (assetTab === "company") {
+      if (assetEditItem) {
+        setMyCompanies(prev => prev.map(c => c.id === assetEditItem.id ? { ...c, ...assetForm } : c));
+      } else {
+        setMyCompanies(prev => [...prev, { ...assetForm, id: "c" + Date.now(), isMain: false }]);
+      }
+    } else {
+      if (assetEditItem) {
+        setMyLands(prev => prev.map(l => l.id === assetEditItem.id ? { ...l, ...assetForm } : l));
+      } else {
+        setMyLands(prev => [...prev, { ...assetForm, id: "l" + Date.now() }]);
+      }
+    }
+    setAssetModal(false);
+  }
+
+  function deleteAsset(id) {
+    if (assetTab === "company") setMyCompanies(prev => prev.filter(c => c.id !== id || c.isMain));
+    else setMyLands(prev => prev.filter(l => l.id !== id));
+  }
+
   // ─── Cooldown logic: 3 bulan (90 hari), reset gratis 1x ──────────────────
   const getCooldown = () => {
     if (!qStatus?.isComplete)       return { canEdit: true };
@@ -231,7 +267,91 @@ function handleIsoUpload(e) {
         </div>
       </div>
 
-      {/* ── 2. KUESIONER EMISI ──────────────────────────────────────────── */}
+      {/* ── 2. ASET SAYA (Multi-asset: Perusahaan + Lahan) ─────────────── */}
+      <div className="card overflow-hidden">
+        {/* Tab header */}
+        <div className="flex border-b border-gray-100">
+          {[
+            { id: "company", icon: "🏢", label: `Perusahaan (${myCompanies.length})` },
+            { id: "land",    icon: "🌿", label: `Lahan (${myLands.length})` },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setAssetTab(tab.id)}
+              className={`flex-1 py-3 text-xs font-bold transition-all border-b-2 ${
+                assetTab === tab.id
+                  ? "border-green-600 text-green-700 bg-green-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Asset list */}
+        <div className="p-3 flex flex-col gap-2">
+          {assetTab === "company" && (
+            <>
+              {myCompanies.map(c => (
+                <div key={c.id} className={`rounded-xl p-3 border flex items-center gap-3 ${c.isMain ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${c.isMain ? "bg-green-200" : "bg-gray-200"}`}>
+                    🏢
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-gray-800 truncate">{c.name}</p>
+                      {c.isMain && <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded-full font-bold">Utama</span>}
+                    </div>
+                    <p className="text-xs text-gray-500">{c.type} · {c.bizType}</p>
+                    <p className="text-xs text-gray-400 truncate">{c.location}</p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => openEditAsset(c)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
+                    {!c.isMain && (
+                      <button onClick={() => deleteAsset(c.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {assetTab === "land" && (
+            <>
+              {myLands.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">Belum ada lahan terdaftar</p>
+              )}
+              {myLands.map(l => (
+                <div key={l.id} className="rounded-xl p-3 border bg-gray-50 border-gray-200 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg flex-shrink-0">
+                    {l.landType === "forest" ? "🌲" : l.landType === "peatland" ? "🌾" : l.landType === "mangrove" ? "🌴" : "🌿"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-gray-800 truncate">{l.name}</p>
+                    <p className="text-xs text-gray-500">{l.landType} · {l.area ? `${l.area} ha` : "-"}</p>
+                    <p className="text-xs text-gray-400 truncate">{l.location || "-"}</p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => openEditAsset(l)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
+                    <button onClick={() => deleteAsset(l.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Tombol tambah */}
+          <button
+            onClick={openAddAsset}
+            className="w-full py-2.5 rounded-xl border-2 border-dashed border-green-300 text-green-700 bg-green-50 text-xs font-bold active:scale-95 transition-all"
+          >
+            + Tambah {assetTab === "company" ? "Perusahaan" : "Lahan"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 3. KUESIONER EMISI ──────────────────────────────────────────── */}
       <div className={`rounded-3xl p-5 border transition-all duration-500 shadow-sm
         ${qStatus?.isComplete ? "bg-green-50 border-green-200" : "bg-white border-gray-100"}`}>
 
@@ -682,6 +802,75 @@ function handleIsoUpload(e) {
           </button>
         </div>
       </Modal>
+      {/* Asset Modal — Tambah / Edit Perusahaan atau Lahan */}
+      <Modal open={assetModal} onClose={() => setAssetModal(false)}
+        title={`${assetEditItem ? "Edit" : "Tambah"} ${assetTab === "company" ? "🏢 Perusahaan" : "🌿 Lahan"}`}>
+        <div className="flex flex-col gap-3">
+          {assetTab === "company" ? (
+            <>
+              {[
+                { label: "Nama Perusahaan", key: "name", type: "text", ph: "e.g. PT Hijau Lestari" },
+                { label: "Lokasi / Alamat", key: "location", type: "text", ph: "e.g. Jakarta Selatan" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
+                  <input type={f.type} placeholder={f.ph}
+                    value={assetForm[f.key] || ""}
+                    onChange={e => setAssetForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+                </div>
+              ))}
+              <div>
+                <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Entitas</label>
+                <select value={assetForm.type || "PT"}
+                  onChange={e => setAssetForm(p => ({ ...p, type: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+                  {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(e => <option key={e}>{e}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Usaha</label>
+                <select value={assetForm.bizType || "Manufacturing"}
+                  onChange={e => setAssetForm(p => ({ ...p, bizType: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+                  {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(b => <option key={b}>{b}</option>)}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {[
+                { label: "Nama Lahan", key: "name", type: "text", ph: "e.g. Lahan Gambut Riau A" },
+                { label: "Lokasi", key: "location", type: "text", ph: "e.g. Kab. Siak, Riau" },
+                { label: "Luas (ha)", key: "area", type: "number", ph: "e.g. 250" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
+                  <input type={f.type} placeholder={f.ph}
+                    value={assetForm[f.key] || ""}
+                    onChange={e => setAssetForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+                </div>
+              ))}
+              <div>
+                <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Lahan</label>
+                <select value={assetForm.landType || "forest"}
+                  onChange={e => setAssetForm(p => ({ ...p, landType: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+                  {[["forest","🌲 Hutan"],["peatland","🌾 Gambut"],["mangrove","🌴 Mangrove"],["agricultural","🌱 Pertanian"],["industrial","🏭 Industri"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
+          <button onClick={saveAsset} disabled={!assetForm.name}
+            className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40 active:scale-95 transition-all"
+            style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+            {assetEditItem ? "Simpan Perubahan" : `Tambah ${assetTab === "company" ? "Perusahaan" : "Lahan"}`}
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 }
