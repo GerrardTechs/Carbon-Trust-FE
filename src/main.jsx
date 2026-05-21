@@ -6,11 +6,12 @@ import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
 import LandlordApp from "./carbontrust/LandlordApp.jsx";
 import PublicView from "./carbontrust/PublicView.jsx";
-import AdminApp    from "./carbontrust/AdminApp.jsx";
-import LandlordApp from "./carbontrust/LandlordApp.jsx";
-import PublicView  from "./carbontrust/PublicView.jsx";
 
 function RootApp() {
+  // Cek public view terlebih dahulu (sebelum hooks)
+  const isPublic = window.location.pathname.startsWith("/public") ||
+                   new URLSearchParams(window.location.search).get("view") === "public";
+
   // 1. Ambil data dari localStorage saat pertama kali aplikasi dibuka
   const [session, setSession] = useState(() => {
     const savedSession = localStorage.getItem("carbon_session");
@@ -42,8 +43,7 @@ function RootApp() {
     setIsAppActive(false);
   };
 
-  const isPublic = window.location.pathname.startsWith("/public");
-if (isPublic) return <PublicView />;
+  if (isPublic) return <PublicView />;
 
   // KONDISI 1: Belum login sama sekali
   if (!session) {
@@ -256,7 +256,7 @@ if (isPublic) return <PublicView />;
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
   if (session?.role === "admin")    return <AdminApp onLogout={handleLogout} user={session.user} />;
-  if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExit} user={session.user} lang={session.lang} />;
+  if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExitApp} user={session.user} lang={session.lang} />;
   return (
     <CarbonTrust
       initialLang={session.lang}
@@ -265,14 +265,6 @@ if (isPublic) return <PublicView />;
       onExit={handleExitApp}    // Mengirim fungsi tutup dashboard
     />
   );
-}
-
-function RootApp() {
-  const isPublic = window.location.pathname.startsWith("/public") ||
-                   new URLSearchParams(window.location.search).get("view") === "public";
-
-  if (isPublic) return <PublicView />;
-  return <App />;  // App = komponen utama main.jsx yang sudah ada
 }
 
 createRoot(document.getElementById("root")).render(
