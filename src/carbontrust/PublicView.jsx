@@ -1,261 +1,412 @@
 import { useState, useEffect } from "react";
 
 const API = "https://carbon-trust-be.onrender.com/api";
-const TYPE_ICON = { forest:"🌲", peatland:"🌾", mangrove:"🌴", seawater:"🌊", agricultural:"🌱", industrial:"🏭", "Reforestation":"🌲", "Renewable Energy":"☀️", "Blue Carbon":"🌊", "Peat Restoration":"🌾" };
+
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .pv { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-height: 100dvh; background: #f8fafc; color: #1e293b; }
+  .pv-inner { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,.1); }
+  /* header */
+  .pv-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 14px 16px; position: sticky; top: 0; z-index: 20; }
+  .pv-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .pv-brand { display: flex; align-items: center; gap: 8px; }
+  .pv-brand-dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg,#166534,#0f766e); }
+  .pv-brand-name { font-size: 16px; font-weight: 900; letter-spacing: -.02em; }
+  .pv-brand-name span:first-child { color: #166534; }
+  .pv-brand-name span:last-child  { color: #0f766e; }
+  .pv-login-btn { font-size: 12px; font-weight: 700; color: #fff; background: linear-gradient(135deg,#166534,#0f766e); border: none; border-radius: 10px; padding: 7px 14px; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block; }
+  .pv-search { width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-family: inherit; outline: none; color: #1e293b; transition: border .15s; }
+  .pv-search:focus { border-color: #16a34a; }
+  /* filter */
+  .pv-filters { display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; border-bottom: 1px solid #f1f5f9; }
+  .pv-filter { shrink: 0; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; }
+  .pv-filter.active { background: #166534; color: #fff; border-color: #166534; }
+  /* hero banner */
+  .pv-hero { background: linear-gradient(135deg,#166534,#0f766e); padding: 20px 16px; }
+  .pv-hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.7); margin-bottom: 4px; }
+  .pv-hero-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .pv-hero-sub { font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.5; margin-bottom: 14px; }
+  .pv-hero-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .pv-hero-stat { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px; text-align: center; }
+  .pv-hero-stat-val { font-size: 18px; font-weight: 900; color: #fff; }
+  .pv-hero-stat-label { font-size: 10px; color: rgba(255,255,255,.7); margin-top: 1px; }
+  /* main */
+  .pv-main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  /* company card */
+  .pv-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all .2s; }
+  .pv-card:hover { border-color: #bbf7d0; box-shadow: 0 4px 16px rgba(22,101,52,.1); transform: translateY(-1px); }
+  .pv-card-header { padding: 14px; display: flex; align-items: flex-start; gap: 12px; }
+  .pv-card-icon { width: 44px; height: 44px; border-radius: 12px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .pv-card-info { flex: 1; min-width: 0; }
+  .pv-card-name { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pv-card-meta { font-size: 11px; color: #64748b; }
+  .pv-card-price { text-align: right; flex-shrink: 0; }
+  .pv-card-price-val { font-size: 16px; font-weight: 900; color: #166534; }
+  .pv-card-price-unit { font-size: 10px; color: #64748b; }
+  /* metrics */
+  .pv-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; border-top: 1px solid #f1f5f9; }
+  .pv-metric { padding: 10px 8px; text-align: center; border-right: 1px solid #f1f5f9; }
+  .pv-metric:last-child { border-right: none; }
+  .pv-metric-val { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .pv-metric-label { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+  /* badges */
+  .pv-card-badges { padding: 0 14px 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .pv-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .pv-badge-green { background: #dcfce7; color: #166534; }
+  .pv-badge-amber { background: #fef3c7; color: #92400e; }
+  .pv-badge-blue  { background: #dbeafe; color: #1e40af; }
+  /* bottom sheet overlay */
+  .pv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .pv-sheet { background: #fff; border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; max-height: 88vh; overflow-y: auto; }
+  .pv-sheet-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 999px; margin: 12px auto 0; }
+  .pv-sheet-header { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .pv-sheet-title { font-size: 15px; font-weight: 800; color: #1e293b; }
+  .pv-sheet-close { font-size: 20px; color: #94a3b8; background: none; border: none; cursor: pointer; line-height: 1; }
+  .pv-sheet-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  /* info grid */
+  .pv-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pv-info-cell { background: #f8fafc; border-radius: 10px; padding: 10px 12px; }
+  .pv-info-label { font-size: 10px; color: #94a3b8; margin-bottom: 2px; }
+  .pv-info-val { font-size: 13px; font-weight: 700; color: #1e293b; }
+  /* carbon summary */
+  .pv-carbon { background: linear-gradient(135deg,#166534,#0f766e); border-radius: 14px; padding: 16px; }
+  .pv-carbon-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.7); margin-bottom: 4px; }
+  .pv-carbon-val { font-size: 32px; font-weight: 900; color: #fff; }
+  .pv-carbon-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .pv-carbon-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.2); }
+  .pv-carbon-item-label { font-size: 11px; color: rgba(255,255,255,.7); }
+  .pv-carbon-item-val { font-size: 13px; font-weight: 700; color: #fff; }
+  /* parcel list */
+  .pv-parcel { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f8fafc; border-radius: 10px; }
+  .pv-parcel-icon { font-size: 20px; }
+  .pv-parcel-name { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .pv-parcel-sub { font-size: 11px; color: #64748b; }
+  .pv-parcel-abs { font-size: 12px; font-weight: 700; margin-left: auto; }
+  /* CTA */
+  .pv-cta { display: block; width: 100%; padding: 14px 0; border-radius: 14px; border: none; background: linear-gradient(135deg,#166534,#0f766e); color: #fff; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; font-family: inherit; text-decoration: none; transition: all .15s; }
+  .pv-cta:hover { opacity: .92; }
+  .pv-cta-sub { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 6px; }
+  /* empty / loading */
+  .pv-empty { text-align: center; padding: 60px 16px; }
+  .pv-empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .pv-empty-text { font-size: 14px; font-weight: 700; color: #374151; }
+  .pv-empty-sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  /* footer */
+  .pv-footer { padding: 20px 16px; border-top: 1px solid #f1f5f9; text-align: center; }
+  .pv-footer-text { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+  .fade-up { animation: fadeUp .3s ease forwards; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+`;
+
+const TYPE_ICON = {
+  forest:"🌲", peatland:"🌾", mangrove:"🌴",
+  seawater:"🌊", agricultural:"🌱", industrial:"🏭",
+  Reforestation:"🌲", "Renewable Energy":"☀️",
+  "Blue Carbon":"🌊", "Peat Restoration":"🌾",
+};
 
 export default function PublicView() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [detail, setDetail]     = useState(null);
-  const [search, setSearch]     = useState("");
-  const [filter, setFilter]     = useState("all");
+  const [projects, setProjects]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
+  const [search, setSearch]       = useState("");
+  const [filter, setFilter]       = useState("all");
+  const [detail, setDetail]       = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/public/projects`)
       .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setProjects(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => {
+        if (Array.isArray(d)) setProjects(d);
+        else setError(true);
+        setLoading(false);
+      })
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
 
-  async function loadDetail(proj) {
-    const res = await fetch(`${API}/public/company/${proj.companyId}`).then(r => r.json());
+  async function openDetail(proj) {
+    setDetail({ ...proj, companyDetail: null });
+    setDetailLoading(true);
+    const res = await fetch(`${API}/public/company/${proj.companyId}`).then(r => r.json()).catch(() => null);
     setDetail({ ...proj, companyDetail: res });
+    setDetailLoading(false);
   }
 
-  const types = ["all", ...new Set(projects.map(p => p.type))];
+  const types = ["all", ...new Set(projects.map(p => p.type).filter(Boolean))];
+
   const filtered = projects.filter(p => {
-    const matchSearch = p.company.toLowerCase().includes(search.toLowerCase()) ||
-                        p.country.toLowerCase().includes(search.toLowerCase()) ||
-                        p.type.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      (p.company || "").toLowerCase().includes(q) ||
+      (p.country || "").toLowerCase().includes(q) ||
+      (p.type    || "").toLowerCase().includes(q);
     const matchFilter = filter === "all" || p.type === filter;
     return matchSearch && matchFilter;
   });
 
-  return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; }
-        .card { background:#fff; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-        .fade-up { animation: fadeUp .3s ease forwards; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50; display:flex; align-items:flex-end; }
-        .sheet { background:#fff; border-radius:20px 20px 0 0; width:100%; max-height:85vh; overflow-y:auto; padding:24px; }
-      `}</style>
+  const totalCredits    = projects.reduce((s,p) => s + (p.available || 0), 0);
+  const verifiedCount   = projects.filter(p => p.verified).length;
+  const countryCount    = new Set(projects.map(p => p.country)).size;
 
-      <div className="max-w-md mx-auto min-h-screen bg-gray-50 shadow-2xl">
+  return (
+    <div className="pv">
+      <style>{CSS}</style>
+      <div className="pv-inner">
 
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-100">
-          <div className="px-4 py-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="font-black text-lg text-gray-800">
-                  <span style={{ color:"#166534" }}>Carbon</span>
-                  <span style={{ color:"#0f766e" }}>Trust</span>
-                </p>
-                <p className="text-xs text-gray-400">Carbon Credit Marketplace — Public View</p>
+        <div className="pv-header">
+          <div className="pv-header-top">
+            <div className="pv-brand">
+              <div className="pv-brand-dot" />
+              <div className="pv-brand-name">
+                <span>Carbon</span><span>Trust</span>
               </div>
-              <a href="/"
-                className="text-xs font-bold text-white px-3 py-1.5 rounded-xl"
-                style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-                Login →
-              </a>
             </div>
-
-            <input
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:border-green-400"
-              placeholder="🔍 Cari project, negara, tipe..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+            <a href="/" className="pv-login-btn">Login / Daftar →</a>
           </div>
-
-          {/* Filter tabs */}
-          <div className="flex gap-2 px-4 pb-3 overflow-x-auto">
-            {types.map(t => (
-              <button key={t} onClick={() => setFilter(t)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all
-                  ${filter === t
-                    ? "bg-green-700 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                {t === "all" ? "Semua" : t}
-              </button>
-            ))}
-          </div>
+          <input className="pv-search"
+            placeholder="🔍 Cari perusahaan, negara, tipe..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
 
-        {/* Stats banner */}
-        <div className="mx-4 mt-4 rounded-2xl p-4 text-white mb-4"
-          style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-          <p className="text-xs text-green-200 uppercase tracking-wide mb-1">Platform Overview</p>
-          <div className="grid grid-cols-3 gap-2 text-center">
+        {/* Filter chips */}
+        <div className="pv-filters">
+          {types.map(t => (
+            <button key={t}
+              className={`pv-filter ${filter === t ? "active" : ""}`}
+              onClick={() => setFilter(t)}>
+              {t === "all" ? "🌍 Semua" : `${TYPE_ICON[t] || "🌿"} ${t}`}
+            </button>
+          ))}
+        </div>
+
+        {/* Hero */}
+        <div className="pv-hero">
+          <div className="pv-hero-label">Carbon Credit Marketplace · Public View</div>
+          <div className="pv-hero-title">Pasar Karbon Terbuka</div>
+          <div className="pv-hero-sub">
+            Lihat kredit karbon, emisi, dan serapan perusahaan secara transparan.
+            Tidak perlu login untuk melihat data.
+          </div>
+          <div className="pv-hero-stats">
             {[
-              { l:"Project",  v:projects.length },
-              { l:"Verified", v:projects.filter(p=>p.verified).length },
-              { l:"Negara",   v:new Set(projects.map(p=>p.country)).size },
+              { val:projects.length,              label:"Project"  },
+              { val:verifiedCount,                label:"Verified" },
+              { val:countryCount,                 label:"Negara"   },
             ].map((s,i) => (
-              <div key={i}>
-                <p className="font-black text-xl">{s.v}</p>
-                <p className="text-xs text-green-300">{s.l}</p>
+              <div key={i} className="pv-hero-stat">
+                <div className="pv-hero-stat-val">{s.val}</div>
+                <div className="pv-hero-stat-label">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Project list */}
-        <div className="px-4 flex flex-col gap-3 pb-8">
+        <div className="pv-main">
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-sm text-gray-400">Memuat project...</p>
+            <div className="pv-empty">
+              <div className="pv-empty-icon">⏳</div>
+              <div className="pv-empty-text">Memuat data market...</div>
+            </div>
+          ) : error ? (
+            <div className="pv-empty">
+              <div className="pv-empty-icon">⚠️</div>
+              <div className="pv-empty-text">Gagal memuat data</div>
+              <div className="pv-empty-sub">Coba refresh halaman ini</div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-3xl mb-3">🔍</p>
-              <p className="text-sm text-gray-500">Tidak ada project ditemukan</p>
+            <div className="pv-empty">
+              <div className="pv-empty-icon">🔍</div>
+              <div className="pv-empty-text">Tidak ada project ditemukan</div>
+              <div className="pv-empty-sub">Coba kata kunci lain</div>
             </div>
-          ) : filtered.map(proj => (
-            <div key={proj.id} className="card p-4 cursor-pointer hover:shadow-md transition-shadow fade-up"
-              onClick={() => loadDetail(proj)}>
-
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl shrink-0">
-                  {TYPE_ICON[proj.type] || "🌿"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-bold text-gray-800 text-sm truncate">{proj.company}</p>
-                      <p className="text-xs text-gray-400">{proj.flag} {proj.country} · {proj.type}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-black text-green-700 text-sm">${proj.price}</p>
-                      <p className="text-xs text-gray-400">/tCO₂</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1.5 mt-2">
-                    {[
-                      { l:"Stok",     v:`${proj.available?.toLocaleString()} t` },
-                      { l:"Serapan",  v:proj.ndvi ? `${proj.absRate} t/ha` : "—" },
-                      { l:"Rating",   v:`⭐ ${proj.rating}` },
-                    ].map((s,i) => (
-                      <div key={i} className="bg-gray-50 rounded-lg p-1.5 text-center">
-                        <p className="text-xs font-bold text-gray-700">{s.v}</p>
-                        <p className="text-xs text-gray-400">{s.l}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-2">
-                    {proj.verified
-                      ? <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200 font-bold">✅ ISO 14064</span>
-                      : <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-bold">⏳ Pending</span>
-                    }
-                    {proj.isoVerified && (
-                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-bold">🔒 Verified</span>
-                    )}
-                    <span className="ml-auto text-xs text-gray-400">Lihat detail →</span>
+          ) : filtered.map((proj, idx) => (
+            <div key={proj.id} className="pv-card fade-up" onClick={() => openDetail(proj)}
+              style={{ animationDelay:`${idx * 40}ms` }}>
+              <div className="pv-card-header">
+                <div className="pv-card-icon">{TYPE_ICON[proj.type] || "🌿"}</div>
+                <div className="pv-card-info">
+                  <div className="pv-card-name">{proj.company}</div>
+                  <div className="pv-card-meta">
+                    {proj.flag} {proj.country} · {proj.type}
                   </div>
                 </div>
+                <div className="pv-card-price">
+                  <div className="pv-card-price-val">${proj.price}</div>
+                  <div className="pv-card-price-unit">/tCO₂</div>
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div className="pv-metrics">
+                {[
+                  { label:"Stok",       val:`${(proj.available||0).toLocaleString()} t` },
+                  { label:"Serapan",    val:proj.absRate ? `${proj.absRate} t/ha` : "—" },
+                  { label:"Emisi",      val:proj.totalAbsorption ? `${proj.totalAbsorption} t/bln` : "—" },
+                  { label:"Rating",     val:`⭐ ${proj.rating}` },
+                ].map((m,i) => (
+                  <div key={i} className="pv-metric">
+                    <div className="pv-metric-val">{m.val}</div>
+                    <div className="pv-metric-label">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pv-card-badges">
+                {proj.verified
+                  ? <span className="pv-badge pv-badge-green">✅ ISO 14064</span>
+                  : <span className="pv-badge pv-badge-amber">⏳ Pending ISO</span>
+                }
+                {proj.isoVerified && (
+                  <span className="pv-badge pv-badge-blue">🔒 Terverifikasi</span>
+                )}
+                {proj.companyESG && (
+                  <span className="pv-badge" style={{
+                    background: proj.companyESG >= 70 ? "#dcfce7" : "#fef3c7",
+                    color:      proj.companyESG >= 70 ? "#166534"  : "#92400e",
+                  }}>
+                    ESG {proj.companyESG}
+                  </span>
+                )}
+                <span style={{ marginLeft:"auto", fontSize:11, color:"#94a3b8" }}>
+                  Lihat detail →
+                </span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-6 text-center border-t border-gray-100">
-          <p className="text-xs text-gray-400">
-            CarbonTrust · ISO 14064:2018 · Paris Agreement Article 6
-          </p>
-          <a href="/"
-            className="inline-block mt-2 text-xs font-bold text-green-700 hover:underline">
-            Daftar / Login untuk bid →
+        <div className="pv-footer">
+          <div className="pv-footer-text">
+            CarbonTrust · ISO 14064:2018 · Paris Agreement Article 6<br />
+            Data diperbarui real-time dari platform CarbonTrust
+          </div>
+          <a href="/" className="pv-cta" style={{ marginTop:12 }}>
+            Daftar / Login untuk Bid →
           </a>
         </div>
-
       </div>
 
       {/* Detail bottom sheet */}
       {detail && (
-        <div className="overlay" onClick={() => setDetail(null)}>
-          <div className="sheet fade-up" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-black text-gray-800">{detail.company}</p>
-              <button onClick={() => setDetail(null)} className="text-gray-400 text-xl">✕</button>
-            </div>
-
-            {/* Company info */}
-            <div className="bg-slate-50 rounded-xl p-3 mb-3">
-              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Profil Perusahaan</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { l:"Negara",       v:`${detail.flag} ${detail.country}` },
-                  { l:"Tipe Project", v:detail.type },
-                  { l:"Total Lahan",  v:`${detail.companyDetail?.parcels?.length || 0} lahan` },
-                  { l:"Total Area",   v:`${detail.companyDetail?.totalAbsorption || 0} t/bln` },
-                  { l:"ESG Score",    v:detail.companyESG ?? "—" },
-                  { l:"ISO Status",   v:detail.isoVerified ? "✅ Verified" : "⏳ Pending" },
-                ].map((item,i) => (
-                  <div key={i} className="bg-white rounded-lg p-2.5">
-                    <p className="text-xs text-gray-400">{item.l}</p>
-                    <p className="font-bold text-sm text-gray-800">{item.v}</p>
-                  </div>
-                ))}
+        <div className="pv-overlay" onClick={() => setDetail(null)}>
+          <div className="pv-sheet" onClick={e => e.stopPropagation()}>
+            <div className="pv-sheet-handle" />
+            <div className="pv-sheet-header">
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ fontSize:24 }}>{TYPE_ICON[detail.type] || "🌿"}</span>
+                <div>
+                  <div className="pv-sheet-title">{detail.company}</div>
+                  <div style={{ fontSize:11, color:"#64748b" }}>{detail.flag} {detail.country}</div>
+                </div>
               </div>
+              <button className="pv-sheet-close" onClick={() => setDetail(null)}>✕</button>
             </div>
 
-            {/* Parcel list */}
-            {detail.companyDetail?.parcels?.length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Lahan & Serapan</p>
-                <div className="flex flex-col gap-1.5">
-                  {detail.companyDetail.parcels.map(p => (
-                    <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <span>{TYPE_ICON[p.type] || "🌿"}</span>
-                        <div>
-                          <p className="text-xs font-bold text-gray-700">{p.name}</p>
-                          <p className="text-xs text-gray-400">{p.area} ha · {p.status}</p>
+            <div className="pv-sheet-body">
+              {detailLoading ? (
+                <div style={{ textAlign:"center", padding:"24px 0", color:"#94a3b8", fontSize:13 }}>
+                  Memuat detail...
+                </div>
+              ) : (
+                <>
+                  {/* Company info */}
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", marginBottom:8 }}>Profil Perusahaan</div>
+                    <div className="pv-info-grid">
+                      {[
+                        { l:"Tipe Project",  v:detail.type },
+                        { l:"Harga Ask",     v:`$${detail.price}/tCO₂` },
+                        { l:"Stok Kredit",   v:`${(detail.available||0).toLocaleString()} t` },
+                        { l:"Rating",        v:`⭐ ${detail.rating}` },
+                        { l:"ESG Score",     v:detail.companyESG ?? "—" },
+                        { l:"ISO Status",    v:detail.verified ? "✅ Terverifikasi" : "⏳ Pending" },
+                        { l:"Total Lahan",   v:`${detail.companyDetail?.parcels?.length || 0} lahan` },
+                        { l:"Total Area",    v:detail.companyDetail ? `${detail.companyDetail.parcels?.reduce((s,p) => s + p.area, 0)?.toLocaleString()} ha` : "—" },
+                      ].map((item,i) => (
+                        <div key={i} className="pv-info-cell">
+                          <div className="pv-info-label">{item.l}</div>
+                          <div className="pv-info-val">{item.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Carbon summary */}
+                  <div className="pv-carbon">
+                    <div className="pv-carbon-label">Kredit Karbon Tersedia</div>
+                    <div className="pv-carbon-val">{(detail.available||0).toLocaleString()}</div>
+                    <div className="pv-carbon-sub">tCO₂e tersertifikasi</div>
+                    <div className="pv-carbon-row">
+                      <div>
+                        <div className="pv-carbon-item-label">Serapan / bulan</div>
+                        <div className="pv-carbon-item-val">
+                          {detail.companyDetail?.totalAbsorption ?? detail.totalAbsorption ?? "—"} t
                         </div>
                       </div>
-                      <p className={`text-xs font-black ${p.absorptionMonthly >= 0 ? "text-green-700" : "text-red-500"}`}>
-                        {p.absorptionMonthly >= 0 ? "▲" : "▼"}{Math.abs(p.absorptionMonthly)} t/bln
-                      </p>
+                      <div style={{ textAlign:"right" }}>
+                        <div className="pv-carbon-item-label">Est. Nilai</div>
+                        <div className="pv-carbon-item-val">
+                          ${((detail.available || 0) * detail.price).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
 
-            {/* Carbon summary */}
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">
-              <p className="text-xs font-bold text-green-700 mb-2">📜 Kredit Karbon Tersedia</p>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-2xl font-black text-green-700">
-                    {detail.available?.toLocaleString()} t
-                  </p>
-                  <p className="text-xs text-green-600">tCO₂e tersertifikasi</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-green-700">${detail.price}/ton</p>
-                  <p className="text-xs text-green-600">
-                    ≈ ${(detail.available * detail.price).toLocaleString()} total
-                  </p>
-                </div>
-              </div>
+                  {/* Parcel list */}
+                  {detail.companyDetail?.parcels?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", marginBottom:8 }}>
+                        Lahan & Serapan
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                        {detail.companyDetail.parcels.map(p => (
+                          <div key={p.id} className="pv-parcel">
+                            <span className="pv-parcel-icon">{TYPE_ICON[p.type] || "🌿"}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div className="pv-parcel-name" style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                              <div className="pv-parcel-sub">{p.area} ha · {p.type} · {p.status}</div>
+                            </div>
+                            <div className={`pv-parcel-abs ${p.absorptionMonthly >= 0 ? "" : ""}`}
+                              style={{ color: p.absorptionMonthly >= 0 ? "#166534" : "#dc2626" }}>
+                              {p.absorptionMonthly >= 0 ? "▲" : "▼"}{Math.abs(p.absorptionMonthly)} t/bln
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Emisi & serapan detail */}
+                  {detail.companyDetail && (
+                    <div style={{ background:"#f8fafc", borderRadius:12, padding:"12px 14px", display:"flex", flexDirection:"column", gap:8 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase" }}>Ringkasan Karbon</div>
+                      {[
+                        { l:"Total Serapan / bulan",  v:`+ ${detail.companyDetail.totalAbsorption} tCO₂`,  c:"#166534" },
+                        { l:"Total Emisi / bulan",    v:`- ${detail.companyDetail.totalEmission} tCO₂`,    c:"#dc2626" },
+                        { l:"Net / bulan",            v:`${detail.companyDetail.netMonthly ?? (detail.companyDetail.totalAbsorption - detail.companyDetail.totalEmission).toFixed(2)} tCO₂`, c:"#1e293b" },
+                        { l:"Kredit Karbon / tahun",  v:`${detail.companyDetail.netCredits?.toLocaleString() ?? "—"} tCO₂e`, c:"#166534" },
+                      ].map((row,i) => (
+                        <div key={i} style={{ display:"flex", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:12, color:"#64748b" }}>{row.l}</span>
+                          <span style={{ fontSize:12, fontWeight:700, color:row.c }}>{row.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* CTA */}
+                  <a href="/" className="pv-cta">Login untuk Ajukan Bid →</a>
+                  <div className="pv-cta-sub">Butuh akun untuk mengajukan harga bid</div>
+                </>
+              )}
             </div>
-
-            {/* CTA */}
-            <a href="/"
-              className="block w-full text-center py-3 rounded-xl font-bold text-white active:scale-95 transition-all"
-              style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-              Login untuk Bid →
-            </a>
-            <p className="text-xs text-gray-400 text-center mt-2">
-              Butuh akun untuk mengajukan bid harga
-            </p>
           </div>
         </div>
       )}

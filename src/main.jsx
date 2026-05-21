@@ -6,6 +6,9 @@ import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
 import LandlordApp from "./carbontrust/LandlordApp.jsx";
 import PublicView from "./carbontrust/PublicView.jsx";
+import AdminApp    from "./carbontrust/AdminApp.jsx";
+import LandlordApp from "./carbontrust/LandlordApp.jsx";
+import PublicView  from "./carbontrust/PublicView.jsx";
 
 function RootApp() {
   // 1. Ambil data dari localStorage saat pertama kali aplikasi dibuka
@@ -38,6 +41,9 @@ function RootApp() {
   const handleExitApp = () => {
     setIsAppActive(false);
   };
+
+  const isPublic = window.location.pathname.startsWith("/public");
+if (isPublic) return <PublicView />;
 
   // KONDISI 1: Belum login sama sekali
   if (!session) {
@@ -249,12 +255,8 @@ function RootApp() {
   }
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
-  if (session.role === "admin") {
-    return <AdminApp onLogout={handleLogout} user={session.user} />;
-  }
-  if (session.role === "landlord") {
-    return <LandlordApp onLogout={handleLogout} onExit={handleExit} user={session.user} lang={session.lang} />;
-  }
+  if (session?.role === "admin")    return <AdminApp onLogout={handleLogout} user={session.user} />;
+  if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExit} user={session.user} lang={session.lang} />;
   return (
     <CarbonTrust
       initialLang={session.lang}
