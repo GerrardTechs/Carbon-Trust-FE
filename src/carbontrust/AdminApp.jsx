@@ -175,7 +175,7 @@ export default function AdminApp({ onLogout, user }) {
                       : "linear-gradient(135deg,#450a0a,#431407)"
                   }}>
                     <div className="adm-net-label">Net Platform Carbon Balance</div>
-                    <div className="adm-net-val">{net >= 0 ? "+" : ""}{net.toFixed(2)}</div>
+                    <div className="adm-net-val">{net >= 0 ? "+" : ""}{(net || 0).toFixed(2)}</div>
                     <div className="adm-net-sub">tCO₂e / bulan · seluruh platform</div>
                   </div>
 
