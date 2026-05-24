@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client"; 
 import "./index.css"
 import AuthFlow from "./auth/AuthFlow";
-import AdminApp from "./carbontrust/AdminApp.jsx";
+/// import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
 /// import LandlordApp from "./carbontrust/LandlordApp.jsx";
 /// import PublicView from "./carbontrust/PublicView.jsx";
@@ -255,16 +255,8 @@ function RootApp() {
   }
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
-  if (session?.role === "admin") {
-    try {
-      return <AdminApp onLogout={handleLogout} user={session.user} />;
-    } catch(e) {
-      console.error("AdminApp crash:", e);
-      return <div style={{color:"red",padding:20}}>{e.message}</div>;
-    }
-  }
-    if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExitApp} user={session.user} lang={session.lang} />;
-  return (
+  if (session?.role === "admin")    return <div style={{padding:20,color:"green"}}>Admin OK - imports commented</div>;
+if (session?.role === "landlord") return <div style={{padding:20,color:"blue"}}>Landlord OK</div>;  return (
     <CarbonTrust
       initialLang={session.lang}
       userData={session.user}
