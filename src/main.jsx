@@ -4,8 +4,8 @@ import "./index.css"
 import AuthFlow from "./auth/AuthFlow";
 import AdminApp from "./carbontrust/AdminApp.jsx";
 import CarbonTrust from "./carbontrust/App";
-import LandlordApp from "./carbontrust/LandlordApp.jsx";
-import PublicView from "./carbontrust/PublicView.jsx";
+/// import LandlordApp from "./carbontrust/LandlordApp.jsx";
+/// import PublicView from "./carbontrust/PublicView.jsx";
 
 function RootApp() {
   // Cek public view terlebih dahulu (sebelum hooks)
@@ -255,8 +255,15 @@ function RootApp() {
   }
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
-  if (session?.role === "admin")    return <AdminApp onLogout={handleLogout} user={session.user} />;
-  if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExitApp} user={session.user} lang={session.lang} />;
+  if (session?.role === "admin") {
+    try {
+      return <AdminApp onLogout={handleLogout} user={session.user} />;
+    } catch(e) {
+      console.error("AdminApp crash:", e);
+      return <div style={{color:"red",padding:20}}>{e.message}</div>;
+    }
+  }
+    if (session?.role === "landlord") return <LandlordApp onLogout={handleLogout} onExit={handleExitApp} user={session.user} lang={session.lang} />;
   return (
     <CarbonTrust
       initialLang={session.lang}
