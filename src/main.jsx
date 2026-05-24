@@ -273,6 +273,14 @@ function RootApp() {
   );
 }
 
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (args[0]?.includes?.('Cannot access')) {
+    console.trace('TDZ Error location:');
+  }
+  originalConsoleError(...args);
+};
+
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RootApp />
