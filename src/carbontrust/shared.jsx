@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useRef } from "react";
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-import { API } from "./shared.jsx";
 export const COMPANY_ID = "COMP-001";
 export const CREDIT_PRICE = 18.5;
 
