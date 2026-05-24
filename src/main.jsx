@@ -255,8 +255,15 @@ function RootApp() {
   }
 
   // KONDISI 3: Masuk ke dalam Aplikasi CarbonTrust
-  if (session?.role === "admin")    return <div style={{padding:20,color:"green"}}>Admin OK - imports commented</div>;
-if (session?.role === "landlord") return <div style={{padding:20,color:"blue"}}>Landlord OK</div>;  return (
+  if (session?.role === "admin") {
+    return (
+      <div style={{padding:20, fontFamily:"sans-serif"}}>
+        <h2>Admin Test</h2>
+        <p>Session: {JSON.stringify(session)}</p>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+    );
+  }if (session?.role === "landlord") return <div style={{padding:20,color:"blue"}}>Landlord OK</div>;  return (
     <CarbonTrust
       initialLang={session.lang}
       userData={session.user}
