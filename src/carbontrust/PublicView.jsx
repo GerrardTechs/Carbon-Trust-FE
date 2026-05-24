@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API } from "./shared.jsx"; 
 
 const API = "https://carbon-trust-be.onrender.com/api";
 
