@@ -1966,7 +1966,12 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
 
         // 3. Setelah animasi success selesai, lempar data asli backend ke App.jsx
         setTimeout(() => {
-          if (onComplete) onComplete(role, result.user, lang, result.token);
+          if (onComplete) onComplete(
+            data.user.role,  // ← pakai dari response BE
+            data.user,
+            lang,
+            data.token
+          );
         }, 2000);
       } else {
         alert("Gagal registrasi di server.");

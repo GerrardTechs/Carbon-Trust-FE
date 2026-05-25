@@ -69,27 +69,40 @@ export function MarketPage({ t, company, projects, setProjects }) {
     });
   }, [search]);
 
-  const sorted = [...projects].sort((a, b) => {
-    const sa = (a.verified ? 2 : 0) + a.rating + (a.ndvi || 0);
-    const sb = (b.verified ? 2 : 0) + b.rating + (b.ndvi || 0);
+  const sorted = [...projects].sort((projA, projB) => {
+    const sa = (projA.verified ? 2 : 0) + projA.rating + (projA.ndvi || 0);
+    const sb = (projB.verified ? 2 : 0) + projB.rating + (projB.ndvi || 0);
     return sb - sa;
   });
 
   // ── Bid submit ─────────────────────────────────────────────────────────────
-  function submitBid(proj) {
+  async function submitBid(proj) {
     const price = parseFloat(bidPrice);
     const vol   = parseFloat(bidVolume) || 100;
     if (!price || price <= 0) return;
+  
+    // Kirim ke BE
+    const res = await apiFetch("/bids", {
+      method: "POST",
+      body: JSON.stringify({
+        projectId:      proj._id || proj.id,
+        buyerCompanyId: company?.id || company?._id,
+        buyerName:      company?.name || "PT. Anda",
+        pricePerTon:    price,
+        volume:         vol,
+      }),
+    });
+  
     const newBid = {
-      bidder:  company?.name || "PT. Anda",
+      bidder: company?.name || "PT. Anda",
       price,
-      volume:  vol,
-      total:   +(price * vol).toFixed(0),
-      time:    new Date().toLocaleString("id-ID"),
+      volume: vol,
+      total:  +(price * vol).toFixed(0),
+      time:   new Date().toLocaleString("id-ID"),
     };
     setBids(prev => ({
       ...prev,
-      [proj.id]: [...(prev[proj.id] || []), newBid].sort((a, b) => b.price - a.price),
+      [proj.id]: [...(prev[proj.id] || []), newBid].sort((x, y) => y.price - x.price),
     }));
     setBidPrice(""); setBidVolume("");
     setSubmitted(true);
@@ -387,7 +400,7 @@ export function MarketPage({ t, company, projects, setProjects }) {
                   Bid Aktif ({bids[detail.id].length}) — tertinggi dulu
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  {bids[detail.id].map((b, i) => (
+                {bids[detail.id].map((bidItem, i) => (
                     <div
                       key={i}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl ${i === 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"}`}

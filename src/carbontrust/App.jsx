@@ -43,11 +43,12 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
 
   const t = TR[lang] ?? TR["en"];
 
+  const companyId = userData?.id || userData?._id || COMPANY_ID;
   // Load real data from backend (fallback: mock data stays)
   useEffect(() => {
-    apiFetch(`/parcels?companyId=${COMPANY_ID}`).then(d => { if (d?.length) setParcels(d); });
-    apiFetch(`/alerts?companyId=${COMPANY_ID}`).then(d => { if (Array.isArray(d)) setAlerts(d); });
-    apiFetch(`/company/${COMPANY_ID}`).then(d => { if (d?.id) setCompany(d); });
+    apiFetch(`/parcels?companyId=${companyId}`)
+    apiFetch(`/alerts?companyId=${companyId}`)
+    apiFetch(`/company/${companyId}`)
     apiFetch(`/transactions?companyId=${COMPANY_ID}`).then(d => {
       if (d?.length) setActiveTx(d[d.length - 1]);
     });

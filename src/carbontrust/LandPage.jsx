@@ -13,10 +13,11 @@ export function LandPage({ parcels, setParcels, t, lang }) {
   const [addModal, setAddModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
   const [selParcel, setSelParcel] = useState(null);
+  const parcelId = p._id || p.id;
   const [ownershipDocs, setOwnershipDocs] = useState({}); // { parcelId: { file, country, type } }
-const [docError, setDocError]           = useState("");
-const [docUploaded, setDocUploaded]     = useState({});
-const FOREIGN_COUNTRIES = [
+  const [docError, setDocError]           = useState("");
+  const [docUploaded, setDocUploaded]     = useState({});
+  const FOREIGN_COUNTRIES = [
   "Malaysia", "Papua New Guinea", "Brazil", "Colombia", "Peru",
   "Congo", "Gabon", "Vietnam", "Cambodia", "Myanmar", "Other"
 ];

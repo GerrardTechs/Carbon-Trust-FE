@@ -31,8 +31,13 @@ export const GCSS = `
 
 export async function apiFetch(path, opts = {}) {
   try {
+    const session = JSON.parse(localStorage.getItem("carbon_session") || "{}");
+    const token = session?.token || "";
     const res = await fetch(`${API}${path}`, {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      },
       ...opts,
     });
     return await res.json();
