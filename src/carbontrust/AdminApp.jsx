@@ -158,7 +158,7 @@ export default function AdminApp({ onLogout, user }) {
                       { icon:"🏭", label:"Emisi / bulan",      val:`${overview.totalEmission} t`,   sub:"tCO₂e" },
                       { icon:"🎫", label:"Total Kredit",       val:overview.totalCredits?.toLocaleString(), sub:"tCO₂e/yr" },
                       { icon:"✅", label:"ISO Verified",       val:overview.verifiedCount,  sub:"perusahaan" },
-                    ].map((k,i) => (
+                    ].map((comp,i) => (
                       <div key={i} className="adm-kpi">
                         <div className="adm-kpi-icon">{k.icon}</div>
                         <div className="adm-kpi-val">{k.val}</div>
@@ -210,7 +210,7 @@ export default function AdminApp({ onLogout, user }) {
                       <span className="adm-section-sub">{overview.companies?.length} total</span>
                     </div>
                     {[...( overview.companies || [])]
-                      .sort((a,b) => (b.netCredits||0) - (a.netCredits||0))
+                      .sort((compA, compB) => (compB.netCredits||0) - (compA.netCredits||0))
                       .slice(0,5)
                       .map((c,i) => (
                         <div key={c.id} className="adm-row">
@@ -253,12 +253,12 @@ export default function AdminApp({ onLogout, user }) {
                           { label:"Lahan",    val:c.parcelsCount },
                           { label:"Serapan",  val:`${c.totalAbsorption}t` },
                           { label:"Kredit",   val:(c.netCredits||0).toLocaleString() },
-                        ].map((s,i) => (
-                          <div key={i} className="adm-company-stat">
-                            <div className="adm-company-stat-val">{s.val}</div>
-                            <div className="adm-company-stat-label">{s.label}</div>
-                          </div>
-                        ))}
+                        ].map((stat,i) => (
+  <div key={i} className="adm-company-stat">
+    <div className="adm-company-stat-val">{stat.val}</div>
+    <div className="adm-company-stat-label">{stat.label}</div>
+  </div>
+))}
                       </div>
 
                       <div className="adm-company-footer">
