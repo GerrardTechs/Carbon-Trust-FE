@@ -46,10 +46,16 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   const companyId = userData?.id || userData?._id || COMPANY_ID;
   // Load real data from backend (fallback: mock data stays)
   useEffect(() => {
-    apiFetch(`/parcels?companyId=${companyId}`)
-    apiFetch(`/alerts?companyId=${companyId}`)
-    apiFetch(`/company/${companyId}`)
-    apiFetch(`/transactions?companyId=${COMPANY_ID}`).then(d => {
+    apiFetch(`/parcels?companyId=${companyId}`).then(d => {
+      if (d?.length) setParcels(d);
+    });
+    apiFetch(`/alerts?companyId=${companyId}`).then(d => {
+      if (Array.isArray(d)) setAlerts(d);
+    });
+    apiFetch(`/company/${companyId}`).then(d => {
+      if (d?.id || d?._id) setCompany(d);
+    });
+    apiFetch(`/transactions?companyId=${companyId}`).then(d => {
       if (d?.length) setActiveTx(d[d.length - 1]);
     });
   }, []);
@@ -73,7 +79,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "tx":      return <TxPage      tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
       case "market":  return <MarketPage t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;      
       case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} />;
-      case "projects":    return <ActiveProjectPage t={t} company={company} />;
+      /// case "projects":    return <ActiveProjectPage t={t} company={company} />;
       case "verify":  return <VerifyPage  t={t} parcels={parcels} lang={lang} setPage={setPage} />;
       case "profile": return <ProfilePage company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus}
       />;
