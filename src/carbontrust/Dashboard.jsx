@@ -83,8 +83,8 @@ async function handleDismiss(alertId) {
   }
 
   const visibleAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
-  const totalAbs  = parseFloat(parcels.reduce((s, p) => s + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
-  const totalEm   = parseFloat(parcels.reduce((s, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
+  const totalAbs = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0,  calcAbsorption(parcel)), 0).toFixed(2));
+  const totalEm  = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0, -calcAbsorption(parcel)), 0).toFixed(2));  
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
 
   // Compute delta % when parcels (conditions) change
@@ -124,22 +124,22 @@ async function handleDismiss(alertId) {
     { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
     { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
     { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
-  ].map((k, i) => (
+  ].map((kpiItem, i) => (
     <div key={i} className="card p-3 text-center">
-      <p className="text-xl mb-0.5">{k.icon}</p>
-      <p className={`font-black text-sm ${k.color === "emerald" ? "text-emerald-700" : k.color === "red" ? "text-red-600" : "text-teal-700"}`}>
-        {k.v}
+      <p className="text-xl mb-0.5">{kpiItem.icon}</p>
+      <p className={`font-black text-sm ${kpiItem.color === "emerald" ? "text-emerald-700" : kpiItem.color === "red" ? "text-red-600" : "text-teal-700"}`}>
+        {kpiItem.v}
       </p>
       <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
-      {k.delta !== 0 && (
-        <p className={`text-xs font-bold mt-0.5 ${k.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
-          ({k.delta > 0 ? "▲" : "▼"}{Math.abs(k.delta)}%)
+      {kpiItem.delta !== 0 && (
+        <p className={`text-xs font-bold mt-0.5 ${kpiItem.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+          ({kpiItem.delta > 0 ? "▲" : "▼"}{Math.abs(kpiItem.delta)}%)
         </p>
       )}
       <p className="text-xs text-gray-300 mt-0.5" title="Data Quality: based on satellite NDVI + IoT sensor">
   ±{i === 0 ? "5" : i === 1 ? "8" : "6"}% DQ
 </p>
-      <p className="text-xs text-gray-500 leading-tight mt-0.5">{k.l}</p>
+      <p className="text-xs text-gray-500 leading-tight mt-0.5">{kpiItem.l}</p>
     </div>
   ))}
 </div>
@@ -198,7 +198,7 @@ async function handleDismiss(alertId) {
   <div className="card p-4">
     <div className="flex items-center justify-between mb-2">
       <p className="text-xs font-bold text-gray-700">📈 Harga Saham</p>
-      <button onClick={() => setShowStockInput(s => !s)}
+      <button onClick={() => setShowStockInput(statItem => !statItem)}
         className="text-xs text-green-600 font-bold hover:underline">
         {showStockInput ? "Tutup" : "Input"}
       </button>
@@ -215,7 +215,7 @@ async function handleDismiss(alertId) {
             <label className="text-xs text-gray-500 w-28 shrink-0">{f.label}</label>
             <input type={f.key==="symbol"?"text":"number"} placeholder={f.ph}
               value={stockPrice[f.key]}
-              onChange={e => setStockPrice(s => ({...s, [f.key]: e.target.value}))}
+              onChange={e => setStockPrice(statItem => ({...statItem, [f.key]: e.target.value}))}
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
           </div>
         ))}
@@ -330,11 +330,11 @@ async function handleDismiss(alertId) {
             { l: "Temperature", v: `${liveIoT.temp}°C`, c: "#ef4444", d: tH },
             { l: "Humidity",    v: `${liveIoT.hum}%`,  c: "#3b82f6", d: hH },
             { l: "CO₂ Abs.",   v: `${liveIoT.co2}t`,  c: "#10b981", d: cH },
-          ].map((s, i) => (
+          ].map((statItem, i) => (
             <div key={i} className="card p-3">
-              <p className="text-xs text-gray-400">{s.l}</p>
-              <p className="font-black text-gray-800 text-base">{s.v}</p>
-              <SparkLine data={s.d} color={s.c} h={24} />
+              <p className="text-xs text-gray-400">{statItem.l}</p>
+              <p className="font-black text-gray-800 text-base">{statItem.v}</p>
+              <SparkLine data={statItem.d} color={statItem.c} h={24} />
             </div>
           ))}
         </div>

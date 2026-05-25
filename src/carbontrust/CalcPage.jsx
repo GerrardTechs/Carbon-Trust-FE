@@ -59,7 +59,7 @@ const SCOPE_INFO = {
 // ─── SCOPE SUMMARY CARD (dipakai di tab Total) ───────────────────────────────
 function ScopeSummaryCard({ scope, value, breakdown, onClick }) {
   const si = SCOPE_INFO[scope];
-  const count = breakdown.filter(b => b.scope === scope).length;
+  const count = breakdown.filter(breakdownItem => breakdownItem.scope === scope).length;
   return (
     <button
       onClick={onClick}
@@ -97,14 +97,14 @@ function BreakdownTable({ items, scopeColor }) {
   );
   return (
     <div className="divide-y divide-gray-50">
-      {items.map((b, i) => {
-        const unc = UNCERTAINTY[b.category] || { label: "±10%", color: "#6b7280" };
+      {items.map((breakdownItem, i) => {
+        const unc = UNCERTAINTY[breakdownItem.category] || { label: "±10%", color: "#6b7280" };
         return (
           <div key={i} className="flex items-center justify-between px-3 py-2.5">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-700 truncate">{b.source}</p>
+              <p className="text-xs font-semibold text-gray-700 truncate">{breakdownItem.source}</p>
               <p className="text-xs text-gray-400">
-                {b.val} {b.unit} × EF {b.ef}
+                {breakdownItem.val} {breakdownItem.unit} × EF {breakdownItem.ef}
               </p>
             </div>
             <div className="flex items-center gap-2 ml-2">
@@ -115,7 +115,7 @@ function BreakdownTable({ items, scopeColor }) {
                 {unc.label}
               </span>
               <p className="font-bold text-sm" style={{ color: scopeColor }}>
-                {b.emission.toLocaleString("id-ID", { maximumFractionDigits: 2 })} kg
+                {breakdownItem.emission.toLocaleString("id-ID", { maximumFractionDigits: 2 })} kg
               </p>
             </div>
           </div>
@@ -141,17 +141,17 @@ function ScopeDonut({ s1, s2, s3 }) {
     { pct: pct3, color: "#ca8a04", label: "S3" },
   ];
   let offset = 0;
-  const paths = seg.map((s, i) => {
-    const dash = s.pct * circ;
+  const paths = seg.map((segItem, i) => {
+    const dash = segItem.pct * circ;
     const gap  = circ - dash;
     const rot  = offset * 360;
-    offset += s.pct;
+    offset += segItem.pct;
     return (
       <circle
         key={i}
         cx={cx} cy={cy} r={R}
         fill="none"
-        stroke={s.color}
+        stroke={segItem.color}
         strokeWidth={strokeW}
         strokeDasharray={`${dash} ${gap}`}
         strokeDashoffset={circ * 0.25} // start from top
@@ -171,11 +171,11 @@ function ScopeDonut({ s1, s2, s3 }) {
         <text x={cx} y={cy + 8}  textAnchor="middle" fontSize="7"  fill="#6b7280">tCO₂e</text>
       </svg>
       <div className="flex flex-col gap-1.5">
-        {seg.map((s, i) => (
+        {seg.map((segItem, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: s.color }} />
+            <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: segItem.color }} />
             <span className="text-xs text-gray-600">
-              {s.label}: <strong style={{ color: s.color }}>{(s.pct * 100).toFixed(1)}%</strong>
+              {segItem.label}: <strong style={{ color: segItem.color }}>{(segItem.pct * 100).toFixed(1)}%</strong>
             </span>
           </div>
         ))}
@@ -284,7 +284,7 @@ export function CalcPage({ t = TR.en }) {
           <div key={cat} className="card overflow-hidden">
             <button
               onClick={() => toggleCat(cat)}
-              className="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 text-left hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 border-breakdownItem border-gray-100 text-left hover:bg-gray-50 transition-colors"
             >
               <div>
                 <p className="text-xs font-bold text-gray-800">{EF_CATEGORIES[cat] || cat}</p>
@@ -442,13 +442,13 @@ export function CalcPage({ t = TR.en }) {
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1">
           Rincian per Scope — ketuk untuk detail
         </p>
-        {[1, 2, 3].map(s => (
+        {[1, 2, 3].map(segItem => (
           <ScopeSummaryCard
-            key={s}
-            scope={s}
-            value={s === 1 ? s1 : s === 2 ? s2 : s3}
+            key={segItem}
+            scope={segItem}
+            value={segItem === 1 ? s1 : segItem === 2 ? s2 : s3}
             breakdown={breakdown}
-            onClick={() => setTotalDetailScope(totalDetailScope === s ? null : s)}
+            onClick={() => setTotalDetailScope(totalDetailScope === segItem ? null : segItem)}
           />
         ))}
 
@@ -456,7 +456,7 @@ export function CalcPage({ t = TR.en }) {
         {totalDetailScope && (
           <div className="card overflow-hidden">
             <div
-              className="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
+              className="px-4 py-3 border-breakdownItem border-gray-100 flex items-center justify-between"
               style={{ background: SCOPE_INFO[totalDetailScope].bg }}
             >
               <p className="text-xs font-bold" style={{ color: SCOPE_INFO[totalDetailScope].color }}>
@@ -468,7 +468,7 @@ export function CalcPage({ t = TR.en }) {
               >✕</button>
             </div>
             <BreakdownTable
-              items={breakdown.filter(b => b.scope === totalDetailScope)}
+              items={breakdown.filter(breakdownItem => breakdownItem.scope === totalDetailScope)}
               scopeColor={SCOPE_INFO[totalDetailScope].color}
             />
             {/* Subtotal */}
@@ -541,18 +541,18 @@ export function CalcPage({ t = TR.en }) {
 
       {/* ── Scope tabs (1 | 2 | 3 | Total) ── */}
       <div className="flex gap-1.5">
-        {[1, 2, 3].map(s => (
+        {[1, 2, 3].map(segItem => (
           <button
-            key={s}
-            onClick={() => setScope(s)}
+            key={segItem}
+            onClick={() => setScope(segItem)}
             className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeScope === s
+              activeScope === segItem
                 ? "text-white shadow-md"
                 : "bg-white border border-gray-200 text-gray-600"
             }`}
-            style={activeScope === s ? { background: SCOPE_INFO[s].color } : {}}
+            style={activeScope === segItem ? { background: SCOPE_INFO[segItem].color } : {}}
           >
-            Scope {s}
+            Scope {segItem}
           </button>
         ))}
         {/* Tab Total — highlight beda jika sudah ada hasil */}

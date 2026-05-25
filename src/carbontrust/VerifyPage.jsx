@@ -61,15 +61,15 @@ const [verified, setVerified]   = useState(false);
             <defs><pattern id="ter5" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#14532d" /><circle cx="20" cy="20" r="16" fill="#166534" opacity=".7" /></pattern></defs>
             <rect width="400" height="200" fill="url(#ter5)" opacity=".7" />
             <path d="M0,90 Q100,65 200,95 Q300,125 400,100" fill="none" stroke="#0ea5e9" strokeWidth="4" opacity=".5" />
-            {parcels.map((p, idx) => {
+            {parcels.map((parcel, idx) => {
               const positions = [[80, 40], [220, 30], [60, 120], [250, 120], [350, 60]];
               const [bx, by] = positions[idx] || [200, 100];
-              const sc = { healthy: "#22c55e", flooded: "#60a5fa", degraded: "#f59e0b", burned: "#ef4444", drying: "#fb923c" }[p.status] || "#22c55e";
+              const sc = { healthy: "#22c55e", flooded: "#60a5fa", degraded: "#f59e0b", burned: "#ef4444", drying: "#fb923c" }[parcel.status] || "#22c55e";
               return (
-                <g key={p.id}>
+                <g key={parcel.id}>
                   <rect x={bx} y={by} width={90} height={60}
-                    fill={{ forest: "#166534", peatland: "#92400e", mangrove: "#0e7490", agricultural: "#a16207", industrial: "#475569" }[p.type]} opacity=".45"
-                    stroke={sc} strokeWidth="2" strokeDasharray={p.status !== "healthy" ? "6,3" : "none"} rx="4" />
+                    fill={{ forest: "#166534", peatland: "#92400e", mangrove: "#0e7490", agricultural: "#a16207", industrial: "#475569" }[parcel.type]} opacity=".45"
+                    stroke={sc} strokeWidth="2" strokeDasharray={parcel.status !== "healthy" ? "6,3" : "none"} rx="4" />
                   {[[bx + 20, by + 20], [bx + 50, by + 15], [bx + 70, by + 35]].map(([sx, sy], j) => (
                     <g key={j}>
                       <circle cx={sx} cy={sy} r="4" fill={sc} opacity=".9" />
@@ -79,7 +79,7 @@ const [verified, setVerified]   = useState(false);
                       </circle>
                     </g>
                   ))}
-                  <text x={bx + 4} y={by + 12} fill="white" fontSize="8" fontWeight="bold" opacity=".9">{p.id}</text>
+                  <text x={bx + 4} y={by + 12} fill="white" fontSize="8" fontWeight="bold" opacity=".9">{parcel.id}</text>
                 </g>
               );
             })}

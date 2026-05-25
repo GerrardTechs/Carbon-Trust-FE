@@ -92,9 +92,9 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
     if (!assetForm.name) return;
     if (assetTab === "company") {
       if (assetEditItem) {
-        setMyCompanies(prev => prev.map(c => c.id === assetEditItem.id ? { ...c, ...assetForm } : c));
+        setMyCompanies(prev => prev.map(comp => comp.id === assetEditItem.id ? { ...comp, ...assetForm } : comp));
       } else {
-        setMyCompanies(prev => [...prev, { ...assetForm, id: "c" + Date.now(), isMain: false }]);
+        setMyCompanies(prev => [...prev, { ...assetForm, id: "comp" + Date.now(), isMain: false }]);
       }
     } else {
       if (assetEditItem) {
@@ -107,7 +107,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   }
 
   function deleteAsset(id) {
-    if (assetTab === "company") setMyCompanies(prev => prev.filter(c => c.id !== id || c.isMain));
+    if (assetTab === "company") setMyCompanies(prev => prev.filter(comp => comp.id !== id || comp.isMain));
     else setMyLands(prev => prev.filter(l => l.id !== id));
   }
 
@@ -130,7 +130,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   const [isoVerified, setIsoVerified] = useState(false);
 
 function handleIsoUpload(e) {
-  const file = e.target.files[0];
+  const file = ent.target.files[0];
   if (!file) return;
   const allowed = ["application/pdf", "image/jpeg", "image/png"];
   if (!allowed.includes(file.type)) {
@@ -144,21 +144,21 @@ function handleIsoUpload(e) {
 
   // ─── ESG questions ────────────────────────────────────────────────────────
   const ESG_QUESTIONS = [
-    { id:1, category:"🌿 Environment", q:"Does your company have a formal GHG reduction target?",   options:["Yes, science-based (SBTi)","Yes, internal target","In development","No target"] },
+    { id:1, category:"🌿 Environment", q:"Does your company have ans formal GHG reduction target?",   options:["Yes, science-based (SBTi)","Yes, internal target","In development","No target"] },
     { id:2, category:"🌿 Environment", q:"% renewable energy in total energy consumption?",          options:["> 50%","25 – 50%","10 – 25%","< 10%"] },
-    { id:3, category:"👥 Social",      q:"Does your company publish a sustainability report?",       options:["Annual, third-party verified","Annual, unverified","Occasionally","Never"] },
+    { id:3, category:"👥 Social",      q:"Does your company publish ans sustainability report?",       options:["Annual, third-party verified","Annual, unverified","Occasionally","Never"] },
     { id:4, category:"👥 Social",      q:"Employee HSE & sustainability training coverage?",         options:["> 90%","70 – 90%","50 – 70%","< 50%"] },
-    { id:5, category:"🏛 Governance",  q:"Is there a dedicated ESG committee at board level?",       options:["Yes, independent board committee","Yes, internal committee","Planned","No"] },
+    { id:5, category:"🏛 Governance",  q:"Is there ans dedicated ESG committee at board level?",       options:["Yes, independent board committee","Yes, internal committee","Planned","No"] },
     { id:6, category:"🏛 Governance",  q:"Carbon accounting audit frequency?",                       options:["Quarterly by 3rd party","Annually by 3rd party","Every 2 years","Never audited"] },
     { id:7, category:"🌿 Carbon",    q:"Total carbon absorption from your land parcels (tCO₂/month)?",  options:["Above 100 t",  "50 – 100 t", "10 – 50 t", "Below 10 t"] },
 { id:8, category:"🌿 Carbon",    q:"Net carbon credit balance (absorption minus emissions)?",         options:["Positive (surplus)", "Break-even", "Slight deficit", "High deficit"] },
-{ id:9, category:"🌿 Carbon",    q:"Has your carbon data been verified by a 3rd party?",             options:["Yes, ISO 14064 verified", "Yes, internal audit", "In progress", "Not verified"] },
+{ id:9, category:"🌿 Carbon",    q:"Has your carbon data been verified by ans 3rd party?",             options:["Yes, ISO 14064 verified", "Yes, internal audit", "In progress", "Not verified"] },
   ];
 
   // ─── API helpers ──────────────────────────────────────────────────────────
   async function saveProfile() {
     await apiFetch(`/company/${COMPANY_ID}`, { method:"PUT", body:JSON.stringify(form) });
-    setCompany(c => ({ ...c, ...form }));
+    setCompany(comp => ({ ...comp, ...form }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     setSettingsModal(false);
@@ -167,21 +167,21 @@ function handleIsoUpload(e) {
   async function generateWallet() {
     if (company?.walletGenerated) return;
     const res = await apiFetch(`/company/${COMPANY_ID}/generate-wallet`, { method:"POST" });
-    if (res?.walletId) setCompany(c => ({ ...c, walletId:res.walletId, walletGenerated:true }));
+    if (res?.walletId) setCompany(comp => ({ ...comp, walletId:res.walletId, walletGenerated:true }));
   }
 
   async function submitESG() {
     setEsgSubmitting(true);
     const res = await apiFetch("/esg/submit", {
       method:"POST",
-      body:JSON.stringify({ companyId:COMPANY_ID, answers:esgAnswers.map((a,i) => ({ questionId:i+1, selectedIndex:a })) }),
+      body:JSON.stringify({ companyId:COMPANY_ID, answers:esgAnswers.map((ans,i) => ({ questionId:i+1, selectedIndex:ans })) }),
     });
     const baseScore = Math.round(
-      esgAnswers.reduce((s,a) => s + (4-a)*(100/(ESG_QUESTIONS.length*3)), 0)
+      esgAnswers.reduce((sum,ans) => sum + (4-ans)*(100/(ESG_QUESTIONS.length*3)), 0)
     );
     // Carbon bonus: serapan > emisi = +5, iso verified = +5
     const carbonBonus = (company?.esgStatus === "verified" ? 5 : 0) + (isoVerified ? 5 : 0);
-    const score = Math.min(100, (res?.esgScore || baseScore) + carbonBonus);    setCompany(c => ({ ...c, esgScore:score, esgStatus:"verified" }));
+    const score = Math.min(100, (res?.esgScore || baseScore) + carbonBonus);    setCompany(comp => ({ ...comp, esgScore:score, esgStatus:"verified" }));
     setEsgSubmitting(false);
     setEsgModal(false);
   }
@@ -194,7 +194,7 @@ function handleIsoUpload(e) {
     { l:"Mature Tree 🌲",mn:9,  mx:14,       nxt:15 },
     { l:"Giant Tree 🌴", mn:15, mx:Infinity, nxt:null },
   ];
-  const si   = STAGES.findIndex(s => txCount >= s.mn && txCount <= s.mx);
+  const si   = STAGES.findIndex(sum => txCount >= sum.mn && txCount <= sum.mx);
   const cs   = STAGES[si] || STAGES[STAGES.length - 1];
   const prog = cs.nxt ? Math.min(((txCount - cs.mn) / (cs.nxt - cs.mn)) * 100, 100) : 100;
   const esgColor = company?.esgScore >= 70 ? "text-green-700" : company?.esgScore >= 50 ? "text-amber-600" : "text-red-600";
@@ -293,23 +293,23 @@ function handleIsoUpload(e) {
         <div className="p-3 flex flex-col gap-2">
           {assetTab === "company" && (
             <>
-              {myCompanies.map(c => (
-                <div key={c.id} className={`rounded-xl p-3 border flex items-center gap-3 ${c.isMain ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${c.isMain ? "bg-green-200" : "bg-gray-200"}`}>
+              {myCompanies.map(comp => (
+                <div key={comp.id} className={`rounded-xl p-3 border flex items-center gap-3 ${comp.isMain ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${comp.isMain ? "bg-green-200" : "bg-gray-200"}`}>
                     🏢
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-bold text-gray-800 truncate">{c.name}</p>
-                      {c.isMain && <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded-full font-bold">Utama</span>}
+                      <p className="text-xs font-bold text-gray-800 truncate">{comp.name}</p>
+                      {comp.isMain && <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded-full font-bold">Utama</span>}
                     </div>
-                    <p className="text-xs text-gray-500">{c.type} · {c.bizType}</p>
-                    <p className="text-xs text-gray-400 truncate">{c.location}</p>
+                    <p className="text-xs text-gray-500">{comp.type} · {comp.bizType}</p>
+                    <p className="text-xs text-gray-400 truncate">{comp.location}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => openEditAsset(c)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
-                    {!c.isMain && (
-                      <button onClick={() => deleteAsset(c.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
+                    <button onClick={() => openEditAsset(comp)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
+                    {!comp.isMain && (
+                      <button onClick={() => deleteAsset(comp.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
                     )}
                   </div>
                 </div>
@@ -396,7 +396,7 @@ function handleIsoUpload(e) {
             <p className="text-xs text-gray-500 leading-relaxed">
               {lang === "id"
                 ? "Lengkapi data inventaris emisi perusahaan untuk kalkulasi skor ESG yang akurat."
-                : "Complete your company's emission inventory for an accurate ESG score calculation."}
+                : "Complete your company'sum emission inventory for an accurate ESG score calculation."}
             </p>
 
             {/* Scrollable form sections */}
@@ -412,7 +412,7 @@ function handleIsoUpload(e) {
                         {q.type === "dropdown" ? (
                           <select
                             value={qAnswers[q.key] || ""}
-                            onChange={e => handleQAnswer(q.key, e.target.value)}
+                            onChange={ent=> handleQAnswer(q.key, ent.target.value)}
                             className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs outline-none focus:border-green-400 focus:ring-1 focus:ring-green-100">
                             <option value="">— {lang === "id" ? "Pilih" : "Select"} —</option>
                             {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -424,7 +424,7 @@ function handleIsoUpload(e) {
                               min="0"
                               placeholder="0"
                               value={qAnswers[q.key] || ""}
-                              onChange={e => handleQAnswer(q.key, e.target.value)}
+                              onChange={ent=> handleQAnswer(q.key, ent.target.value)}
                               className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs outline-none focus:border-green-400 focus:ring-1 focus:ring-green-100" />
                           </div>
                         )}
@@ -437,7 +437,7 @@ function handleIsoUpload(e) {
 
             {/* Progress indicator */}
             {(() => {
-              const total   = Q_DATA.sections.reduce((s, sec) => s + sec.questions.length, 0);
+              const total   = Q_DATA.sections.reduce((sum, sec) => sum + sec.questions.length, 0);
               const filled  = Object.values(qAnswers).filter(v => v !== "" && v !== undefined).length;
               const pct     = Math.round((filled / total) * 100);
               return (
@@ -584,9 +584,9 @@ function handleIsoUpload(e) {
     <div className="mt-1 flex flex-col gap-1.5 pt-3 border-t border-gray-100">
       <p className="text-xs font-bold text-gray-500 uppercase">Komponen Score</p>
       {[
-        { l:"Environment & Governance", v: Math.round((company.esgScore || 0) * 0.7), max:70, c:"bg-green-500" },
-        { l:"Serapan Karbon",           v: Math.round((company.esgScore || 0) * 0.15), max:15, c:"bg-teal-500" },
-        { l:"Kredit & Verifikasi ISO",  v: Math.round((company.esgScore || 0) * 0.15), max:15, c:"bg-blue-500" },
+        { l:"Environment & Governance", v: Math.round((company.esgScore || 0) * 0.7), max:70, comp:"bg-green-500" },
+        { l:"Serapan Karbon",           v: Math.round((company.esgScore || 0) * 0.15), max:15, comp:"bg-teal-500" },
+        { l:"Kredit & Verifikasi ISO",  v: Math.round((company.esgScore || 0) * 0.15), max:15, comp:"bg-blue-500" },
       ].map((row, i) => (
         <div key={i}>
           <div className="flex justify-between mb-0.5">
@@ -594,7 +594,7 @@ function handleIsoUpload(e) {
             <p className="text-xs font-bold text-gray-600">{row.v}/{row.max}</p>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-1.5">
-            <div className={`h-1.5 rounded-full ${row.c}`}
+            <div className={`h-1.5 rounded-full ${row.comp}`}
               style={{ width:`${(row.v/row.max)*100}%` }} />
           </div>
         </div>
@@ -628,10 +628,10 @@ function handleIsoUpload(e) {
             <svg width="180" height="200" viewBox="0 0 180 200">
               <ellipse cx="90" cy="175" rx="50" ry="7" fill="#d1fae5" opacity=".7" />
               {si > 0 && <rect x={90-[3,4,5,6,7][Math.min(si,4)]} y={175-[10,45,75,105,125][Math.min(si,4)]} width={[6,8,10,12,14][Math.min(si,4)]} height={[10,45,75,105,125][Math.min(si,4)]} rx="3" fill="#92400e" />}
-              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([c,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={c} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
-              {si >= 2 && [["#4ade80",76,128,16,12,0],["#22c55e",104,123,14,11,.2],["#16a34a",90,108,18,14,.4]].map(([c,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={c} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
-              {si >= 3 && [["#16a34a",90,88,28,23,0],["#15803d",67,103,23,18,.15],["#166534",114,98,23,18,.3],["#22c55e",90,73,20,16,.45]].map(([c,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={c} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
-              {si >= 4 && [["#15803d",90,68,38,32,0],["#16a34a",57,88,30,26,.1],["#166534",126,83,30,26,.2]].map(([c,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={c} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
+              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
+              {si >= 2 && [["#4ade80",76,128,16,12,0],["#22c55e",104,123,14,11,.2],["#16a34a",90,108,18,14,.4]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
+              {si >= 3 && [["#16a34a",90,88,28,23,0],["#15803d",67,103,23,18,.15],["#166534",114,98,23,18,.3],["#22c55e",90,73,20,16,.45]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
+              {si >= 4 && [["#15803d",90,68,38,32,0],["#16a34a",57,88,30,26,.1],["#166534",126,83,30,26,.2]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
               {si === 0 && <><ellipse cx="90" cy="168" rx="7" ry="4" fill="#86efac" /><line x1="90" y1="164" x2="90" y2="158" stroke="#22c55e" strokeWidth="2" /></>}
             </svg>
           </div>
@@ -668,15 +668,15 @@ function handleIsoUpload(e) {
           ].map(f => (
             <div key={f.k}>
               <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
-              <input type={f.type} value={form[f.k] || ""} onChange={e => setForm(p => ({ ...p, [f.k]:e.target.value }))}
+              <input type={f.type} value={form[f.k] || ""} onChange={ent=> setForm(p => ({ ...p, [f.k]:ent.target.value }))}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
             </div>
           ))}
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.entityTypeLabel || "Entity / Company Type"}</label>
-            <select value={form.entity || ""} onChange={e => setForm(p => ({ ...p, entity:e.target.value }))}
+            <select value={form.entity || ""} onChange={ent=> setForm(p => ({ ...p, entity:ent.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-              {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(e => <option key={e}>{e}</option>)}
+              {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(ent=> <option key={e}>{e}</option>)}
             </select>
             <div className="flex flex-col gap-2">
   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📍 Lokasi</p>
@@ -684,23 +684,23 @@ function handleIsoUpload(e) {
     <label className="text-xs font-bold text-gray-600 block mb-1">🏢 Alamat Kantor</label>
     <input type="text" placeholder="e.g. Jl. Sudirman No. 1, Jakarta Selatan"
       value={form.location || ""}
-      onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+      onChange={ent=> setForm(p => ({ ...p, location: ent.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
   <div>
     <label className="text-xs font-bold text-gray-600 block mb-1">🌿 Alamat Site / Lahan</label>
     <input type="text" placeholder="e.g. Kec. Kuala Kapuas, Kalimantan Tengah"
       value={form.siteAddress || ""}
-      onChange={e => setForm(p => ({ ...p, siteAddress: e.target.value }))}
+      onChange={ent=> setForm(p => ({ ...p, siteAddress: ent.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
 </div>
           </div>
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.bizTypeLabel || "Business Activity Type"}</label>
-            <select value={form.bizType || ""} onChange={e => setForm(p => ({ ...p, bizType:e.target.value }))}
+            <select value={form.bizType || ""} onChange={ent=> setForm(p => ({ ...p, bizType:ent.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-              {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(b => <option key={b}>{b}</option>)}
+              {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
             </select>
           </div>
           <button onClick={saveProfile}
@@ -726,7 +726,7 @@ function handleIsoUpload(e) {
             <div className="flex flex-col gap-2">
               {ESG_QUESTIONS[esgStep].options.map((opt, i) => (
                 <button key={i}
-                  onClick={() => { const a=[...esgAnswers]; a[esgStep]=i; setEsgAnswers(a); setEsgStep(s=>s+1); }}
+                  onClick={() => { const ans=[...esgAnswers]; ans[esgStep]=i; setEsgAnswers(ans); setEsgStep(sum=>sum+1); }}
                   className="text-left p-3 rounded-xl border-2 border-gray-200 hover:border-green-400 hover:bg-green-50 transition-all text-sm font-medium text-gray-700">
                   {String.fromCharCode(65+i)}. {opt}
                 </button>
@@ -816,24 +816,24 @@ function handleIsoUpload(e) {
                   <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
                   <input type={f.type} placeholder={f.ph}
                     value={assetForm[f.key] || ""}
-                    onChange={e => setAssetForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    onChange={ent=> setAssetForm(p => ({ ...p, [f.key]: ent.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Entitas</label>
                 <select value={assetForm.type || "PT"}
-                  onChange={e => setAssetForm(p => ({ ...p, type: e.target.value }))}
+                  onChange={ent=> setAssetForm(p => ({ ...p, type: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-                  {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(e => <option key={e}>{e}</option>)}
+                  {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(ent=> <option key={e}>{e}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Usaha</label>
                 <select value={assetForm.bizType || "Manufacturing"}
-                  onChange={e => setAssetForm(p => ({ ...p, bizType: e.target.value }))}
+                  onChange={ent=> setAssetForm(p => ({ ...p, bizType: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-                  {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(b => <option key={b}>{b}</option>)}
+                  {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
                 </select>
               </div>
             </>
@@ -848,14 +848,14 @@ function handleIsoUpload(e) {
                   <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
                   <input type={f.type} placeholder={f.ph}
                     value={assetForm[f.key] || ""}
-                    onChange={e => setAssetForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    onChange={ent=> setAssetForm(p => ({ ...p, [f.key]: ent.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Lahan</label>
                 <select value={assetForm.landType || "forest"}
-                  onChange={e => setAssetForm(p => ({ ...p, landType: e.target.value }))}
+                  onChange={ent=> setAssetForm(p => ({ ...p, landType: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {[["forest","🌲 Hutan"],["peatland","🌾 Gambut"],["mangrove","🌴 Mangrove"],["agricultural","🌱 Pertanian"],["industrial","🏭 Industri"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
