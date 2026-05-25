@@ -96,9 +96,9 @@ export default function AdminApp({ onLogout, user }) {
     });
   }, []);
 
-  const filtered = (overview?.companies || []).filter(c =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.id?.toLowerCase().includes(search.toLowerCase())
+  const filtered = (overview?.companies || []).filter(comp =>
+    comp.name?.toLowerCase().includes(search.toLowerCase()) ||
+    comp.id?.toLowerCase().includes(search.toLowerCase())
   );
 
   const net = overview ? overview.totalAbsorption - overview.totalEmission : 0;
@@ -160,10 +160,10 @@ export default function AdminApp({ onLogout, user }) {
                       { icon:"✅", label:"ISO Verified",       val:overview.verifiedCount,  sub:"perusahaan" },
                     ].map((comp,i) => (
                       <div key={i} className="adm-kpi">
-                        <div className="adm-kpi-icon">{k.icon}</div>
-                        <div className="adm-kpi-val">{k.val}</div>
-                        <div className="adm-kpi-label">{k.label}</div>
-                        <div className="adm-kpi-sub">{k.sub}</div>
+                        <div className="adm-kpi-icon">{kpi.icon}</div>
+                        <div className="adm-kpi-val">{kpi.val}</div>
+                        <div className="adm-kpi-label">{kpi.label}</div>
+                        <div className="adm-kpi-sub">{kpi.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -212,15 +212,15 @@ export default function AdminApp({ onLogout, user }) {
                     {[...( overview.companies || [])]
                       .sort((compA, compB) => (compB.netCredits||0) - (compA.netCredits||0))
                       .slice(0,5)
-                      .map((c,i) => (
-                        <div key={c.id} className="adm-row">
+                      .map((comp,i) => (
+                        <div key={comp.id} className="adm-row">
                           <span className="adm-rank">#{i+1}</span>
                           <div style={{ flex:1, minWidth:0 }}>
-                            <div className="adm-row-name" style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name}</div>
-                            <div className="adm-row-sub">{c.parcelsCount} lahan · {c.totalArea?.toLocaleString()} ha</div>
+                            <div className="adm-row-name" style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{comp.name}</div>
+                            <div className="adm-row-sub">{comp.parcelsCount} lahan · {comp.totalArea?.toLocaleString()} ha</div>
                           </div>
                           <div>
-                            <div className="adm-row-val">{c.netCredits?.toLocaleString()}</div>
+                            <div className="adm-row-val">{comp.netCredits?.toLocaleString()}</div>
                             <div className="adm-row-val-sub">kredit</div>
                           </div>
                         </div>
@@ -236,23 +236,23 @@ export default function AdminApp({ onLogout, user }) {
                     value={search} onChange={e => setSearch(e.target.value)} />
                   <div style={{ fontSize:11, color:"#64748b" }}>{filtered.length} perusahaan</div>
 
-                  {filtered.map(c => (
-                    <div key={c.id} className="adm-company">
+                  {filtered.map(comp => (
+                    <div key={comp.id} className="adm-company">
                       <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:4 }}>
                         <div>
-                          <div className="adm-company-name">{c.name}</div>
-                          <div className="adm-company-id">{c.id}</div>
+                          <div className="adm-company-name">{comp.name}</div>
+                          <div className="adm-company-id">{comp.id}</div>
                         </div>
-                        <span className={`adm-badge ${c.isoCertVerified ? "adm-badge-green" : "adm-badge-amber"}`}>
-                          {c.isoCertVerified ? "✅ ISO" : "⏳ Pending"}
+                        <span className={`adm-badge ${comp.isoCertVerified ? "adm-badge-green" : "adm-badge-amber"}`}>
+                          {comp.isoCertVerified ? "✅ ISO" : "⏳ Pending"}
                         </span>
                       </div>
 
                       <div className="adm-company-grid">
                         {[
-                          { label:"Lahan",    val:c.parcelsCount },
-                          { label:"Serapan",  val:`${c.totalAbsorption}t` },
-                          { label:"Kredit",   val:(c.netCredits||0).toLocaleString() },
+                          { label:"Lahan",    val:comp.parcelsCount },
+                          { label:"Serapan",  val:`${comp.totalAbsorption}t` },
+                          { label:"Kredit",   val:(comp.netCredits||0).toLocaleString() },
                         ].map((stat,i) => (
   <div key={i} className="adm-company-stat">
     <div className="adm-company-stat-val">{stat.val}</div>
@@ -262,11 +262,11 @@ export default function AdminApp({ onLogout, user }) {
                       </div>
 
                       <div className="adm-company-footer">
-                        <span className="adm-company-email">{c.email}</span>
+                        <span className="adm-company-email">{comp.email}</span>
                         <span className="adm-esg" style={{
-                          color: c.esgScore >= 70 ? "#4ade80" : c.esgScore ? "#fbbf24" : "#64748b"
+                          color: comp.esgScore >= 70 ? "#4ade80" : comp.esgScore ? "#fbbf24" : "#64748b"
                         }}>
-                          ESG: {c.esgScore ?? "—"}
+                          ESG: {comp.esgScore ?? "—"}
                         </span>
                       </div>
                     </div>
