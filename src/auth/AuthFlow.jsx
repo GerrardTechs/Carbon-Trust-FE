@@ -1027,7 +1027,7 @@ function pwStrength(pw, t) {
 function LangSwitcher({ lang, setLang }) {
   return (
     <div className="lang-switcher" style={{ marginTop: 2 }}>
-      {Object.keys(LANGS).map(k => (
+      {Object.keys(LANGS).map(langCode => (
         <button
           key={k}
           className={`lang-btn ${lang === k ? "active" : ""}`}
@@ -1115,7 +1115,7 @@ function RolePage({ onSelect, onGuest, onBack, lang }) {
     { id: "landlord", title: t.landlord.title, desc: t.landlord.desc, icon: Icons.tree,     iconBg: "role-icon-teal"  },
   ];
 
-  const selectedRole = ROLES.find(r => r.id === selected);
+  const selectedRole = ROLES.find(role => role.id === selected);
 
   return (
     <div className="shell">
@@ -1197,11 +1197,11 @@ function generateInstitutionId(companyName) {
   if (!companyName || !companyName.trim()) return "";
   const stopWords = ["pt", "cv", "tbk", "persero", "the", "and", "&", "-"];
   const words = companyName.trim().split(/\s+/).filter(
-    w => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
+    word => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
   );
   const prefix = words
     .slice(0, 3)
-    .map(w => w.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 3))
+    .map(wrd => wrd.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 3))
     .join("");
   let hash = 0;
   for (let i = 0; i < companyName.length; i++) {
@@ -1231,11 +1231,11 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
   function setField(name, value) {
     if (name === "name" && role === "company") {
       const newId = generateInstitutionId(value);
-      setForm(p => ({ ...p, [name]: value, institutionId: newId }));
+      setForm(prev => ({ ...prev, [name]: value, institutionId: newId }));
     } else {
-      setForm(p => ({ ...p, [name]: value }));
+      setForm(prev => ({ ...prev, [name]: value }));
     }
-    setErrors(p => ({ ...p, [name]: "" }));
+    setErrors(prev => ({ ...prev, [name]: "" }));
   }
 
   function copyId() {
@@ -1261,7 +1261,7 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(resolve => setTimeout(resolve, 1200));
     setLoading(false);
     onSubmit(form);
   }
@@ -1357,7 +1357,7 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
                 style={{ paddingRight: 44 }}
                 onChange={e => setField("password", e.target.value)}
               />
-              <button className="pw-toggle" type="button" onClick={() => setShowPw(v => !v)}>
+              <button className="pw-toggle" type="button" onClick={() => setShowPw(prev => !prev)}>
                 {showPw ? Icons.eyeOff : Icons.eye}
               </button>
             </div>
@@ -1496,7 +1496,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
 
   useEffect(() => {
     if (resendCd <= 0) return;
-    const id = setTimeout(() => setResendCd(c => c - 1), 1000);
+    const id = setTimeout(() => setResendCd(prev => prev - 1), 1000);
     return () => clearTimeout(id);
   }, [resendCd]);
 
@@ -1507,7 +1507,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
     setCells(next);
     setErrMsg("");
     if (ch && idx < OTP_LEN - 1) inputsRef.current[idx + 1]?.focus();
-    if (ch && next.every(c => c !== "")) submitOTP(next.join(""));
+    if (ch && next.every(cell => cell !== "")) submitOTP(next.join(""));
   }
 
   function handleKeyDown(idx, e) {
@@ -1528,7 +1528,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
 
   async function submitOTP(code) {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     if (code.length === OTP_LEN) {
       setLoading(false);
       onVerified();
@@ -1548,7 +1548,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
     setTimeout(() => setResent(false), 3000);
   }
 
-  const filled = cells.filter(c => c !== "").length;
+  const filled = cells.filter(cell => cell !== "").length;
 
   return (
     <div className="shell">
@@ -1628,7 +1628,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
   const t = LANGS[lang].operational;
 
   function setField(name, value) {
-    setForm(p => ({ ...p, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   }
 
   const needsSite = form.emissionObject === t.emissionObjects[1] || form.emissionObject === t.emissionObjects[2];
@@ -1636,7 +1636,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
 
   async function handleNext() {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(resolve => setTimeout(resolve, 800));
     setLoading(false);
     onSubmit(form);
   }
@@ -1743,12 +1743,12 @@ function CalcMethodPage({ onSubmit, onBack, lang }) {
   const t = LANGS[lang].calcMethod;
 
   function setField(name, value) {
-    setForm(p => ({ ...p, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   }
 
   async function handleFinish() {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setLoading(false);
     onSubmit(form);
   }
@@ -1910,14 +1910,14 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
         <label className="label">Username</label>
         <input className="input-field" type="text" placeholder="admin"
           value={adminForm.username}
-          onChange={e => setAdminForm(f => ({ ...f, username: e.target.value }))} />
+          onChange={e => setAdminForm(prev => ({ ...prev, username: e.target.value }))} />
       </div>
   
       <div className="field-group" style={{ marginTop:12 }}>
         <label className="label">Password</label>
         <input className="input-field" type="password" placeholder="••••••••"
           value={adminForm.password}
-          onChange={e => setAdminForm(f => ({ ...f, password: e.target.value }))} />
+          onChange={e => setAdminForm(prev => ({ ...prev, password: e.target.value }))} />
       </div>
   
       {adminError && (

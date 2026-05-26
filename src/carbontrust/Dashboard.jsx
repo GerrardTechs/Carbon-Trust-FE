@@ -34,21 +34,21 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
       socket.on("iot_live", ({ parcelId, data }) => {
         if (parcelId === "LP-001") {
           setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });
-          setTH(a => [...a.slice(-19), data.temp]);
-          setHH(a => [...a.slice(-19), +data.hum]);
-          setCH(a => [...a.slice(-19), data.co2]);
+          setTH(arr => [...arr.slice(-19), data.temp]);
+          setHH(arr => [...arr.slice(-19), +data.hum]);
+          setCH(arr => [...arr.slice(-19), data.co2]);
         }
       });
       return () => socket.disconnect();
     } catch {
       const id = setInterval(() => {
-        setLiveIoT(p => {
+        setLiveIoT(prevIoT => {
           const temp = +(p.temp + (Math.random() - .5) * .4).toFixed(1);
           const hum  = +(p.hum  + (Math.random() - .5) * 1.2).toFixed(0);
           const co2  = +(p.co2  + (Math.random() - .48) * 2).toFixed(1);
-          setTH(a => [...a.slice(-19), data.temp]);
-          setHH(a => [...a.slice(-19), +hum]);
-          setCH(a => [...a.slice(-19), co2]);
+          setTH(arr => [...arr.slice(-19), data.temp]);
+          setHH(arr => [...arr.slice(-19), +hum]);
+          setCH(arr => [...arr.slice(-19), co2]);
           return { temp, hum: +hum, co2 };
         });
       }, 2000);
@@ -58,7 +58,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
 
 async function handleDismiss(alertId) {
   await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
-  setAlerts(prev => prev.filter(a => a.id !== alertId));
+  setAlerts(prev => prev.filter(alertObj => alertObj.id !== alertId));
 }
 
 <Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} />
@@ -82,7 +82,7 @@ async function handleDismiss(alertId) {
     setHistModal(true);
   }
 
-  const visibleAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
+  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertObj.id));
   const totalAbs = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0,  calcAbsorption(parcel)), 0).toFixed(2));
   const totalEm  = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0, -calcAbsorption(parcel)), 0).toFixed(2));  
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
@@ -97,7 +97,7 @@ async function handleDismiss(alertId) {
   }, [parcels]);
   const credits   = Math.max(0, Math.floor(netBal * 12));
   const creditsUSD = (credits * CREDIT_PRICE).toLocaleString();
-  const cv = v => convertUnit(v, unit);
+  const cv = val => convertUnit(val, unit);
   const uSuffix = t.dash.units[unit];
 
   return (
@@ -156,10 +156,10 @@ async function handleDismiss(alertId) {
     </div>
     <div className="text-right">
       <p className="font-black text-sm text-green-700">
-        {parcels.every(p => p.status === "healthy") ? "Tinggi" : parcels.some(p => p.status === "burned" || p.status === "degraded") ? "Rendah" : "Sedang"}
+        {parcels.every(pc => pc.status === "healthy") ? "Tinggi" : parcels.some(pc => pc.status === "burned" || pc.status === "degraded") ? "Rendah" : "Sedang"}
       </p>
       <p className="text-xs text-gray-400">
-        {parcels.every(p => p.status === "healthy") ? "±5%" : parcels.some(p => p.status === "burned" || p.status === "degraded") ? "±15%" : "±10%"} margin
+        {parcels.every(pc => pc.status === "healthy") ? "±5%" : parcels.some(pc => pc.status === "burned" || pc.status === "degraded") ? "±15%" : "±10%"} margin
       </p>
     </div>
   </div>
@@ -254,13 +254,13 @@ async function handleDismiss(alertId) {
 {(() => {
   const activeProjects = [
     { id:"PRJ-A", name:"Rehabilitasi Gambut Riau", type:"peatland", area:320, status:"active",
-      absorption: parcels.find(p=>p.type==="peatland") ? calcAbsorption(parcels.find(p=>p.type==="peatland")) : 0,
+      absorption: parcels.find(pc=>pc.type==="peatland") ? calcAbsorption(parcels.find(pc=>pc.type==="peatland")) : 0,
       startDate:"Jan 2024", method:"Rewetting & revegetasi", progress:68 },
     { id:"PRJ-B", name:"Konservasi Hutan Kalimantan", type:"forest", area:450, status:"active",
-      absorption: parcels.find(p=>p.type==="forest") ? calcAbsorption(parcels.find(p=>p.type==="forest")) : 0,
+      absorption: parcels.find(pc=>pc.type==="forest") ? calcAbsorption(parcels.find(pc=>pc.type==="forest")) : 0,
       startDate:"Mar 2023", method:"REDD+ protection", progress:85 },
     { id:"PRJ-C", name:"Mangrove Pesisir Sumatra", type:"mangrove", area:85, status:"pending",
-      absorption: parcels.find(p=>p.type==="mangrove") ? calcAbsorption(parcels.find(p=>p.type==="mangrove")) : 0,
+      absorption: parcels.find(pc=>pc.type==="mangrove") ? calcAbsorption(parcels.find(pc=>pc.type==="mangrove")) : 0,
       startDate:"Jun 2024", method:"Replanting & monitoring", progress:32 },
   ];
   const typeIcon = { peatland:"🌾", forest:"🌲", mangrove:"🌴" };

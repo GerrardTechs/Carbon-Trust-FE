@@ -119,12 +119,12 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
   const userId = user?.id || "LANDLORD-001";
 
   useEffect(() => {
-    apiFetch(`/landlord/${userId}/parcels`).then(d => {
-      if (Array.isArray(d)) setParcels(d);
+    apiFetch(`/landlord/${userId}/parcels`).then(fetchedData => {
+      if (Array.isArray(fetchedData)) setParcels(fetchedData);
     });
   }, []);
 
-  function setF(k, v) { setForm(p => ({ ...p, [k]: v })); }
+  function setF(kk, vv) { setForm(prev => ({ ...prev, [kk]: vv })); }
 
   async function addParcel() {
     if (!form.name || !form.area || !form.lat || !form.lng) return;
@@ -137,7 +137,7 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
     };
     const res = await apiFetch("/parcels", { method:"POST", body: JSON.stringify(body) });
     if (res?.id) {
-      setParcels(p => [...p, res]);
+      setParcels(prev => [...prev, res]);
       setAddModal(false);
       setForm({ name:"", type:"forest", area:"", lat:"", lng:"", depth:"", humidity:"" });
     }
@@ -187,7 +187,7 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
               { key:"dashboard", label:"Dashboard" },
               { key:"parcels",   label:"Lahan Saya" },
               { key:"market",    label:"Tawarkan" },
-            ].map(t => (
+            ].map(tabItem => (
               <button key={t.key}
                 className={`ll-tab ${tab === t.key ? "active" : ""}`}
                 onClick={() => setTab(t.key)}>
@@ -263,7 +263,7 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                       Lihat semua →
                     </button>
                   </div>
-                  {parcels.slice(0,3).map(p => (
+                  {parcels.slice(0,3).map(parcelItem => (
                     <div key={p.id} className="ll-parcel">
                       <div className="ll-parcel-top">
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -304,7 +304,7 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                 </div>
               ) : (
                 <div className="ll-section" style={{ margin:"0 16px" }}>
-                  {parcels.map(p => (
+                  {parcels.map(parcelItem => (
                     <div key={p.id} className="ll-parcel">
                       <div className="ll-parcel-top">
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>

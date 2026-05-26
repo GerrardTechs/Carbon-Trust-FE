@@ -90,8 +90,8 @@ export default function AdminApp({ onLogout, user }) {
   const [alerts, setAlerts]   = useState([]);
 
   useEffect(() => {
-    apiFetch("/admin/overview").then(d => {
-      if (d) { setOverview(d); setAlerts(d.recentAlerts || []); }
+    apiFetch("/admin/overview").then(fetchData => {
+      if (fetchData) { setOverview(fetchData); setAlerts(fetchData.recentAlerts || []); }
       setLoading(false);
     });
   }, []);
@@ -126,7 +126,7 @@ export default function AdminApp({ onLogout, user }) {
             { key:"overview",  label:"Overview"   },
             { key:"companies", label:"Perusahaan" },
             { key:"alerts",    label:"Alerts"     },
-          ].map(t => (
+          ].map(tabItem => (
             <button key={t.key}
               className={`adm-tab ${tab === t.key ? "active" : ""}`}
               onClick={() => setTab(t.key)}>

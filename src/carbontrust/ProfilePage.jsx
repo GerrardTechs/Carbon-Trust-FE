@@ -230,7 +230,7 @@ function handleIsoUpload(e) {
           {/* Avatar initials */}
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white shadow-md flex-shrink-0"
             style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-            {company?.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
+            {company?.name?.split(" ").map(word => word[0]).join("").slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-black text-gray-800 text-lg leading-tight">{company?.name}</h2>
@@ -646,7 +646,7 @@ function handleIsoUpload(e) {
           </div>
         </div>
         <div className="px-4 pb-4">
-          <button onClick={() => { setTxCount(n => n+1); setGlowing(true); setTimeout(() => setGlowing(false), 600); }}
+          <button onClick={() => { setTxCount(prev => prev+1); setGlowing(true); setTimeout(() => setGlowing(false), 600); }}
             className="w-full text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition-all flex items-center justify-center gap-2"
             style={{ background:"linear-gradient(135deg,#16a34a,#0f766e)" }}>
             <Ic.Leaf className="w-4 h-4" />{t.profile?.simulateTx || "Simulate New Transaction (+1 🌱)"}
@@ -674,7 +674,7 @@ function handleIsoUpload(e) {
           ))}
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.entityTypeLabel || "Entity / Company Type"}</label>
-            <select value={form.entity || ""} onChange={ent=> setForm(p => ({ ...p, entity:ent.target.value }))}
+            <select value={form.entity || ""} onChange={ent=> setForm(frm => ({ ...frm, entity:ent.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(ent=> <option key={e}>{e}</option>)}
             </select>
@@ -684,21 +684,21 @@ function handleIsoUpload(e) {
     <label className="text-xs font-bold text-gray-600 block mb-1">🏢 Alamat Kantor</label>
     <input type="text" placeholder="e.g. Jl. Sudirman No. 1, Jakarta Selatan"
       value={form.location || ""}
-      onChange={ent=> setForm(p => ({ ...p, location: ent.target.value }))}
+      onChange={ent=> setForm(frm => ({ ...frm, location: ent.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
   <div>
     <label className="text-xs font-bold text-gray-600 block mb-1">🌿 Alamat Site / Lahan</label>
     <input type="text" placeholder="e.g. Kec. Kuala Kapuas, Kalimantan Tengah"
       value={form.siteAddress || ""}
-      onChange={ent=> setForm(p => ({ ...p, siteAddress: ent.target.value }))}
+      onChange={ent=> setForm(frm => ({ ...frm, siteAddress: ent.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
 </div>
           </div>
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.bizTypeLabel || "Business Activity Type"}</label>
-            <select value={form.bizType || ""} onChange={ent=> setForm(p => ({ ...p, bizType:ent.target.value }))}
+            <select value={form.bizType || ""} onChange={ent=> setForm(frm => ({ ...frm, bizType:ent.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
             </select>
@@ -811,7 +811,7 @@ function handleIsoUpload(e) {
               {[
                 { label: "Nama Perusahaan", key: "name", type: "text", ph: "e.g. PT Hijau Lestari" },
                 { label: "Lokasi / Alamat", key: "location", type: "text", ph: "e.g. Jakarta Selatan" },
-              ].map(f => (
+              ].map(fieldItem => (
                 <div key={f.key}>
                   <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
                   <input type={f.type} placeholder={f.ph}
@@ -823,7 +823,7 @@ function handleIsoUpload(e) {
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Entitas</label>
                 <select value={assetForm.type || "PT"}
-                  onChange={ent=> setAssetForm(p => ({ ...p, type: ent.target.value }))}
+                  onChange={ent=> setAssetForm(frm => ({ ...frm, type: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(ent=> <option key={e}>{e}</option>)}
                 </select>
@@ -831,7 +831,7 @@ function handleIsoUpload(e) {
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Usaha</label>
                 <select value={assetForm.bizType || "Manufacturing"}
-                  onChange={ent=> setAssetForm(p => ({ ...p, bizType: ent.target.value }))}
+                  onChange={ent=> setAssetForm(frm => ({ ...frm, bizType: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
                 </select>
@@ -843,19 +843,19 @@ function handleIsoUpload(e) {
                 { label: "Nama Lahan", key: "name", type: "text", ph: "e.g. Lahan Gambut Riau A" },
                 { label: "Lokasi", key: "location", type: "text", ph: "e.g. Kab. Siak, Riau" },
                 { label: "Luas (ha)", key: "area", type: "number", ph: "e.g. 250" },
-              ].map(f => (
+              ].map(fieldItem => (
                 <div key={f.key}>
                   <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
                   <input type={f.type} placeholder={f.ph}
                     value={assetForm[f.key] || ""}
-                    onChange={ent=> setAssetForm(p => ({ ...p, [f.key]: ent.target.value }))}
+                    onChange={ent=> setAssetForm(frm => ({ ...frm, [f.key]: ent.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Lahan</label>
                 <select value={assetForm.landType || "forest"}
-                  onChange={ent=> setAssetForm(p => ({ ...p, landType: ent.target.value }))}
+                  onChange={ent=> setAssetForm(frm => ({ ...frm, landType: ent.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {[["forest","🌲 Hutan"],["peatland","🌾 Gambut"],["mangrove","🌴 Mangrove"],["agricultural","🌱 Pertanian"],["industrial","🏭 Industri"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>

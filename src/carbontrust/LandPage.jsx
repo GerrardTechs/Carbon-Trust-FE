@@ -54,7 +54,7 @@ function handleOwnershipUpload(parcelId, e) {
   const [scanLine, setScanLine] = useState(0);
   const [viewAll, setViewAll] = useState(false);
 
-  useInterval(() => setScanLine(l => (l + 1) % 100), 25);
+  useInterval(() => setScanLine(prev => (prev + 1) % 100), 25);
 
   async function addParcel() {
     setSaving(true);
@@ -86,7 +86,7 @@ function handleOwnershipUpload(parcelId, e) {
   async function changeStatus(id, status) {
     await apiFetch(`/parcels/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
     const ndviMap = { healthy: 0.75, flooded: 0.45, degraded: 0.28, burned: 0.10, drying: 0.32 };
-    setParcels(prev => prev.map(p => parcel.id === id ? { ...p, status, ndvi: ndviMap[status] } : p));
+    setParcels(prev => prev.map(pc => parcel.id === id ? { ...pc, status, ndvi: ndviMap[status] } : pc));
     setSimModal(false);
   }
 
@@ -331,7 +331,7 @@ function handleOwnershipUpload(parcelId, e) {
               }))}
               className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
               <option value="">Pilih negara...</option>
-              {FOREIGN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {FOREIGN_COUNTRIES.map(countryOpt => <option key={countryOpt} value={countryOpt}>{countryOpt}</option>)}
             </select>
           </div>
 
@@ -424,7 +424,7 @@ function handleOwnershipUpload(parcelId, e) {
         {displayParcels.map(parcel => {
           const abs = calcAbsorption(parcel);
           return (
-            <button key={parcel.id} onClick={() => setSelParcel(selParcel?.id === parcel.id ? null : p)}
+            <button key={parcel.id} onClick={() => setSelParcel(selParcel?.id === parcel.id ? null : pc)}
               className={`card flex items-center gap-3 p-3 text-left transition-all ${selParcel?.id === parcel.id ? "border-2 border-green-400 shadow-md" : ""}`}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
                 style={{ background: LF[parcel.type] + "22" }}>
@@ -442,7 +442,7 @@ function handleOwnershipUpload(parcelId, e) {
           );
         })}
         {parcels.length > 3 && (
-          <button onClick={() => setViewAll(v => !v)}
+          <button onClick={() => setViewAll(prev => !prev)}
             className="text-sm text-green-600 font-bold text-center py-2 hover:underline">
             {viewAll ? "Show less ↑" : `See all ${parcels.length} parcels →`}
           </button>
@@ -454,7 +454,7 @@ function handleOwnershipUpload(parcelId, e) {
         {selParcel && (
           <div className="flex flex-col gap-3">
             <p className="text-xs text-gray-500">Select new condition — absorption/emission updates live across the app:</p>
-            {Object.keys(ABS_RATES[selParcel.type] || {}).map(s => {
+            {Object.keys(ABS_RATES[selParcel.type] || {}).map(statusKey => {
               const rate = ABS_RATES[selParcel.type][s];
               const monthly = +((rate * selParcel.area) / 12).toFixed(1);
               const active = selParcel.status === s;
@@ -489,7 +489,7 @@ function handleOwnershipUpload(parcelId, e) {
         { val:"office", label:"🏢 Kantor" },
       ].map(opt => (
         <button key={opt.val} type="button"
-          onClick={() => setForm(p => ({ ...p, locType: opt.val }))}
+           onClick={() => setForm(prev => ({ ...prev, locType: opt.val }))}
           className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all
             ${form.locType === opt.val
               ? "bg-slate-800 text-white border-slate-800"
@@ -523,7 +523,7 @@ function handleOwnershipUpload(parcelId, e) {
           <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
           <input type={f.type || "text"} placeholder={f.ph}
             value={form[f.k]}
-            onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, [f.k]: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
         </div>
       ))}
@@ -546,7 +546,7 @@ function handleOwnershipUpload(parcelId, e) {
         <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.name}</label>
         <input type="text" placeholder="e.g. Borneo Forest Block C"
           value={form.name}
-          onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+          onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
       </div>
 
@@ -554,7 +554,7 @@ function handleOwnershipUpload(parcelId, e) {
       <div>
         <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
         <select value={form.type}
-          onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+          onChange={e => setForm(prev => ({ ...prev, type: e.target.value }))}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
           {["forest","peatland","mangrove","seawater","agricultural","industrial"].map(tipeVal=> (
             <option key={tipeVal} value={tipeVal}>
@@ -585,7 +585,7 @@ function handleOwnershipUpload(parcelId, e) {
           </label>
           <input type="number" placeholder="450"
             value={form.area}
-            onChange={e => setForm(p => ({ ...p, area: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, area: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
         </div>
         <div>
@@ -595,7 +595,7 @@ function handleOwnershipUpload(parcelId, e) {
           </label>
           <input type="number" placeholder={form.type === "peatland" ? "4.5 (wajib)" : "opsional"}
             value={form.depth}
-            onChange={e => setForm(p => ({ ...p, depth: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, depth: e.target.value }))}
             className={`w-full bg-gray-50 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400
               ${form.type === "peatland" ? "border-amber-300" : "border-gray-200"}`} />
         </div>
@@ -615,14 +615,14 @@ function handleOwnershipUpload(parcelId, e) {
           <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.lat}</label>
           <input type="number" placeholder="-1.2412"
             value={form.lat}
-            onChange={e => setForm(p => ({ ...p, lat: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, lat: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
         </div>
         <div>
           <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.lng}</label>
           <input type="number" placeholder="113.9213"
             value={form.lng}
-            onChange={e => setForm(p => ({ ...p, lng: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, lng: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
         </div>
       </div>
@@ -636,7 +636,7 @@ function handleOwnershipUpload(parcelId, e) {
         <input type="number" min="0" max="100"
           placeholder={form.type === "peatland" ? "e.g. 65 (optimal >60%)" : "e.g. 70"}
           value={form.humidity}
-          onChange={e => setForm(p => ({ ...p, humidity: e.target.value }))}
+          onChange={e => setForm(prev => ({ ...prev, humidity: e.target.value }))}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
       </div>
 
@@ -659,7 +659,7 @@ function handleOwnershipUpload(parcelId, e) {
           type="text" 
           placeholder="e.g. Jl. Sudirman No. 1, Jakarta"
           value={form.officeAddress || ""}
-          onChange={e => setForm(p => ({ ...p, officeAddress: e.target.value }))}
+          onChange={e => setForm(prev => ({ ...prev, officeAddress: e.target.value }))}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
         />
       </div> 
@@ -679,7 +679,7 @@ function handleOwnershipUpload(parcelId, e) {
               type={f.type || "text"} 
               placeholder={f.ph} 
               value={form[f.k] || ""} 
-              onChange={e => setForm(p => ({ ...p, [f.k]: e.target.value }))}
+              onChange={e => setForm(prev => ({ ...prev, [f.k]: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
             />
           </div>
@@ -688,7 +688,7 @@ function handleOwnershipUpload(parcelId, e) {
         {/* Tipe Lahan Select */}
         <div>
           <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
-          <select value={form.type || ""} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+          <select value={form.type || ""} onChange={e => setForm(prev => ({ ...prev, type: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
             {Object.entries(t.land.types || {}).map(([typeKey, typeLabel]) => <option key={typeKey} value={typeKey}>{v}</option>)}
           </select>
@@ -699,7 +699,7 @@ function handleOwnershipUpload(parcelId, e) {
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.depth}</label>
             <input type="number" placeholder="4.5" value={form.depth || ""}
-              onChange={e => setForm(p => ({ ...p, depth: e.target.value }))}
+              onChange={e => setForm(prev => ({ ...prev, depth: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
           </div>
         )}

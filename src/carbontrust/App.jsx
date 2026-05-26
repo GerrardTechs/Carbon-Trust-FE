@@ -46,27 +46,27 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   const companyId = userData?.id || userData?._id || COMPANY_ID;
   // Load real data from backend (fallback: mock data stays)
   useEffect(() => {
-    apiFetch(`/parcels?companyId=${companyId}`).then(d => {
-      if (d?.length) setParcels(d);
+    apiFetch(`/parcels?companyId=${companyId}`).then(fetchedData => {
+      if (fetchedData?.length) setParcels(fetchedData);
     });
-    apiFetch(`/alerts?companyId=${companyId}`).then(d => {
-      if (Array.isArray(d)) setAlerts(d);
+    apiFetch(`/alerts?companyId=${companyId}`).then(fetchedData => {
+      if (Array.isArray(fetchedData)) setAlerts(fetchedData);
     });
-    apiFetch(`/company/${companyId}`).then(d => {
-      if (d?.id || d?._id) setCompany(d);
+    apiFetch(`/company/${companyId}`).then(fetchedData => {
+      if (fetchedData?.id || fetchedData?._id) setCompany(fetchedData);
     });
-    apiFetch(`/transactions?companyId=${companyId}`).then(d => {
-      if (d?.length) setActiveTx(d[d.length - 1]);
+    apiFetch(`/transactions?companyId=${companyId}`).then(fetchedData => {
+      if (fetchedData?.length) setActiveTx(fetchedData[fetchedData.length - 1]);
     });
   }, []);
 
   // Derive alerts from parcel status changes
   useEffect(() => {
     const dynamic = [
-      ...parcels.filter(p => p.status === "flooded").map(p => ({ id:`fl-${p.id}`, parcelId:p.id, type:"critical", message:`MNDWI > 0.42 — Flood confirmed · ${p.name}`, time:new Date().toISOString() })),
-      ...parcels.filter(p => p.status === "degraded" && p.type === "peatland").map(p => ({ id:`pd-${p.id}`, parcelId:p.id, type:"warning", message:`${p.name}: Peat degrading, NDVI=${p.ndvi}, becoming emitter`, time:new Date().toISOString() })),
-      ...parcels.filter(p => p.status === "burned").map(p => ({ id:`br-${p.id}`, parcelId:p.id, type:"critical", message:`FIRE detected at ${p.name} — Credits suspended`, time:new Date().toISOString() })),
-      ...parcels.filter(p => p.status === "healthy").map(p => ({ id:`ok-${p.id}`, parcelId:p.id, type:"info", message:`${p.name}: All sensors normal, NDVI stable ${p.ndvi}`, time:new Date().toISOString() })),
+      ...parcels.filter(pc => pc.status === "flooded").map(pc => ({ id:`fl-${pc.id}`, parcelId:pc.id, type:"critical", message:`MNDWI > 0.42 — Flood confirmed · ${pc.name}`, time:new Date().toISOString() })),
+      ...parcels.filter(pc => pc.status === "degraded" && pc.type === "peatland").map(pc => ({ id:`pd-${p.id}`, parcelId:p.id, type:"warning", message:`${pc.name}: Peat degrading, NDVI=${pc.ndvi}, becoming emitter`, time:new Date().toISOString() })),
+      ...parcels.filter(pc => pc.status === "burned").map(pc => ({ id:`br-${pc.id}`, parcelId:pc.id, type:"critical", message:`FIRE detected at ${pc.name} — Credits suspended`, time:new Date().toISOString() })),
+      ...parcels.filter(pc => pc.status === "healthy").map(pc => ({ id:`ok-${pc.id}`, parcelId:pc.id, type:"info", message:`${pc.name}: All sensors normal, NDVI stable ${pc.ndvi}`, time:new Date().toISOString() })),
     ];
     setAlerts(dynamic.length ? dynamic : MOCK_ALERTS);
   }, [parcels]);
@@ -106,7 +106,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
 
   async function handleDismiss(alertId) {
     await fetch(`https://carbon-trust-be.onrender.com/api/alerts/${alertId}`, { method: "DELETE" });
-    setAlerts(prev => prev.filter(a => a.id !== alertId));
+    setAlerts(prev => prev.filter(alertItem => alertItem.id !== alertId));
   }
 
   return (

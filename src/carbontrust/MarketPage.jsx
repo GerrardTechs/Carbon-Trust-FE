@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
 
-const projIcon = t =>
+const projIcon = tipe =>
   t?.includes("Reforest") || t?.includes("Reforestasi") ? "🌲" :
   t?.includes("Solar") || t?.includes("Renewable") ? "☀️" :
   t?.includes("Blue") ? "🌊" :
@@ -61,11 +61,11 @@ export function MarketPage({ t, company, projects, setProjects }) {
   // Conversations: { projId: [{from, text, time, isMine}] }
   const [conversations, setConversations] = useState({});
 
-  const unreadCount = inbox.filter(m => !m.read).length;
+  const unreadCount = inbox.filter(msg => !msg.read).length;
 
   useEffect(() => {
-    apiFetch(`/projects?search=${encodeURIComponent(search)}`).then(d => {
-      if (d && Array.isArray(d)) setProjects(d);
+    apiFetch(`/projects?search=${encodeURIComponent(search)}`).then(fetchedData => {
+      if (fetchedData && Array.isArray(fetchedData)) setProjects(fetchedData);
     });
   }, [search]);
 
@@ -154,7 +154,7 @@ export function MarketPage({ t, company, projects, setProjects }) {
         { from: thread.from, text: thread.text, time: thread.time, isMine: false }
       ]), reply],
     }));
-    setInbox(prev => prev.map(m => m.id === thread.id ? { ...m, read: true } : m));
+    setInbox(prev => prev.map(msgItem => msgItem.id === thread.id ? { ...msgItem, read: true } : msgItem));
     setReplyText("");
   }
 
@@ -435,13 +435,13 @@ export function MarketPage({ t, company, projects, setProjects }) {
           {[
             { label: "Jumlah Kredit (tCO₂e)", key: "credits", type: "number", ph: "e.g. 1200" },
             { label: "Catatan (opsional)", key: "note", type: "text", ph: "e.g. Lahan gambut Sentinel-2" },
-          ].map(f => (
+          ].map(fieldItem => (
             <div key={f.key}>
               <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
               <input
                 type={f.type} placeholder={f.ph}
                 value={offerForm[f.key]}
-                onChange={e => setOfferForm(o => ({ ...o, [f.key]: e.target.value }))}
+                onChange={e => setOfferForm(prev => ({ ...prev, [fieldItem.key]: e.target.value }))}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
               />
             </div>
@@ -470,7 +470,7 @@ export function MarketPage({ t, company, projects, setProjects }) {
             >← Kembali ke inbox</button>
             <div className="bg-slate-50 rounded-xl px-3 py-2">
               <p className="text-xs font-bold text-gray-700">{thread.from} {thread.fromFlag}</p>
-              <p className="text-xs text-gray-400">Re: {projects.find(p => p.id === thread.projId)?.company || thread.projId}</p>
+              <p className="text-xs text-gray-400">Re: {projects.find(proj => proj.id === thread.projId)?.company || thread.projId}</p>
             </div>
             {/* Conversation thread */}
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
@@ -519,7 +519,7 @@ export function MarketPage({ t, company, projects, setProjects }) {
             {inbox.map(msg => (
               <button
                 key={msg.id}
-                onClick={() => { setThread(msg); setInbox(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m)); }}
+                onClick={() => { setThread(msg); setInbox(prev => prev.map(msgItem => msgItem.id === msg.id ? { ...msgItem, read: true } : msgItem)); }}
                 className={`w-full text-left rounded-xl p-3 flex items-start gap-3 transition-all hover:bg-gray-50 ${!msg.read ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-100"}`}
               >
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-lg flex-shrink-0">

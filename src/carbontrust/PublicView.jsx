@@ -118,9 +118,9 @@ export default function PublicView() {
 
   useEffect(() => {
     fetch(`${API}/public/projects`)
-      .then(r => r.json())
-      .then(d => {
-        if (Array.isArray(d)) setProjects(d);
+      .then(resp => resp.json())
+      .then(fetchedData => {
+        if (Array.isArray(fetchedData)) setProjects(fetchedData);
         else setError(true);
         setLoading(false);
       })
@@ -130,26 +130,26 @@ export default function PublicView() {
   async function openDetail(proj) {
     setDetail({ ...proj, companyDetail: null });
     setDetailLoading(true);
-    const res = await fetch(`${API}/public/company/${proj.companyId}`).then(r => r.json()).catch(() => null);
+    const res = await fetch(`${API}/public/company/${proj.companyId}`).then(resp => resp.json()).catch(() => null);
     setDetail({ ...proj, companyDetail: res });
     setDetailLoading(false);
   }
 
-  const types = ["all", ...new Set(projects.map(p => p.type).filter(Boolean))];
+  const types = ["all", ...new Set(projects.map(proj => proj.type).filter(Boolean))];
 
-  const filtered = projects.filter(p => {
+  const filtered = projects.filter(proj => {
     const q = search.toLowerCase();
     const matchSearch = !q ||
-      (p.company || "").toLowerCase().includes(q) ||
-      (p.country || "").toLowerCase().includes(q) ||
-      (p.type    || "").toLowerCase().includes(q);
-    const matchFilter = filter === "all" || p.type === filter;
+      (proj.company || "").toLowerCase().includes(q) ||
+      (proj.country || "").toLowerCase().includes(q) ||
+      (proj.type    || "").toLowerCase().includes(q);
+    const matchFilter = filter === "all" || proj.type === filter;
     return matchSearch && matchFilter;
   });
 
   const totalCredits    = projects.reduce((s,p) => s + (p.available || 0), 0);
-  const verifiedCount   = projects.filter(p => p.verified).length;
-  const countryCount    = new Set(projects.map(p => p.country)).size;
+  const verifiedCount   = projects.filter(proj => proj.verified).length;
+  const countryCount    = new Set(projects.map(proj => proj.country)).size;
 
   return (
     <div className="pv">
@@ -176,7 +176,7 @@ export default function PublicView() {
 
         {/* Filter chips */}
         <div className="pv-filters">
-          {types.map(t => (
+          {types.map(typeItem => (
             <button key={t}
               className={`pv-filter ${filter === t ? "active" : ""}`}
               onClick={() => setFilter(t)}>
@@ -367,7 +367,7 @@ export default function PublicView() {
                         Lahan & Serapan
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                        {detail.companyDetail.parcels.map(p => (
+                        {detail.companyDetail.parcels.map(parcelItem => (
                           <div key={p.id} className="pv-parcel">
                             <span className="pv-parcel-icon">{TYPE_ICON[p.type] || "🌿"}</span>
                             <div style={{ flex:1, minWidth:0 }}>

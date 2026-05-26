@@ -51,7 +51,7 @@ export function CertificatePage({ t, parcels, company }) {
         `Valid Until    : 31 Desember ${new Date().getFullYear() + 1}`,
         "",
         "─── CARBON ABSORPTION ─────────────────────",
-        ...parcels.map(p => `  ${p.name} (${p.type}, ${p.area} ha): ${Math.max(0, calcAbsorption(p))} t/month`),
+        ...parcels.map(parcelItem => `  ${p.name} (${p.type}, ${p.area} ha): ${Math.max(0, calcAbsorption(p))} t/month`),
         `  Total Absorption  : ${totalAbs} tCO₂/month`,
         `  Total Emission    : ${totalEm} tCO₂/month`,
         `  Net Monthly       : ${netMonthly} tCO₂/month`,
@@ -122,7 +122,7 @@ export function CertificatePage({ t, parcels, company }) {
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase mb-2">Sumber Serapan ({parcels.length} lahan)</p>
             <div className="flex flex-col gap-2">
-              {parcels.map(p => {
+              {parcels.map(parcelItem => {
                 const abs = calcAbsorption(p);
                 const isEmit = abs < 0;
                 return (

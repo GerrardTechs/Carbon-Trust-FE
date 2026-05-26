@@ -224,12 +224,12 @@ export function CalcPage({ t = TR.en }) {
     let s1 = 0, s2 = 0, s3 = 0;
     const breakdown = [];
 
-    Object.entries(EF).forEach(([k, ef]) => {
-      const raw = parseFloat(inputs[k]) || 0;
+    Object.entries(EF).forEach(([efKey, ef]) => {
+      const raw = parseFloat(inputs[efKey]) || 0;
       if (raw <= 0) return;
 
-      const isTkm = (k === "freightRoad" || k === "freightShip");
-      const tons  = isTkm ? (parseFloat(freightTons[k]) || 0) : 1;
+      const isTkm = (efKey === "freightRoad" || efKey === "freightShip");
+      const tons  = isTkm ? (parseFloat(freightTons[efKey]) || 0) : 1;
       if (isTkm && tons <= 0) return;
 
       // GHG_i = Activity × EF × equityFactor
@@ -295,7 +295,7 @@ export function CalcPage({ t = TR.en }) {
 
             {expanded[cat] !== false && (
               <div className="p-3 flex flex-col gap-3">
-                {keys.map(k => {
+                {keys.map(efKey => {
                   const ef     = EF[efKey];
                   const raw    = parseFloat(inputs[efKey]) || 0;
                   const emPrev = raw > 0 ? +(raw * ef.ef).toFixed(2) : null;
@@ -311,7 +311,7 @@ export function CalcPage({ t = TR.en }) {
                       <div className="flex gap-2">
                         <input
                           type="number" min="0" placeholder="0"
-                          value={inputs[k]}
+                          value={inputs[efKey]}
                           onChange={e => setInputs(prev => ({ ...prev, [efKey]: e.target.value }))}
                           className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
                         />
@@ -351,10 +351,10 @@ export function CalcPage({ t = TR.en }) {
                             onChange={e => setFreightTons(freightState => ({ ...freightState, [efKey]: e.target.value }))}
                             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
                           />
-                          {inputs[k] && freightTons[k] && (
+                          {inputs[efKey] && freightTons[efKey] && (
                             <p className="text-xs text-yellow-700 mt-1 bg-yellow-50 rounded-lg px-2 py-1">
-                              {inputs[k]} km × {freightTons[k]} ton = <strong>{+(parseFloat(inputs[k]) * parseFloat(freightTons[k])).toFixed(1)} tkm</strong>
-                              {" × EF "}{ef.ef} = <strong>{+(parseFloat(inputs[k]) * parseFloat(freightTons[k]) * ef.ef).toFixed(2)} kg CO₂e</strong>
+                              {inputs[efKey]} km × {freightTons[efKey]} ton = <strong>{+(parseFloat(inputs[efKey]) * parseFloat(freightTons[efKey])).toFixed(1)} tkm</strong>
+                              {" × EF "}{ef.ef} = <strong>{+(parseFloat(inputs[efKey]) * parseFloat(freightTons[efKey]) * ef.ef).toFixed(2)} kg CO₂e</strong>
                             </p>
                           )}
                         </div>
