@@ -525,7 +525,7 @@ export function useApi(path, deps = []) {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
-    apiFetch(path).then(d => { setData(d); setLoading(false); });
+    apiFetch(path).then(fetchData => { setData(fetchData); setLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return { data, loading, refresh: () => apiFetch(path).then(setData) };
@@ -645,13 +645,13 @@ export function LangSel({ lang, setLang }) {
   const t = TR[lang] ?? TR["en"];
   return (
     <div className="relative">
-      <button onClick={() => setOpen(o => !o)}
+      <button onClick={() => setOpen(isOpen => !isOpen)}
         className="flex items-center gap-1.5 text-xs bg-green-50 border border-green-200 px-2.5 py-1.5 rounded-xl text-green-700 font-bold hover:bg-green-100">
         <Ic.Globe />{t.flag} <span className="hidden sm:inline">{t.label}</span> ▾
       </button>
       {open && (
         <div className="absolute right-0 top-10 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-36">
-          {Object.keys(TR).map(k => (
+          {Object.keys(TR).map(langCode => (
             <button key={k} onClick={() => { setLang(k); setOpen(false); }}
               className={`flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-gray-50 ${lang === k ? "bg-green-50 text-green-700 font-bold" : "text-gray-700"}`}>
               <span>{TR[k].flag}</span><span>{TR[k].label}</span>
@@ -666,7 +666,7 @@ export function LangSel({ lang, setLang }) {
 // ─── HEADER ────────────────────────────────────────────────────────────────
 export function Header({ alerts, onDismiss, lang, setLang, t }) {
   const [open, setOpen] = useState(false);
-  const crit = alerts.filter(a => a.type !== "info").length;
+  const crit = alerts.filter(alertObj => alertObj.type !== "info").length;
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
       <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-2">
@@ -683,7 +683,7 @@ export function Header({ alerts, onDismiss, lang, setLang, t }) {
       <Modal open={open} onClose={() => setOpen(false)} title={`🔔 ${t.dash.alerts}`}>
         <div className="flex flex-col gap-3">
           {alerts.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No active alerts</p>}
-          {alerts.map(a => (
+          {alerts.map(alertObj => (
             <div key={a.id} className={`flex items-start gap-3 p-3 rounded-xl ${a.type === "critical" ? "bg-red-50" : a.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
               <span className="text-lg">{a.type === "critical" ? "🚨" : a.type === "warning" ? "⚠️" : "✅"}</span>
               <div className="flex-1">

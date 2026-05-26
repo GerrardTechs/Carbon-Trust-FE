@@ -98,7 +98,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       }
     } else {
       if (assetEditItem) {
-        setMyLands(prev => prev.map(l => l.id === assetEditItem.id ? { ...l, ...assetForm } : l));
+        setMyLands(prev => prev.map(land => land.id === assetEditItem.id ? { ...l, ...assetForm } : l));
       } else {
         setMyLands(prev => [...prev, { ...assetForm, id: "l" + Date.now() }]);
       }
@@ -108,7 +108,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
 
   function deleteAsset(id) {
     if (assetTab === "company") setMyCompanies(prev => prev.filter(comp => comp.id !== id || comp.isMain));
-    else setMyLands(prev => prev.filter(l => l.id !== id));
+    else setMyLands(prev => prev.filter(land => land.id !== id));
   }
 
   // ─── Cooldown logic: 3 bulan (90 hari), reset gratis 1x ──────────────────
@@ -322,7 +322,7 @@ function handleIsoUpload(e) {
               {myLands.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">Belum ada lahan terdaftar</p>
               )}
-              {myLands.map(l => (
+              {myLands.map(landItem => (
                 <div key={l.id} className="rounded-xl p-3 border bg-gray-50 border-gray-200 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg flex-shrink-0">
                     {l.landType === "forest" ? "🌲" : l.landType === "peatland" ? "🌾" : l.landType === "mangrove" ? "🌴" : "🌿"}
@@ -438,7 +438,7 @@ function handleIsoUpload(e) {
             {/* Progress indicator */}
             {(() => {
               const total   = Q_DATA.sections.reduce((sum, sec) => sum + sec.questions.length, 0);
-              const filled  = Object.values(qAnswers).filter(v => v !== "" && v !== undefined).length;
+              const filled  = Object.values(qAnswers).filter(val => val !== "" && v !== undefined).length;
               const pct     = Math.round((filled / total) * 100);
               return (
                 <div>
@@ -665,10 +665,10 @@ function handleIsoUpload(e) {
             { l: t.profile?.companyName || "Company Name",              k:"name",          type:"text"  },
             { l: t.profile?.emailLabel  || "Institutional Email",       k:"email",         type:"email" },
             { l: t.profile?.removalProjectLabel || "Carbon Removal Project", k:"removalProject", type:"text" },
-          ].map(f => (
+          ].map(fieldItem => (
             <div key={f.k}>
               <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
-              <input type={f.type} value={form[f.k] || ""} onChange={ent=> setForm(p => ({ ...p, [f.k]:ent.target.value }))}
+              <input type={f.type} value={form[f.k] || ""} onChange={ent=> setForm(prev => ({ ...prev, [f.k]:ent.target.value }))}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
             </div>
           ))}
@@ -816,7 +816,7 @@ function handleIsoUpload(e) {
                   <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
                   <input type={f.type} placeholder={f.ph}
                     value={assetForm[f.key] || ""}
-                    onChange={ent=> setAssetForm(p => ({ ...p, [f.key]: ent.target.value }))}
+                    onChange={ent=> setAssetForm(prev => ({ ...prev, [f.key]: ent.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}

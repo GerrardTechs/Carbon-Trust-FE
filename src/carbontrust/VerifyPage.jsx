@@ -13,7 +13,7 @@ const [verified, setVerified]   = useState(false);
   const [dl, setDl] = useState(false);
   const [done, setDone] = useState(false);
   const [scanLine, setScanLine] = useState(0);
-  useInterval(() => setScanLine(l => (l + 1) % 100), 30);
+  useInterval(() => setScanLine(prev => (l + 1) % 100), 30);
 
   function handleIsoUpload(e) {
     const file = e.target.files[0];
@@ -44,7 +44,7 @@ const [verified, setVerified]   = useState(false);
         <p className="text-teal-200 text-xs uppercase tracking-widest mb-1">{t.verify.title}</p>
         <p className="font-black text-xl">MRV Report · ISO 14064:2018</p>
         <div className="flex gap-2 mt-2 flex-wrap">
-          {["ISO 14064:2018", "VCS Verra", "Gold Standard", "IPCC 2006"].map(b => (
+          {["ISO 14064:2018", "VCS Verra", "Gold Standard", "IPCC 2006"].map(badgeLabel => (
             <span key={b} className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{b}</span>
           ))}
         </div>

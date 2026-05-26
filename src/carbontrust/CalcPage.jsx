@@ -19,17 +19,17 @@ import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR } from "./shared.jsx";
 // Group EF keys by scope
 const SCOPE_KEYS = { 1: [], 2: [], 3: [] };
 const CAT_MAP    = {};
-Object.entries(EF).forEach(([k, v]) => {
-  SCOPE_KEYS[v.scope].push(k);
-  CAT_MAP[k] = v.category;
+Object.entries(EF).forEach(([efKey, efVal]) => {
+  SCOPE_KEYS[efVal.scope].push(efKey);
+  CAT_MAP[efKey] = efVal.category;
 });
 
 function groupByCategory(keys) {
   const groups = {};
-  keys.forEach(k => {
-    const cat = CAT_MAP[k] || "other";
+  keys.forEach(efKey => {
+    const cat = CAT_MAP[efKey] || "other";
     if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(k);
+    groups[cat].push(efKey);
   });
   return groups;
 }
@@ -59,7 +59,7 @@ const SCOPE_INFO = {
 // ─── SCOPE SUMMARY CARD (dipakai di tab Total) ───────────────────────────────
 function ScopeSummaryCard({ scope, value, breakdown, onClick }) {
   const si = SCOPE_INFO[scope];
-  const count = breakdown.filter(breakdownItem => breakdownItem.scope === scope).length;
+  const count = breakdown.filter(bdItem => bdItem.scope === scope).length;
   return (
     <button
       onClick={onClick}
@@ -186,7 +186,7 @@ function ScopeDonut({ s1, s2, s3 }) {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export function CalcPage({ t = TR.en }) {
-  const [inputs, setInputs]     = useState(Object.fromEntries(Object.keys(EF).map(k => [k, ""])));
+  const [inputs, setInputs]     = useState(Object.fromEntries(Object.keys(EF).map(efKey => [efKey, ""])));
   const [result, setResult]     = useState(null);
   const [activeScope, setScope] = useState(1);   // 1 | 2 | 3 | "total"
   const [expanded, setExpanded] = useState({});
@@ -296,8 +296,8 @@ export function CalcPage({ t = TR.en }) {
             {expanded[cat] !== false && (
               <div className="p-3 flex flex-col gap-3">
                 {keys.map(k => {
-                  const ef     = EF[k];
-                  const raw    = parseFloat(inputs[k]) || 0;
+                  const ef     = EF[efKey];
+                  const raw    = parseFloat(inputs[efKey]) || 0;
                   const emPrev = raw > 0 ? +(raw * ef.ef).toFixed(2) : null;
 
                   return (
@@ -312,7 +312,7 @@ export function CalcPage({ t = TR.en }) {
                         <input
                           type="number" min="0" placeholder="0"
                           value={inputs[k]}
-                          onChange={e => setInputs(i => ({ ...i, [k]: e.target.value }))}
+                          onChange={e => setInputs(prev => ({ ...prev, [efKey]: e.target.value }))}
                           className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
                         />
                         <span className="bg-gray-100 rounded-xl px-3 flex items-center text-xs font-medium text-gray-500 min-w-fit">
@@ -347,8 +347,8 @@ export function CalcPage({ t = TR.en }) {
                           </div>
                           <input
                             type="number" min="0" placeholder="e.g. 5"
-                            value={freightTons[k]}
-                            onChange={e => setFreightTons(f => ({ ...f, [k]: e.target.value }))}
+                            value={freightTons[efKey]}
+                            onChange={e => setFreightTons(freightState => ({ ...freightState, [efKey]: e.target.value }))}
                             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
                           />
                           {inputs[k] && freightTons[k] && (
@@ -468,7 +468,7 @@ export function CalcPage({ t = TR.en }) {
               >✕</button>
             </div>
             <BreakdownTable
-              items={breakdown.filter(breakdownItem => breakdownItem.scope === totalDetailScope)}
+              items={breakdown.filter(bdItem => bdItem.scope === totalDetailScope)}
               scopeColor={SCOPE_INFO[totalDetailScope].color}
             />
             {/* Subtotal */}
@@ -580,16 +580,16 @@ export function CalcPage({ t = TR.en }) {
             {[
               { val: "operational", label: "Operational / Activity" },
               { val: "equity",      label: "Equity Share" },
-            ].map(m => (
+            ].map(methodOpt => (
               <button
-                key={m.val} type="button" onClick={() => setMethod(m.val)}
+                key={methodOpt.val} type="button" onClick={() => setMethod(methodOpt.val)}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${
                   method === m.val
                     ? "bg-slate-800 text-white border-slate-800"
                     : "bg-white border-gray-200 text-gray-600"
                 }`}
               >
-                {m.label}
+                {methodOpt.label}
               </button>
             ))}
           </div>

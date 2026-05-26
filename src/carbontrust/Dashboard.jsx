@@ -46,7 +46,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           const temp = +(p.temp + (Math.random() - .5) * .4).toFixed(1);
           const hum  = +(p.hum  + (Math.random() - .5) * 1.2).toFixed(0);
           const co2  = +(p.co2  + (Math.random() - .48) * 2).toFixed(1);
-          setTH(a => [...a.slice(-19), temp]);
+          setTH(a => [...a.slice(-19), data.temp]);
           setHH(a => [...a.slice(-19), +hum]);
           setCH(a => [...a.slice(-19), co2]);
           return { temp, hum: +hum, co2 };
@@ -67,7 +67,7 @@ async function handleDismiss(alertId) {
     setHistParcelId(parcelId);
     const data = await apiFetch(`/iot/${parcelId}/history?hours=72`);
     if (data && Array.isArray(data)) {
-      setHistData(data.filter((_, i) => i % 6 === 0).map(d => ({
+      setHistData(data.filter((_, i) => i % 6 === 0).map(dataPoint => ({
         time: new Date(d.ts).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
         temp: d.temp, hum: d.hum, co2: d.co2,
       })));
@@ -108,7 +108,7 @@ async function handleDismiss(alertId) {
           <p className="text-green-200 text-xs font-bold uppercase tracking-widest">{company?.name}</p>
           <p className="text-white/80 text-xs mt-0.5">{t.dash.tagline}</p>
           <div className="flex gap-1 mt-3">
-            {["t","kt","Mt","kg"].map(u => (
+            {["t","kt","Mt","kg"].map(unitOpt => (
               <button key={u} onClick={() => setUnit(u)}
                 className={`text-xs px-2.5 py-1 rounded-full font-bold transition-all ${unit === u ? "bg-white text-green-800" : "bg-white/20 text-white/80 hover:bg-white/30"}`}>
                 {t.dash.units[u]}
@@ -210,7 +210,7 @@ async function handleDismiss(alertId) {
           { label:"Kode Saham", key:"symbol", ph:"TLKM" },
           { label:"Harga Sekarang (Rp)", key:"price", ph:"3750" },
           { label:"Harga Sebelumnya (Rp)", key:"prev", ph:"3900" },
-        ].map(f => (
+        ].map(stockField => (
           <div key={f.key} className="flex gap-2 items-center">
             <label className="text-xs text-gray-500 w-28 shrink-0">{f.label}</label>
             <input type={f.key==="symbol"?"text":"number"} placeholder={f.ph}
@@ -347,7 +347,7 @@ async function handleDismiss(alertId) {
           <button onClick={() => setPage("land")} className="text-xs text-green-600 font-bold hover:underline">{t.dash.seeAll}</button>
         </div>
         <div className="flex flex-col gap-2">
-          {parcels.map(p => {
+          {parcels.map(parcel => {
             const abs = calcAbsorption(p);
             const isEm = abs < 0;
             return (
@@ -372,14 +372,14 @@ async function handleDismiss(alertId) {
         <div className="px-4">
           <p className="text-sm font-bold text-gray-800 mb-2">{t.dash.alerts}</p>
           <div className="flex flex-col gap-2">
-            {visibleAlerts.map(a => (
+            {visibleAlerts.map(alert => (
               <div key={a.id} className={`card flex items-start gap-3 p-3 border-l-4 ${a.type==="critical"?"border-l-red-500 bg-red-50":a.type==="warning"?"border-l-amber-500 bg-amber-50":"border-l-emerald-500 bg-emerald-50"}`}>
                 <span className="text-base flex-shrink-0 mt-0.5">{a.type==="critical"?"🚨":a.type==="warning"?"⚠️":"✅"}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-gray-700">{a.parcelId}</p>
                   <p className="text-xs text-gray-600">{a.message}</p>
                 </div>
-                <button onClick={() => setDismissedAlerts(d => [...d, a.id])}
+                <button onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}
                   className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all" title={t.dash.dismiss}>
                   ×
                 </button>
@@ -392,7 +392,7 @@ async function handleDismiss(alertId) {
       {/* IoT History Modal */}
       <Modal open={histModal} onClose={() => setHistModal(false)} title={`📈 IoT History — ${histParcelId} (72h)`} wide>
         <div className="mb-3 flex gap-2 flex-wrap">
-          {parcels.map(p => (
+          {parcels.map(parcel => (
             <button key={p.id} onClick={() => openHistory(p.id)}
               className={`text-xs px-3 py-1.5 rounded-full font-bold transition-all ${histParcelId===p.id?"bg-green-600 text-white":"bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
               {p.id}
