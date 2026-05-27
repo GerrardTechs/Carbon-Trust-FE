@@ -138,16 +138,16 @@ export default function PublicView() {
   const types = ["all", ...new Set(projects.map(proj => proj.type).filter(Boolean))];
 
   const filtered = projects.filter(proj => {
-    const q = search.toLowerCase();
+    const qStr = search.toLowerCase();
     const matchSearch = !q ||
-      (proj.company || "").toLowerCase().includes(q) ||
-      (proj.country || "").toLowerCase().includes(q) ||
-      (proj.type    || "").toLowerCase().includes(q);
+      (proj.company || "").toLowerCase().includes(qStr) ||
+      (proj.country || "").toLowerCase().includes(qStr) ||
+      (proj.type    || "").toLowerCase().includes(qStr);
     const matchFilter = filter === "all" || proj.type === filter;
     return matchSearch && matchFilter;
   });
 
-  const totalCredits    = projects.reduce((s,p) => s + (p.available || 0), 0);
+  const totalCredits    = projects.reduce((sum,proj) => sum + (proj.available || 0), 0);
   const verifiedCount   = projects.filter(proj => proj.verified).length;
   const countryCount    = new Set(projects.map(proj => proj.country)).size;
 
@@ -176,7 +176,7 @@ export default function PublicView() {
 
         {/* Filter chips */}
         <div className="pv-filters">
-          {types.map(typeItem => (
+          {types.map(typeStr => (
             <button key={t}
               className={`pv-filter ${filter === t ? "active" : ""}`}
               onClick={() => setFilter(t)}>
@@ -198,10 +198,10 @@ export default function PublicView() {
               { val:projects.length,              label:"Project"  },
               { val:verifiedCount,                label:"Verified" },
               { val:countryCount,                 label:"Negara"   },
-            ].map((s,i) => (
+            ].map((statItem,i) => (
               <div key={i} className="pv-hero-stat">
-                <div className="pv-hero-stat-val">{s.val}</div>
-                <div className="pv-hero-stat-label">{s.label}</div>
+                <div className="pv-hero-stat-val">{statItem.val}</div>
+                <div className="pv-hero-stat-label">{statItem.label}</div>
               </div>
             ))}
           </div>
@@ -250,10 +250,10 @@ export default function PublicView() {
                   { label:"Serapan",    val:proj.absRate ? `${proj.absRate} t/ha` : "—" },
                   { label:"Emisi",      val:proj.totalAbsorption ? `${proj.totalAbsorption} t/bln` : "—" },
                   { label:"Rating",     val:`⭐ ${proj.rating}` },
-                ].map((m,i) => (
+                ].map((metricItem,i) => (
                   <div key={i} className="pv-metric">
-                    <div className="pv-metric-val">{m.val}</div>
-                    <div className="pv-metric-label">{m.label}</div>
+                    <div className="pv-metric-val">{metricItem.val}</div>
+                    <div className="pv-metric-label">{metricItem.label}</div>
                   </div>
                 ))}
               </div>
@@ -367,16 +367,16 @@ export default function PublicView() {
                         Lahan & Serapan
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                        {detail.companyDetail.parcels.map(parcelItem => (
-                          <div key={p.id} className="pv-parcel">
-                            <span className="pv-parcel-icon">{TYPE_ICON[p.type] || "🌿"}</span>
+                        {detail.companyDetail.parcels.map(pItem => (
+                          <div key={pItem.id} className="pv-parcel">
+                            <span className="pv-parcel-icon">{TYPE_ICON[pItem.type] || "🌿"}</span>
                             <div style={{ flex:1, minWidth:0 }}>
                               <div className="pv-parcel-name" style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
-                              <div className="pv-parcel-sub">{p.area} ha · {p.type} · {p.status}</div>
+                              <div className="pv-parcel-sub">{pItem.area} ha · {pItem.type} · {pItem.status}</div>
                             </div>
                             <div className={`pv-parcel-abs ${p.absorptionMonthly >= 0 ? "" : ""}`}
-                              style={{ color: p.absorptionMonthly >= 0 ? "#166534" : "#dc2626" }}>
-                              {p.absorptionMonthly >= 0 ? "▲" : "▼"}{Math.abs(p.absorptionMonthly)} t/bln
+                              style={{ color: pItem.absorptionMonthly >= 0 ? "#166534" : "#dc2626" }}>
+                              {pItem.absorptionMonthly >= 0 ? "▲" : "▼"}{Math.abs(pItem.absorptionMonthly)} t/bln
                             </div>
                           </div>
                         ))}

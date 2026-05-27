@@ -1115,7 +1115,7 @@ function RolePage({ onSelect, onGuest, onBack, lang }) {
     { id: "landlord", title: t.landlord.title, desc: t.landlord.desc, icon: Icons.tree,     iconBg: "role-icon-teal"  },
   ];
 
-  const selectedRole = ROLES.find(role => role.id === selected);
+  const selectedRole = ROLES.find(roleItem => roleItem.id === selected);
 
   return (
     <div className="shell">
@@ -1197,7 +1197,7 @@ function generateInstitutionId(companyName) {
   if (!companyName || !companyName.trim()) return "";
   const stopWords = ["pt", "cv", "tbk", "persero", "the", "and", "&", "-"];
   const words = companyName.trim().split(/\s+/).filter(
-    word => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
+    wrd => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
   );
   const prefix = words
     .slice(0, 3)
@@ -1507,7 +1507,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
     setCells(next);
     setErrMsg("");
     if (ch && idx < OTP_LEN - 1) inputsRef.current[idx + 1]?.focus();
-    if (ch && next.every(cell => cell !== "")) submitOTP(next.join(""));
+    if (ch && next.every(cellVal => cellVal !== "")) submitOTP(next.join(""));
   }
 
   function handleKeyDown(idx, e) {
@@ -1548,7 +1548,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
     setTimeout(() => setResent(false), 3000);
   }
 
-  const filled = cells.filter(cell => cell !== "").length;
+  const filled = cells.filter(cellVal => cellVal !== "").length;
 
   return (
     <div className="shell">
@@ -1669,7 +1669,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
               onChange={e => setField("emissionObject", e.target.value)}
             >
               <option value="">{t.emissionObjectPlaceholder}</option>
-              {t.emissionObjects.map((o, i) => <option key={i} value={o}>{o}</option>)}
+              {t.emissionObjects.map((emObj, i) => <option key={i} value={emObj}>{emObj}</option>)}
             </select>
           </div>
 
@@ -1682,7 +1682,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
               onChange={e => setField("companyType", e.target.value)}
             >
               <option value="">{t.companyTypePlaceholder}</option>
-              {t.companyTypes.map((c, i) => <option key={i} value={c}>{c}</option>)}
+              {t.companyTypes.map((cType, i) => <option key={i} value={cType}>{cType}</option>)}
             </select>
           </div>
 
@@ -1698,7 +1698,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
                 style={{ opacity: !form.emissionObject ? .5 : 1 }}
               >
                 <option value="">{t.officeAddressPlaceholder}</option>
-                {t.addressOptions.map((a, i) => <option key={i} value={a}>{a}</option>)}
+                {t.addressOptions.map((addrOpt, i) => <option key={i} value={addrOpt}>{addrOpt}</option>)}
               </select>
             </div>
           )}
@@ -1715,7 +1715,7 @@ function OperationalPage({ onSubmit, onBack, lang }) {
                 style={{ opacity: !form.emissionObject ? .5 : 1 }}
               >
                 <option value="">{t.siteAddressPlaceholder}</option>
-                {t.addressOptions.map((a, i) => <option key={i} value={a}>{a}</option>)}
+                {t.addressOptions.map((addrOpt, i) => <option key={i} value={addrOpt}>{addrOpt}</option>)}
               </select>
             </div>
           )}
@@ -1777,7 +1777,7 @@ function CalcMethodPage({ onSubmit, onBack, lang }) {
               onChange={e => setField("calcMethod", e.target.value)}
             >
               <option value="">{t.calcMethodPlaceholder}</option>
-              {t.calcMethods.map((m, i) => <option key={i} value={m}>{m}</option>)}
+              {t.calcMethods.map((calcMethod, i) => <option key={i} value={calcMethod}>{calcMethod}</option>)}
             </select>
           </div>
 
@@ -1889,9 +1889,9 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
   const [operationalData, setOperationalData] = useState(null);
   const [calcData,        setCalcData]        = useState(null);
 
-  function handleRoleSelect(r) {
-    setRole(r);
-    if (r === "admin") {
+  function handleRoleSelect(roleVal) {
+    setRole(roleVal);
+    if (roleVal === "admin") {
       setStep("adminLogin");
     } else {
       setStep("register");
@@ -1940,44 +1940,64 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     setStep("verify");
   }
 
+  const [loginForm, setLoginForm] = useState({ email:"", password:"" });
+const [loginError, setLoginError] = useState("");
+
+async function handleLogin() {
+  setLoginError("");
+  try {
+    const res = await fetch("https://carbon-trust-be.onrender.com/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(loginForm),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (onComplete) onComplete(data.user.role, data.user, lang, data.token);
+    } else {
+      setLoginError(data.message || "Login gagal");
+    }
+  } catch {
+    setLoginError("Tidak bisa terhubung ke server");
+  }
+}
+
   const handleFinalSubmit = async (finalCalcData) => {
-    // 1. Gabungkan semua data dari langkah 1 sampai akhir
     const completeData = {
       ...userData,
       ...operationalData,
       ...finalCalcData,
-      role: role // Kirimkan juga role-nya (company / landlord)
+      role,
     };
-
-    setCalcData(finalCalcData); // Simpan ke state
-
+    setCalcData(finalCalcData);
+  
     try {
-      // 2. Tembak API Backend
-      const response = await fetch("https://carbon-trust-be.onrender.com/api/auth/register-company", {
+      const endpoint = role === "landlord"
+        ? "https://carbon-trust-be.onrender.com/api/auth/register-landlord"
+        : "https://carbon-trust-be.onrender.com/api/auth/register-company";
+  
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(completeData)
+        body: JSON.stringify(completeData),
       });
-
       const result = await response.json();
-
+  
       if (result.success) {
-        setStep("success"); // Lanjut ke halaman centang hijau
-
-        // 3. Setelah animasi success selesai, lempar data asli backend ke App.jsx
+        setStep("success");
         setTimeout(() => {
           if (onComplete) onComplete(
-            data.user.role,  // ← pakai dari response BE
-            data.user,
+            result.user.role,
+            result.user,
             lang,
-            data.token
+            result.token
           );
         }, 2000);
       } else {
-        alert("Gagal registrasi di server.");
+        alert(result.message || "Gagal registrasi.");
       }
     } catch (error) {
-      alert("Gagal terhubung ke backend. Pastikan server nyala.");
+      alert("Gagal terhubung ke backend.");
       console.error(error);
     }
   };
@@ -2034,8 +2054,58 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
       <style>{css}</style>
 
       {step === "welcome" && (
-        <WelcomePage onContinue={() => setStep("role")} lang={lang} setLang={setLang} />
-      )}
+  <>
+    <WelcomePage onContinue={() => setStep("role")} lang={lang} setLang={setLang} />
+    <button
+      onClick={() => setStep("login")}
+      style={{
+        background:"none", border:"none", fontSize:13,
+        color: G.slate400, cursor:"pointer", fontFamily:"inherit",
+        textDecoration:"underline", marginTop:8,
+        display:"block", width:"100%", textAlign:"center", paddingBottom:24
+      }}>
+      {lang === "id" ? "Sudah punya akun? Masuk" : "Already have an account? Login"}
+    </button>
+  </>
+)}
+{step === "login" && (
+  <div className="screen fade-up" style={{ padding:"40px 28px" }}>
+    <button className="back-btn" onClick={() => setStep("welcome")}>← Back</button>
+    <div style={{ textAlign:"center", marginBottom:32 }}>
+      <div style={{ fontSize:48, marginBottom:12 }}>👤</div>
+      <h2 style={{ fontFamily:"inherit", fontSize:22, fontWeight:900, color:G.slate800 }}>
+        {lang === "id" ? "Masuk" : "Login"}
+      </h2>
+    </div>
+
+    <div className="field-group">
+      <label className="label">Email</label>
+      <input className="input-field" type="email" placeholder="email@perusahaan.com"
+        value={loginForm.email}
+        onChange={prev => setLoginForm(frm => ({ ...frm, email: prev.target.value }))} />
+    </div>
+    <div className="field-group" style={{ marginTop:12 }}>
+      <label className="label">Password</label>
+      <input className="input-field" type="password" placeholder="••••••••"
+        value={loginForm.password}
+        onChange={prev => setLoginForm(frm => ({ ...frm, password: prev.target.value }))} />
+    </div>
+
+    {loginError && <p style={{ color:G.err, fontSize:12, marginTop:8 }}>{loginError}</p>}
+
+    <button className="btn-primary" style={{ marginTop:24, width:"100%" }}
+      onClick={handleLogin}>
+      {lang === "id" ? "Masuk →" : "Login →"}
+    </button>
+
+    <button onClick={() => setStep("role")}
+      style={{ background:"none", border:"none", fontSize:12, color:G.slate400,
+        cursor:"pointer", fontFamily:"inherit", display:"block", margin:"12px auto 0", textDecoration:"underline" }}>
+      {lang === "id" ? "Belum punya akun? Daftar" : "No account? Register"}
+    </button>
+  </div>
+)}
+      
       {step === "role" && (
         <RolePage
           onSelect={handleRoleSelect}

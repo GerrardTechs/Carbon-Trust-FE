@@ -98,7 +98,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       }
     } else {
       if (assetEditItem) {
-        setMyLands(prev => prev.map(land => land.id === assetEditItem.id ? { ...l, ...assetForm } : l));
+        setMyLands(prev => prev.map(landItem => landItem.id === assetEditItem.id ? { ...landItem, ...assetForm } : l));
       } else {
         setMyLands(prev => [...prev, { ...assetForm, id: "l" + Date.now() }]);
       }
@@ -322,19 +322,19 @@ function handleIsoUpload(e) {
               {myLands.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">Belum ada lahan terdaftar</p>
               )}
-              {myLands.map(landItem => (
-                <div key={l.id} className="rounded-xl p-3 border bg-gray-50 border-gray-200 flex items-center gap-3">
+              {myLands.map(land => (
+                <div key={land.id} className="rounded-xl p-3 border bg-gray-50 border-gray-200 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg flex-shrink-0">
-                    {l.landType === "forest" ? "🌲" : l.landType === "peatland" ? "🌾" : l.landType === "mangrove" ? "🌴" : "🌿"}
+                    {land.landType === "forest" ? "🌲" : land.landType === "peatland" ? "🌾" : land.landType === "mangrove" ? "🌴" : "🌿"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-800 truncate">{l.name}</p>
-                    <p className="text-xs text-gray-500">{l.landType} · {l.area ? `${l.area} ha` : "-"}</p>
-                    <p className="text-xs text-gray-400 truncate">{l.location || "-"}</p>
+                    <p className="text-xs font-bold text-gray-800 truncate">{land.name}</p>
+                    <p className="text-xs text-gray-500">{land.landType} · {land.area ? `${l.area} ha` : "-"}</p>
+                    <p className="text-xs text-gray-400 truncate">{land.location || "-"}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => openEditAsset(l)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
-                    <button onClick={() => deleteAsset(l.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
+                    <button onClick={() => openEditAsset(land)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-xs flex items-center justify-center">✏️</button>
+                    <button onClick={() => deleteAsset(land.id)} className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-xs flex items-center justify-center">🗑️</button>
                   </div>
                 </div>
               ))}
@@ -406,16 +406,16 @@ function handleIsoUpload(e) {
                 <div key={i} className="bg-gray-50 p-3 rounded-2xl border border-gray-100">
                   <p className="text-[10px] font-black text-green-700 mb-3 uppercase tracking-widest">{sec.section}</p>
                   <div className="grid gap-3">
-                    {sec.questions.map((q) => (
-                      <div key={q.key} className="flex flex-col gap-1">
-                        <label className="text-[11px] text-gray-500 font-medium">{q.label}</label>
-                        {q.type === "dropdown" ? (
+                    {sec.questions.map((qItem) => (
+                      <div key={qItem.key} className="flex flex-col gap-1">
+                        <label className="text-[11px] text-gray-500 font-medium">{qItem.label}</label>
+                        {qItem.type === "dropdown" ? (
                           <select
-                            value={qAnswers[q.key] || ""}
-                            onChange={ent=> handleQAnswer(q.key, ent.target.value)}
+                            value={qAnswers[qItem.key] || ""}
+                            onChange={ent=> handleQAnswer(qItem.key, ent.target.value)}
                             className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs outline-none focus:border-green-400 focus:ring-1 focus:ring-green-100">
                             <option value="">— {lang === "id" ? "Pilih" : "Select"} —</option>
-                            {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            {qItem.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                           </select>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -423,8 +423,8 @@ function handleIsoUpload(e) {
                               type="number"
                               min="0"
                               placeholder="0"
-                              value={qAnswers[q.key] || ""}
-                              onChange={ent=> handleQAnswer(q.key, ent.target.value)}
+                              value={qAnswers[qItem.key] || ""}
+                              onChange={ent=> handleQAnswer(qItem.key, ent.target.value)}
                               className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs outline-none focus:border-green-400 focus:ring-1 focus:ring-green-100" />
                           </div>
                         )}
@@ -438,7 +438,7 @@ function handleIsoUpload(e) {
             {/* Progress indicator */}
             {(() => {
               const total   = Q_DATA.sections.reduce((sum, sec) => sum + sec.questions.length, 0);
-              const filled  = Object.values(qAnswers).filter(val => val !== "" && v !== undefined).length;
+              const filled  = Object.values(qAnswers).filter(val => val !== "" && val !== undefined).length;
               const pct     = Math.round((filled / total) * 100);
               return (
                 <div>
@@ -628,7 +628,7 @@ function handleIsoUpload(e) {
             <svg width="180" height="200" viewBox="0 0 180 200">
               <ellipse cx="90" cy="175" rx="50" ry="7" fill="#d1fae5" opacity=".7" />
               {si > 0 && <rect x={90-[3,4,5,6,7][Math.min(si,4)]} y={175-[10,45,75,105,125][Math.min(si,4)]} width={[6,8,10,12,14][Math.min(si,4)]} height={[10,45,75,105,125][Math.min(si,4)]} rx="3" fill="#92400e" />}
-              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
+              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([treeColor,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
               {si >= 2 && [["#4ade80",76,128,16,12,0],["#22c55e",104,123,14,11,.2],["#16a34a",90,108,18,14,.4]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
               {si >= 3 && [["#16a34a",90,88,28,23,0],["#15803d",67,103,23,18,.15],["#166534",114,98,23,18,.3],["#22c55e",90,73,20,16,.45]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
               {si >= 4 && [["#15803d",90,68,38,32,0],["#16a34a",57,88,30,26,.1],["#166534",126,83,30,26,.2]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}

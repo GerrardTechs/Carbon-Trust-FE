@@ -43,9 +43,9 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
     } catch {
       const id = setInterval(() => {
         setLiveIoT(prevIoT => {
-          const temp = +(p.temp + (Math.random() - .5) * .4).toFixed(1);
-          const hum  = +(p.hum  + (Math.random() - .5) * 1.2).toFixed(0);
-          const co2  = +(p.co2  + (Math.random() - .48) * 2).toFixed(1);
+          const temp = +(iotPoint.temp + (Math.random() - .5) * .4).toFixed(1);
+          const hum  = +(iotPoint.hum  + (Math.random() - .5) * 1.2).toFixed(0);
+          const co2  = +(iotPoint.co2  + (Math.random() - .48) * 2).toFixed(1);
           setTH(arr => [...arr.slice(-19), data.temp]);
           setHH(arr => [...arr.slice(-19), +hum]);
           setCH(arr => [...arr.slice(-19), co2]);
@@ -68,8 +68,8 @@ async function handleDismiss(alertId) {
     const data = await apiFetch(`/iot/${parcelId}/history?hours=72`);
     if (data && Array.isArray(data)) {
       setHistData(data.filter((_, i) => i % 6 === 0).map(dataPoint => ({
-        time: new Date(d.ts).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
-        temp: d.temp, hum: d.hum, co2: d.co2,
+        time: new Date(dataPoint.ts).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
+        temp: dataPoint.temp, hum: dataPoint.hum, co2: dataPoint.co2,
       })));
     } else {
       setHistData(Array.from({ length: 36 }, (_, i) => ({
@@ -82,7 +82,7 @@ async function handleDismiss(alertId) {
     setHistModal(true);
   }
 
-  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertObj.id));
+  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertItem.id));
   const totalAbs = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0,  calcAbsorption(parcel)), 0).toFixed(2));
   const totalEm  = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0, -calcAbsorption(parcel)), 0).toFixed(2));  
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
@@ -109,9 +109,9 @@ async function handleDismiss(alertId) {
           <p className="text-white/80 text-xs mt-0.5">{t.dash.tagline}</p>
           <div className="flex gap-1 mt-3">
             {["t","kt","Mt","kg"].map(unitOpt => (
-              <button key={u} onClick={() => setUnit(u)}
+              <button key={unitOpt} onClick={() => setUnit(unitOpt)}
                 className={`text-xs px-2.5 py-1 rounded-full font-bold transition-all ${unit === u ? "bg-white text-green-800" : "bg-white/20 text-white/80 hover:bg-white/30"}`}>
-                {t.dash.units[u]}
+                {t.dash.units[unitOpt]}
               </button>
             ))}
           </div>
@@ -215,7 +215,7 @@ async function handleDismiss(alertId) {
             <label className="text-xs text-gray-500 w-28 shrink-0">{f.label}</label>
             <input type={f.key==="symbol"?"text":"number"} placeholder={f.ph}
               value={stockPrice[f.key]}
-              onChange={e => setStockPrice(statItem => ({...statItem, [f.key]: e.target.value}))}
+              onChange={e => setStockPrice(prevStock => ({...prevStock, [f.key]: e.target.value}))}
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
           </div>
         ))}
@@ -348,18 +348,18 @@ async function handleDismiss(alertId) {
         </div>
         <div className="flex flex-col gap-2">
           {parcels.map(parcel => {
-            const abs = calcAbsorption(p);
+            const abs = calcAbsorption(parcelItem);
             const isEm = abs < 0;
             return (
-              <div key={p.id} className={`card flex items-center gap-3 p-3 border-l-4 ${p.status==="flooded"?"border-l-blue-500":p.status==="degraded"?"border-l-amber-500":p.status==="burned"?"border-l-red-500":"border-l-emerald-500"}`}>
-                <span className="text-2xl">{p.type==="forest"?"🌲":p.type==="peatland"?"🌾":p.type==="mangrove"?"🌴":"🏞️"}</span>
+              <div key={parcelItem.id} className={`card flex items-center gap-3 p-3 border-l-4 ${p.status==="flooded"?"border-l-blue-500":p.status==="degraded"?"border-l-amber-500":p.status==="burned"?"border-l-red-500":"border-l-emerald-500"}`}>
+                <span className="text-2xl">{parcelItem.type==="forest"?"🌲":parcelItem.type==="peatland"?"🌾":parcelItem.type==="mangrove"?"🌴":"🏞️"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-800 truncate">{p.name}</p>
-                  <p className="text-xs text-gray-500">{p.area} ha · NDVI {p.ndvi}</p>
+                  <p className="text-xs font-bold text-gray-800 truncate">{parcelItem.name}</p>
+                  <p className="text-xs text-gray-500">{parcelItem.area} ha · NDVI {parcelItem.ndvi}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-xs font-black ${isEm?"text-red-600":"text-emerald-700"}`}>{isEm?"▼":"▲"}{Math.abs(cv(abs))}{uSuffix}</p>
-                  <SBadge status={p.status} t={t} />
+                  <SBadge status={parcelItem.status} t={t} />
                 </div>
               </div>
             );
@@ -373,11 +373,11 @@ async function handleDismiss(alertId) {
           <p className="text-sm font-bold text-gray-800 mb-2">{t.dash.alerts}</p>
           <div className="flex flex-col gap-2">
             {visibleAlerts.map(alert => (
-              <div key={a.id} className={`card flex items-start gap-3 p-3 border-l-4 ${a.type==="critical"?"border-l-red-500 bg-red-50":a.type==="warning"?"border-l-amber-500 bg-amber-50":"border-l-emerald-500 bg-emerald-50"}`}>
-                <span className="text-base flex-shrink-0 mt-0.5">{a.type==="critical"?"🚨":a.type==="warning"?"⚠️":"✅"}</span>
+              <div key={alertItem.id} className={`card flex items-start gap-3 p-3 border-l-4 ${a.type==="critical"?"border-l-red-500 bg-red-50":a.type==="warning"?"border-l-amber-500 bg-amber-50":"border-l-emerald-500 bg-emerald-50"}`}>
+                <span className="text-base flex-shrink-0 mt-0.5">{alertItem.type==="critical"?"🚨":alertItem.type==="warning"?"⚠️":"✅"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-700">{a.parcelId}</p>
-                  <p className="text-xs text-gray-600">{a.message}</p>
+                  <p className="text-xs font-bold text-gray-700">{alertItem.parcelId}</p>
+                  <p className="text-xs text-gray-600">{alertItem.message}</p>
                 </div>
                 <button onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}
                   className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all" title={t.dash.dismiss}>
@@ -393,9 +393,9 @@ async function handleDismiss(alertId) {
       <Modal open={histModal} onClose={() => setHistModal(false)} title={`📈 IoT History — ${histParcelId} (72h)`} wide>
         <div className="mb-3 flex gap-2 flex-wrap">
           {parcels.map(parcel => (
-            <button key={p.id} onClick={() => openHistory(p.id)}
+            <button key={parcelItem.id} onClick={() => openHistory(parcelItem.id)}
               className={`text-xs px-3 py-1.5 rounded-full font-bold transition-all ${histParcelId===p.id?"bg-green-600 text-white":"bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-              {p.id}
+              {parcelItem.id}
             </button>
           ))}
         </div>

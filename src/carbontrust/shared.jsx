@@ -551,7 +551,7 @@ export const MOCK_PROJECTS = [
 ];
 
 export function lockProject(id) {
-  const proj = MOCK_PROJECTS.find(p => p.id === id);
+  const proj = MOCK_PROJECTS.find(proj => proj.id === id);
   if (proj) proj.isLocked = true;
 }
 // ─── SHARED UI ─────────────────────────────────────────────────────────────
@@ -572,7 +572,7 @@ export function Modal({ open, onClose, title, children, wide }) {
   );
 }
 
-export function SBadge({ status, t }) {
+export function SBadge({ status, tLang }) {
   const C = { healthy:"bg-emerald-100 text-emerald-700",flooded:"bg-blue-100 text-blue-700",degraded:"bg-amber-100 text-amber-700",burned:"bg-red-100 text-red-700",drying:"bg-orange-100 text-orange-700" };
   return <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${C[status]||"bg-gray-100 text-gray-600"}`}>{t.land.status[status]||status}</span>;
 }
@@ -652,9 +652,9 @@ export function LangSel({ lang, setLang }) {
       {open && (
         <div className="absolute right-0 top-10 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-36">
           {Object.keys(TR).map(langCode => (
-            <button key={k} onClick={() => { setLang(k); setOpen(false); }}
+            <button key={langCode} onClick={() => { setLang(langCode); setOpen(false); }}
               className={`flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-gray-50 ${lang === k ? "bg-green-50 text-green-700 font-bold" : "text-gray-700"}`}>
-              <span>{TR[k].flag}</span><span>{TR[k].label}</span>
+              <span>{TR[langCode].flag}</span><span>{TR[langCode].label}</span>
             </button>
           ))}
         </div>
@@ -666,7 +666,7 @@ export function LangSel({ lang, setLang }) {
 // ─── HEADER ────────────────────────────────────────────────────────────────
 export function Header({ alerts, onDismiss, lang, setLang, t }) {
   const [open, setOpen] = useState(false);
-  const crit = alerts.filter(alertObj => alertObj.type !== "info").length;
+  const crit = alerts.filter(alertItem => alertItem.type !== "info").length;
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
       <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-2">
@@ -683,16 +683,16 @@ export function Header({ alerts, onDismiss, lang, setLang, t }) {
       <Modal open={open} onClose={() => setOpen(false)} title={`🔔 ${t.dash.alerts}`}>
         <div className="flex flex-col gap-3">
           {alerts.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No active alerts</p>}
-          {alerts.map(alertObj => (
-            <div key={a.id} className={`flex items-start gap-3 p-3 rounded-xl ${a.type === "critical" ? "bg-red-50" : a.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
-              <span className="text-lg">{a.type === "critical" ? "🚨" : a.type === "warning" ? "⚠️" : "✅"}</span>
+          {alerts.map(alertItem => (
+            <div key={alertObj.id} className={`flex items-start gap-3 p-3 rounded-xl ${alertObj.type === "critical" ? "bg-red-50" : a.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
+              <span className="text-lg">{alertObj.type === "critical" ? "🚨" : alertObj.type === "warning" ? "⚠️" : "✅"}</span>
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-700">{a.parcelId}</p>
-                <p className="text-xs text-gray-600">{a.message}</p>
-                <p className="text-xs text-gray-400">{new Date(a.time).toLocaleTimeString()}</p>
+                <p className="text-xs font-bold text-gray-700">{alertObj.parcelId}</p>
+                <p className="text-xs text-gray-600">{alertObj.message}</p>
+                <p className="text-xs text-gray-400">{new Date(alertObj.time).toLocaleTimeString()}</p>
               </div>
               <button
-        onClick={() => onDismiss(a.id)}
+        onClick={() => onDismiss(alertObj.id)}
         className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-black/10 hover:text-gray-600 text-xs flex-shrink-0 mt-0.5"
       >
         ✕

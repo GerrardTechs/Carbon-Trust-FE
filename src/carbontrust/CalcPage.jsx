@@ -241,10 +241,10 @@ export function CalcPage({ t = TR.en }) {
       else s3 += em;
 
       breakdown.push({
-        key: k, val: raw, ef: ef.ef,
+        key: efKey, val: raw, ef: ef.ef,
         unit: isTkm ? `km × ${tons} ton = ${+(raw * tons).toFixed(1)} tkm` : ef.unit,
         emission: em, scope: ef.scope, category: ef.category,
-        source: ef.source || EF_LABELS[k],
+        source: ef.source || EF_LABELS[efKey],
       });
     });
 
@@ -301,9 +301,9 @@ export function CalcPage({ t = TR.en }) {
                   const emPrev = raw > 0 ? +(raw * ef.ef).toFixed(2) : null;
 
                   return (
-                    <div key={k}>
+                    <div key={efKey}>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-bold text-gray-700">{EF_LABELS[k]}</label>
+                        <label className="text-xs font-bold text-gray-700">{EF_LABELS[efKey]}</label>
                         <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                           EF: {ef.ef} kg CO₂/{ef.unit}
                         </span>
@@ -339,7 +339,7 @@ export function CalcPage({ t = TR.en }) {
                       )}
 
                       {/* Freight ton input */}
-                      {(k === "freightRoad" || k === "freightShip") && (
+                      {(efKey === "freightRoad" || efKey === "freightShip") && (
                         <div className="mt-2">
                           <div className="flex items-center justify-between mb-1">
                             <label className="text-xs font-bold text-gray-700">Berat Muatan</label>
@@ -394,7 +394,7 @@ export function CalcPage({ t = TR.en }) {
     const { s1, s2, s3, total, leakage, creditsNeeded, breakdown } = result;
 
     // Kontribusi persen
-    const pct = (v) => total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
+    const pct = (val) => total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
 
     return (
       <div className="flex flex-col gap-3">
@@ -584,7 +584,7 @@ export function CalcPage({ t = TR.en }) {
               <button
                 key={methodOpt.val} type="button" onClick={() => setMethod(methodOpt.val)}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                  method === m.val
+                  method === methodOpt.val
                     ? "bg-slate-800 text-white border-slate-800"
                     : "bg-white border-gray-200 text-gray-600"
                 }`}

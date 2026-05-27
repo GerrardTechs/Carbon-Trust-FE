@@ -102,7 +102,7 @@ export function MarketPage({ t, company, projects, setProjects }) {
     };
     setBids(prev => ({
       ...prev,
-      [proj.id]: [...(prev[proj.id] || []), newBid].sort((x, y) => y.price - x.price),
+      [proj.id]: [...(prev[proj.id] || []), newBid].sort((bidA, bidB) => bidB.price - bidA.price),
     }));
     setBidPrice(""); setBidVolume("");
     setSubmitted(true);
@@ -400,20 +400,20 @@ export function MarketPage({ t, company, projects, setProjects }) {
                   Bid Aktif ({bids[detail.id].length}) — tertinggi dulu
                 </p>
                 <div className="flex flex-col gap-1.5">
-                {bids[detail.id].map((bidItem, i) => (
+                {bids[detail.id].map((bid, i) => (
                     <div
                       key={i}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl ${i === 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"}`}
                     >
                       <div>
-                        <p className="text-xs font-bold text-gray-800">{b.bidder}</p>
-                        <p className="text-xs text-gray-400">{b.volume} ton · {b.time}</p>
+                        <p className="text-xs font-bold text-gray-800">{bid.bidder}</p>
+                        <p className="text-xs text-gray-400">{bid.volume} ton · {bid.time}</p>
                       </div>
                       <div className="text-right">
                         <p className={`font-black text-sm ${i === 0 ? "text-green-700" : "text-gray-600"}`}>
-                          ${b.price}/t {i === 0 && "👑"}
+                          ${bid.price}/t {i === 0 && "👑"}
                         </p>
-                        <p className="text-xs text-gray-400">${b.total?.toLocaleString()} total</p>
+                        <p className="text-xs text-gray-400">${bid.total?.toLocaleString()} total</p>
                       </div>
                     </div>
                   ))}

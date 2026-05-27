@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Spinner, Ic } from "./shared.jsx";
 
-function calcAbsorption(p) {
+function calcAbsorption(parcel) {
   const BASE = {
     forest:       { healthy:8.5,  flooded:3.2,  degraded:1.5,  burned:-50,  drying:0    },
     peatland:     { healthy:2.1,  flooded:0.8,  degraded:-15,  burned:-120, drying:-25  },
@@ -10,8 +10,8 @@ function calcAbsorption(p) {
     seawater:     { healthy:14.0, flooded:14.0, degraded:5.0,  burned:-20,  drying:0    },
     industrial:   { healthy:0,    flooded:0,    degraded:0,    burned:0,    drying:0    },
   };
-  const rate = BASE[p.type]?.[p.status] ?? 0;
-  return parseFloat(((rate * p.area) / 12).toFixed(2));
+  const rate = BASE[parcel.type]?.[parcel.status] ?? 0;
+  return parseFloat(((rate * parcel.area) / 12).toFixed(2));
 }
 
 export function CertificatePage({ t, parcels, company }) {
@@ -20,10 +20,10 @@ export function CertificatePage({ t, parcels, company }) {
 
   // Hitung net kredit = total serapan - total emisi dari semua lahan
   const totalAbs = parseFloat(
-    parcels.reduce((s, p) => s + Math.max(0, calcAbsorption(p)), 0).toFixed(2)
+    parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0).toFixed(2)
   );
   const totalEm = parseFloat(
-    parcels.reduce((s, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(2)
+    parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2)
   );
   const netMonthly  = parseFloat((totalAbs - totalEm).toFixed(2));
   const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
@@ -75,10 +75,10 @@ export function CertificatePage({ t, parcels, company }) {
 
       const blob = new Blob([content], { type: "text/plain" });
       const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
-      a.download = `${certNo}.txt`;
-      a.click();
+      const anchor = document.createElement("a");
+      anchor.href     = url;
+      anchor.download = `${certNo}.txt`;
+      anchor.click();
       URL.revokeObjectURL(url);
       setDownloading(false);
       setDownloaded(true);
@@ -122,14 +122,14 @@ export function CertificatePage({ t, parcels, company }) {
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase mb-2">Sumber Serapan ({parcels.length} lahan)</p>
             <div className="flex flex-col gap-2">
-              {parcels.map(parcelItem => {
-                const abs = calcAbsorption(p);
+              {parcels.map(pc => {
+                const abs = calcAbsorption(pc);
                 const isEmit = abs < 0;
                 return (
-                  <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+                  <div key={pc.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
                     <div>
-                      <p className="text-xs font-bold text-gray-700">{p.name}</p>
-                      <p className="text-xs text-gray-400">{p.type} · {p.area} ha · {p.status}</p>
+                      <p className="text-xs font-bold text-gray-700">{pc.name}</p>
+                      <p className="text-xs text-gray-400">{pc.type} · {pc.area} ha · {pc.status}</p>
                     </div>
                     <p className={`text-xs font-black ${isEmit ? "text-red-500" : "text-green-700"}`}>
                       {isEmit ? "▼" : "▲"}{Math.abs(abs)} t/bln
@@ -162,10 +162,10 @@ export function CertificatePage({ t, parcels, company }) {
               { l:"Berlaku s/d",    v:`31 Des ${new Date().getFullYear()+1}` },
               { l:"Standar",        v:"ISO 14064:2018" },
               { l:"Verifikasi",     v:"Sentinel-2 + IoT" },
-            ].map((m, i) => (
+            ].map((metaItem, i) => (
               <div key={i} className="bg-gray-50 rounded-xl p-2">
-                <p className="text-xs text-gray-400">{m.l}</p>
-                <p className="text-xs font-bold text-gray-700">{m.v}</p>
+                <p className="text-xs text-gray-400">{metaItem.l}</p>
+                <p className="text-xs font-bold text-gray-700">{metaItem.v}</p>
               </div>
             ))}
           </div>

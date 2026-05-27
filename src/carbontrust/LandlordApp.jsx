@@ -154,8 +154,8 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
     setIsoCert(file); setCertOk(true); setCertError("");
   }
 
-  const totalAbs = parseFloat(parcels.reduce((s,p) => s + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
-  const totalEm  = parseFloat(parcels.reduce((s,p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
+  const totalAbs = parseFloat(parcels.reduce((sum,pc) => sum + Math.max(0,  calcAbsorption(pc)), 0).toFixed(2));
+  const totalEm  = parseFloat(parcels.reduce((sum,pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2));
   const net      = parseFloat((totalAbs - totalEm).toFixed(2));
   const credits  = Math.max(0, Math.floor(net * 12));
 
@@ -188,10 +188,10 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
               { key:"parcels",   label:"Lahan Saya" },
               { key:"market",    label:"Tawarkan" },
             ].map(tabItem => (
-              <button key={t.key}
-                className={`ll-tab ${tab === t.key ? "active" : ""}`}
-                onClick={() => setTab(t.key)}>
-                {t.label}
+              <button key={tabItem.key}
+                className={`ll-tab ${tab === tabItem.key ? "active" : ""}`}
+                onClick={() => setTab(tabItem.key)}>
+                {tabItem.label}
               </button>
             ))}
           </div>
@@ -220,11 +220,11 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                     { icon:"🏭", label:"Emisi / bulan",    val:`${totalEm} t`,   color:"#dc2626" },
                     { icon:"⚖️", label:"Net Karbon",        val:`${net} t/bln`,  color: net >= 0 ? "#0f766e" : "#dc2626" },
                     { icon:"🎫", label:"Kredit Karbon",    val:credits.toLocaleString(), color:"#1d4ed8" },
-                  ].map((k,i) => (
+                  ].map((kpiItem,i) => (
                     <div key={i} className="ll-kpi">
-                      <div className="ll-kpi-icon">{k.icon}</div>
-                      <div className="ll-kpi-val" style={{ color:k.color }}>{k.val}</div>
-                      <div className="ll-kpi-label">{k.label}</div>
+                      <div className="ll-kpi-icon">{kpiItem.icon}</div>
+                      <div className="ll-kpi-val" style={{ color:kpiItem.color }}>{kpiItem.val}</div>
+                      <div className="ll-kpi-label">{kpiItem.label}</div>
                     </div>
                   ))}
                 </div>
@@ -263,17 +263,17 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                       Lihat semua →
                     </button>
                   </div>
-                  {parcels.slice(0,3).map(parcelItem => (
-                    <div key={p.id} className="ll-parcel">
+                  {parcels.slice(0,3).map(pc => (
+                    <div key={pc.id} className="ll-parcel">
                       <div className="ll-parcel-top">
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <span style={{ fontSize:22 }}>{TYPE_ICON[p.type]}</span>
+                          <span style={{ fontSize:22 }}>{TYPE_ICON[pc.type]}</span>
                           <div>
-                            <div className="ll-parcel-name">{p.name}</div>
-                            <div className="ll-parcel-type">{p.area} ha · {p.type}</div>
+                            <div className="ll-parcel-name">{pc.name}</div>
+                            <div className="ll-parcel-type">{pc.area} ha · {pc.type}</div>
                           </div>
                         </div>
-                        <span className={`ll-badge ${BADGE_CLASS[p.status] || "ll-badge-healthy"}`}>{p.status}</span>
+                        <span className={`ll-badge ${BADGE_CLASS[pc.status] || "ll-badge-healthy"}`}>{p.status}</span>
                       </div>
                     </div>
                   ))}
@@ -305,31 +305,31 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
               ) : (
                 <div className="ll-section" style={{ margin:"0 16px" }}>
                   {parcels.map(parcelItem => (
-                    <div key={p.id} className="ll-parcel">
+                    <div key={pc.id} className="ll-parcel">
                       <div className="ll-parcel-top">
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <span style={{ fontSize:24 }}>{TYPE_ICON[p.type]}</span>
+                          <span style={{ fontSize:24 }}>{TYPE_ICON[pc.type]}</span>
                           <div>
-                            <div className="ll-parcel-name">{p.name}</div>
+                            <div className="ll-parcel-name">{pc.name}</div>
                             <div className="ll-parcel-type">{p.type} · {p.area} ha</div>
                           </div>
                         </div>
-                        <span className={`ll-badge ${BADGE_CLASS[p.status] || "ll-badge-healthy"}`}>{p.status}</span>
+                        <span className={`ll-badge ${BADGE_CLASS[pc.status] || "ll-badge-healthy"}`}>{p.status}</span>
                       </div>
                       <div className="ll-parcel-grid">
                         {[
                           { l:"NDVI",       v:p.ndvi },
                           { l:"Serapan",    v:`${Math.max(0, calcAbsorption(p))} t/bln` },
                           { l:"Humidity",   v:p.humidity ? `${p.humidity}%` : "—" },
-                        ].map((s,i) => (
+                        ].map((statItem,i) => (
                           <div key={i} className="ll-parcel-stat">
-                            <div className="ll-parcel-stat-val">{s.v}</div>
-                            <div className="ll-parcel-stat-label">{s.l}</div>
+                            <div className="ll-parcel-stat-val">{statItem.v}</div>
+                            <div className="ll-parcel-stat-label">{statItem.l}</div>
                           </div>
                         ))}
                       </div>
-                      {p.lat && p.lng && (
-                        <a href={`https://www.google.com/maps?q=${p.lat},${p.lng}&t=k`}
+                      {pc.lat && pc.lng && (
+                        <a href={`https://www.google.com/maps?q=${pc.lat},${pc.lng}&t=k`}
                           target="_blank" rel="noreferrer" className="ll-maps">
                           🛰️ Lihat di Google Maps Satellite
                         </a>
@@ -422,8 +422,8 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
           <div>
             <label className="ll-label">Tipe Lahan</label>
             <select className="ll-select" value={form.type} onChange={e => setF("type", e.target.value)}>
-              {Object.entries(TYPE_ICON).map(([k,v]) => (
-                <option key={k} value={k}>{v} {k.charAt(0).toUpperCase() + k.slice(1)}</option>
+              {Object.entries(TYPE_ICON).map(([typeKey,typeIcon]) => (
+                <option key={typeKey} value={typeKey}>{typeIcon} {typeKey.charAt(0).toUpperCase() + typeKey.slice(1)}</option>
               ))}
             </select>
           </div>

@@ -144,7 +144,7 @@ function handleOwnershipUpload(parcelId, e) {
                 const [bx, by] = positions[idx] || [200, 120];
                 const sc = SS[parcel.status] || "#22c55e";
                 return (
-                  <g key={parcel.id} onClick={() => setSelParcel(p)} style={{ cursor: "pointer" }}>
+                  <g key={parcel.id} onClick={() => setSelParcel(parcelItem)} style={{ cursor: "pointer" }}>
                     <rect x={bx} y={by} width={100} height={70} fill={LF[parcel.type]} opacity={selParcel?.id === parcel.id ? .7 : .4}
                       stroke={sc} strokeWidth={selParcel?.id === parcel.id ? 3 : 2}
                       strokeDasharray={parcel.status !== "healthy" ? "6,3" : "none"} rx="4" />
@@ -162,8 +162,8 @@ function handleOwnershipUpload(parcelId, e) {
             </svg>
             <div className="absolute bottom-2 left-2 bg-black/60 rounded-lg px-2 py-1.5 flex flex-col gap-0.5">
               {Object.entries(SS).map(([statusKey, statusClass]) => (
-                <span key={s} className="flex items-center gap-1 text-white/70 text-xs">
-                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: statusClass }} />{t.land.status[s]}
+                <span key={statusKey} className="flex items-center gap-1 text-white/70 text-xs">
+                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: statusClass }} />{t.land.status[statusKey]}
                 </span>
               ))}
             </div>
@@ -229,20 +229,20 @@ function handleOwnershipUpload(parcelId, e) {
                 burned:   { color:"red",    icon:"🔥", gasInfo:"Pembakaran langsung melepas CO₂, CH₄, N₂O & partikel berbahaya", action:"Hentikan aktivitas di area terdampak, laporkan ke otoritas" },
                 drying:   { color:"orange", icon:"🌡️", gasInfo:"Gambut kering kehilangan kelembaban → oksidasi melepas CO₂ & CH₄ dalam volume besar", action:"Rewetting segera: buka kanal, naikkan muka air gambut" },
               };
-              const r = riskInfo[selParcel.status];
-              if (!r) return null;
+              const riskData = riskInfo[selParcel.status];
+              if (!riskData) return null;
               const colorMap = {
                 blue:   { bg:"bg-blue-50",   border:"border-blue-200",   text:"text-blue-800",   sub:"text-blue-600"   },
                 amber:  { bg:"bg-amber-50",  border:"border-amber-200",  text:"text-amber-800",  sub:"text-amber-600"  },
                 red:    { bg:"bg-red-50",     border:"border-red-200",    text:"text-red-800",    sub:"text-red-600"    },
                 orange: { bg:"bg-orange-50", border:"border-orange-200", text:"text-orange-800", sub:"text-orange-600" },
               };
-              const c = colorMap[r.color];
+              const colorSet = colorMap[riskData.color];
               return (
-                <div className={`rounded-xl border px-3 py-2.5 mb-3 ${c.bg} ${c.border}`}>
-                  <p className={`text-xs font-bold mb-1 ${c.text}`}>{r.icon} {t.land.alerts?.[selParcel.status] || selParcel.status.toUpperCase()}</p>
-                  <p className={`text-xs mb-1.5 ${c.sub}`}>💨 <strong>Gas dilepas:</strong> {r.gasInfo}</p>
-                  <p className={`text-xs font-bold ${c.text}`}>⚡ Tindakan: {r.action}</p>
+                <div className={`rounded-xl border px-3 py-2.5 mb-3 ${colorSet.bg} ${colorSet.border}`}>
+                  <p className={`text-xs font-bold mb-1 ${colorSet.text}`}>{riskData.icon} {t.land.alerts?.[selParcel.status] || selParcel.status.toUpperCase()}</p>
+                  <p className={`text-xs mb-1.5 ${colorSet.sub}`}>💨 <strong>Gas dilepas:</strong> {riskData.gasInfo}</p>
+                  <p className={`text-xs font-bold ${colorSet.text}`}>⚡ Tindakan: {riskData.action}</p>
                 </div>
               );
             })()}
@@ -345,7 +345,7 @@ function handleOwnershipUpload(parcelId, e) {
               }))}
               className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
               <option value="">Pilih jenis dokumen...</option>
-              {DOC_TYPES.map(docType => <option key={d} value={d}>{d}</option>)}
+              {DOC_TYPES.map(docType => <option key={docType} value={docType}>{docType}</option>)}
             </select>
           </div>
 
@@ -455,14 +455,14 @@ function handleOwnershipUpload(parcelId, e) {
           <div className="flex flex-col gap-3">
             <p className="text-xs text-gray-500">Select new condition — absorption/emission updates live across the app:</p>
             {Object.keys(ABS_RATES[selParcel.type] || {}).map(statusKey => {
-              const rate = ABS_RATES[selParcel.type][s];
+              const rate = ABS_RATES[selParcel.type][statusKey];
               const monthly = +((rate * selParcel.area) / 12).toFixed(1);
               const active = selParcel.status === s;
               return (
-                <button key={s} onClick={() => changeStatus(selParcel.id, s)}
+                <button key={statusKey} onClick={() => changeStatus(selParcel.id, statusKey)}
                   className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${active ? "border-green-500 bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
                   <div>
-                    <p className="font-bold text-gray-800 text-sm">{t.land.status[s]}</p>
+                    <p className="font-bold text-gray-800 text-sm">{t.land.status[statusKey]}</p>
                     <p className="text-xs text-gray-500">IPCC rate: {rate} tCO₂/ha/yr</p>
                   </div>
                   <div className="text-right">
