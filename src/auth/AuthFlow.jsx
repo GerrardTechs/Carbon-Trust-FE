@@ -1029,11 +1029,11 @@ function LangSwitcher({ lang, setLang }) {
     <div className="lang-switcher" style={{ marginTop: 2 }}>
       {Object.keys(LANGS).map(langCode => (
         <button
-          key={k}
-          className={`lang-btn ${lang === k ? "active" : ""}`}
-          onClick={() => setLang(k)}
+          key={langCode}
+          className={`lang-btn ${lang === langCode ? "active" : ""}`}
+          onClick={() => setLang(langCode)}
         >
-          {LANGS[k].flag} {LANGS[k].label}
+          {LANGS[langCode].flag} {LANGS[langCode].label}
         </button>
       ))}
     </div>
