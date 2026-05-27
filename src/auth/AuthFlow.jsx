@@ -1888,6 +1888,8 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
   const [userData,        setUserData]        = useState(null);
   const [operationalData, setOperationalData] = useState(null);
   const [calcData,        setCalcData]        = useState(null);
+  const [adminForm,  setAdminForm]  = useState({ username:"", password:"" });
+  const [adminError, setAdminError] = useState("");
 
   function handleRoleSelect(roleVal) {
     setRole(roleVal);
@@ -1941,7 +1943,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
   }
 
   const [loginForm, setLoginForm] = useState({ email:"", password:"" });
-const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState("");
 
 async function handleLogin() {
   setLoginError("");
@@ -2014,8 +2016,6 @@ async function handleLogin() {
     }
   }
 
-  const [adminForm, setAdminForm] = useState({ username:"", password:"" });
-  const [adminError, setAdminError] = useState("");
 
   async function handleAdminLogin() {
     setAdminError("");
