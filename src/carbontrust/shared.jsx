@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // ─── CONFIG ────────────────────────────────────────────────────────────────
+export const API = "https://carbon-trust-be.onrender.com/api";
 export const COMPANY_ID = "COMP-001";
 export const CREDIT_PRICE = 18.5;
 
