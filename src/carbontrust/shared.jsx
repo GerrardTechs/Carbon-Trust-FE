@@ -685,19 +685,19 @@ export function Header({ alerts, onDismiss, lang, setLang, t }) {
         <div className="flex flex-col gap-3">
           {alerts.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No active alerts</p>}
           {alerts.map(alertItem => (
-            <div key={alertObj.id} className={`flex items-start gap-3 p-3 rounded-xl ${alertObj.type === "critical" ? "bg-red-50" : a.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
-              <span className="text-lg">{alertObj.type === "critical" ? "🚨" : alertObj.type === "warning" ? "⚠️" : "✅"}</span>
+            <div key={alertItem.id} className={`flex items-start gap-3 p-3 rounded-xl ${alertItem.type === "critical" ? "bg-red-50" : alertItem.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
+              <span className="text-lg">{alertItem.type === "critical" ? "🚨" : alertItem.type === "warning" ? "⚠️" : "✅"}</span>
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-700">{alertObj.parcelId}</p>
-                <p className="text-xs text-gray-600">{alertObj.message}</p>
-                <p className="text-xs text-gray-400">{new Date(alertObj.time).toLocaleTimeString()}</p>
+                <p className="text-xs font-bold text-gray-700">{alertItem.parcelId}</p>
+                <p className="text-xs text-gray-600">{alertItem.message}</p>
+                <p className="text-xs text-gray-400">{new Date(alertItem.time).toLocaleTimeString()}</p>
               </div>
               <button
-        onClick={() => onDismiss(alertObj.id)}
-        className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-black/10 hover:text-gray-600 text-xs flex-shrink-0 mt-0.5"
-      >
-        ✕
-      </button>
+                onClick={() => onDismiss(alertItem.id)}
+                className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-black/10 hover:text-gray-600 text-xs flex-shrink-0 mt-0.5"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>

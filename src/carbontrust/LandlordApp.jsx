@@ -305,22 +305,22 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
               ) : (
                 <div className="ll-section" style={{ margin:"0 16px" }}>
                   {parcels.map(parcelItem => (
-                    <div key={pc.id} className="ll-parcel">
+                    <div key={parcelItem.id} className="ll-parcel">
                       <div className="ll-parcel-top">
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <span style={{ fontSize:24 }}>{TYPE_ICON[pc.type]}</span>
+                          <span style={{ fontSize:24 }}>{TYPE_ICON[parcelItem.type]}</span>
                           <div>
-                            <div className="ll-parcel-name">{pc.name}</div>
-                            <div className="ll-parcel-type">{p.type} · {p.area} ha</div>
+                            <div className="ll-parcel-name">{parcelItem.name}</div>
+                            <div className="ll-parcel-type">{parcelItem.type} · {parcelItem.area} ha</div>
                           </div>
                         </div>
-                        <span className={`ll-badge ${BADGE_CLASS[pc.status] || "ll-badge-healthy"}`}>{p.status}</span>
+                        <span className={`ll-badge ${BADGE_CLASS[parcelItem.status] || "ll-badge-healthy"}`}>{parcelItem.status}</span>
                       </div>
                       <div className="ll-parcel-grid">
                         {[
-                          { l:"NDVI",       v:p.ndvi },
-                          { l:"Serapan",    v:`${Math.max(0, calcAbsorption(p))} t/bln` },
-                          { l:"Humidity",   v:p.humidity ? `${p.humidity}%` : "—" },
+                          { l:"NDVI",       v:parcelItem.ndvi },
+                          { l:"Serapan",    v:`${Math.max(0, calcAbsorption(parcelItem))} t/bln` },
+                          { l:"Humidity",   v:parcelItem.humidity ? `${parcelItem.humidity}%` : "—" },
                         ].map((statItem,i) => (
                           <div key={i} className="ll-parcel-stat">
                             <div className="ll-parcel-stat-val">{statItem.v}</div>
@@ -328,8 +328,8 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                           </div>
                         ))}
                       </div>
-                      {pc.lat && pc.lng && (
-                        <a href={`https://www.google.com/maps?q=${pc.lat},${pc.lng}&t=k`}
+                      {parcelItem.lat && parcelItem.lng && (
+                        <a href={`https://www.google.com/maps?q=${parcelItem.lat},${parcelItem.lng}&t=k`}
                           target="_blank" rel="noreferrer" className="ll-maps">
                           🛰️ Lihat di Google Maps Satellite
                         </a>

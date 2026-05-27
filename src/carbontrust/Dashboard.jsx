@@ -82,7 +82,7 @@ async function handleDismiss(alertId) {
     setHistModal(true);
   }
 
-  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertItem.id));
+  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertObj.id));
   const totalAbs = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0,  calcAbsorption(parcel)), 0).toFixed(2));
   const totalEm  = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0, -calcAbsorption(parcel)), 0).toFixed(2));  
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
