@@ -127,10 +127,10 @@ export default function AdminApp({ onLogout, user }) {
             { key:"companies", label:"Perusahaan" },
             { key:"alerts",    label:"Alerts"     },
           ].map(tabItem => (
-            <button key={t.key}
-              className={`adm-tab ${tab === t.key ? "active" : ""}`}
-              onClick={() => setTab(t.key)}>
-              {t.label}
+            <button key={tabItem.key}
+              className={`adm-tab ${tab === tabItem.key ? "active" : ""}`}
+              onClick={() => setTab(tabItem.key)}>
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -158,7 +158,7 @@ export default function AdminApp({ onLogout, user }) {
                       { icon:"🏭", label:"Emisi / bulan",      val:`${overview.totalEmission} t`,   sub:"tCO₂e" },
                       { icon:"🎫", label:"Total Kredit",       val:overview.totalCredits?.toLocaleString(), sub:"tCO₂e/yr" },
                       { icon:"✅", label:"ISO Verified",       val:overview.verifiedCount,  sub:"perusahaan" },
-                    ].map((comp,i) => (
+                    ].map((kpi,i) => (
                       <div key={i} className="adm-kpi">
                         <div className="adm-kpi-icon">{kpi.icon}</div>
                         <div className="adm-kpi-val">{kpi.val}</div>
@@ -212,7 +212,7 @@ export default function AdminApp({ onLogout, user }) {
                     {[...( overview.companies || [])]
                       .sort((compA, compB) => (compB.netCredits||0) - (compA.netCredits||0))
                       .slice(0,5)
-                      .map((comp,i) => (
+                      .map((comp, i) => (
                         <div key={comp.id} className="adm-row">
                           <span className="adm-rank">#{i+1}</span>
                           <div style={{ flex:1, minWidth:0 }}>

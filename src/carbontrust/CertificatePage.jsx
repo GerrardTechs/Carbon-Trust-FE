@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Spinner, Ic } from "./shared.jsx";
+import { useState, useEffect } from "react";
+import { Spinner, Ic, apiFetch } from "./shared.jsx";
 
 function calcAbsorption(parcel) {
   const BASE = {
@@ -14,9 +14,17 @@ function calcAbsorption(parcel) {
   return parseFloat(((rate * parcel.area) / 12).toFixed(2));
 }
 
-export function CertificatePage({ t, parcels, company }) {
+export function CertificatePage({ t, parcels, company, companyId }) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded]   = useState(false);
+  const [certData, setCertData]       = useState(null);
+
+  useEffect(() => {
+    if (!companyId) return;
+    apiFetch(`/certificate/${companyId}`).then(data => {
+      if (data?.success || data?.certNumber) setCertData(data);
+    });
+  }, [companyId]);
 
   // Hitung net kredit = total serapan - total emisi dari semua lahan
   const totalAbs = parseFloat(
@@ -28,6 +36,12 @@ export function CertificatePage({ t, parcels, company }) {
   const netMonthly  = parseFloat((totalAbs - totalEm).toFixed(2));
   const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
   const netCredits  = Math.max(0, Math.floor(netAnnual));
+  const showCertNo = certData?.certNumber || certNo;
+  const showAbs = certData?.totalAbsorption ?? totalAbs;
+  const showEm = certData?.totalEmission ?? totalEm;
+  const showMonthly = certData?.netMonthly ?? netMonthly;
+  const showAnnual = certData?.netAnnual ?? netAnnual;
+  const showCredits = certData?.netCredits ?? netCredits;
 
   // Nomor sertifikat deterministik dari companyId
   const certNo = `CT-CERT-${(company?.id || "COMP-001").replace(/[^A-Z0-9]/g,"")}-${new Date().getFullYear()}`;
@@ -51,7 +65,7 @@ export function CertificatePage({ t, parcels, company }) {
         `Valid Until    : 31 Desember ${new Date().getFullYear() + 1}`,
         "",
         "─── CARBON ABSORPTION ─────────────────────",
-        ...parcels.map(parcelItem => `  ${p.name} (${p.type}, ${p.area} ha): ${Math.max(0, calcAbsorption(p))} t/month`),
+        ...parcels.map(parcelItem => `  ${parcelItem.name} (${parcelItem.type}, ${parcelItem.area} ha): ${Math.max(0, calcAbsorption(parcelItem))} t/month`),
         `  Total Absorption  : ${totalAbs} tCO₂/month`,
         `  Total Emission    : ${totalEm} tCO₂/month`,
         `  Net Monthly       : ${netMonthly} tCO₂/month`,
@@ -105,16 +119,16 @@ export function CertificatePage({ t, parcels, company }) {
           <div className="text-center border-b border-dashed border-green-200 pb-4">
             <p className="text-xs text-gray-400 uppercase tracking-widest">Certificate of Carbon Credits</p>
             <p className="font-black text-gray-800 text-lg mt-1">{company?.name || "PT. Nusantara Hijau Tbk"}</p>
-            <p className="text-xs text-gray-400 font-mono">{certNo}</p>
+            <p className="text-xs text-gray-400 font-mono">{showCertNo}</p>
           </div>
 
           {/* Net credits — angka utama */}
           <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-200">
             <p className="text-xs text-green-600 uppercase tracking-wide font-bold mb-1">Net Verified Carbon Credits</p>
-            <p className="text-5xl font-black text-green-700">{netCredits.toLocaleString()}</p>
+            <p className="text-5xl font-black text-green-700">{showCredits.toLocaleString()}</p>
             <p className="text-sm text-green-600">tCO₂e / tahun</p>
             <p className="text-xs text-green-500 mt-1">
-              ≈ ${(netCredits * 18.5).toLocaleString()} USD @ $18.5/ton
+              ≈ ${(showCredits * 18.5).toLocaleString()} USD @ $18.5/ton
             </p>
           </div>
 
@@ -143,10 +157,10 @@ export function CertificatePage({ t, parcels, company }) {
           {/* Summary math */}
           <div className="border-t border-dashed border-gray-200 pt-3 flex flex-col gap-1.5">
             {[
-              { l:"Total Serapan / bulan",   v:`+ ${totalAbs} tCO₂`,  c:"text-green-700" },
-              { l:"Total Emisi / bulan",      v:`- ${totalEm} tCO₂`,   c:"text-red-500"   },
-              { l:"Net / bulan",              v:`= ${netMonthly} tCO₂`, c:"text-gray-800 font-black" },
-              { l:"Net / tahun (×12)",        v:`${netAnnual} tCO₂`,   c:"text-gray-800 font-black" },
+              { l:"Total Serapan / bulan",   v:`+ ${showAbs} tCO₂`,  c:"text-green-700" },
+              { l:"Total Emisi / bulan",      v:`- ${showEm} tCO₂`,   c:"text-red-500"   },
+              { l:"Net / bulan",              v:`= ${showMonthly} tCO₂`, c:"text-gray-800 font-black" },
+              { l:"Net / tahun (×12)",        v:`${showAnnual} tCO₂`,   c:"text-gray-800 font-black" },
             ].map((row, i) => (
               <div key={i} className="flex justify-between">
                 <p className="text-xs text-gray-500">{row.l}</p>

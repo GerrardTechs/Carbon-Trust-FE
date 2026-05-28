@@ -7,7 +7,9 @@
 
 import { useState, useEffect, useRef } from "react";
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-export const API = "https://carbon-trust-be.onrender.com/api";
+export const API = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL)
+  ? import.meta.env.VITE_API_BASE_URL
+  : "http://localhost:3000/api";
 export const COMPANY_ID = "COMP-001";
 export const CREDIT_PRICE = 18.5;
 
@@ -573,9 +575,10 @@ export function Modal({ open, onClose, title, children, wide }) {
   );
 }
 
-export function SBadge({ status, tLang }) {
+export function SBadge({ status, t }) {
   const C = { healthy:"bg-emerald-100 text-emerald-700",flooded:"bg-blue-100 text-blue-700",degraded:"bg-amber-100 text-amber-700",burned:"bg-red-100 text-red-700",drying:"bg-orange-100 text-orange-700" };
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${C[status]||"bg-gray-100 text-gray-600"}`}>{t.land.status[status]||status}</span>;
+  const label = t?.land?.status?.[status] || status;
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${C[status]||"bg-gray-100 text-gray-600"}`}>{label}</span>;
 }
 
 export function Spinner() {

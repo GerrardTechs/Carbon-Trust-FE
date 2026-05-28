@@ -1,15 +1,15 @@
 /**
  * CarbonTrust — Dashboard.jsx
  * Home page: KPI cards, live IoT sensors, land parcels, AI alerts
+ * FIXED: all variable name inconsistencies, stray JSX, wrong API URLs
  */
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-import Header from './App'; 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import {
-  COMPANY_ID, CREDIT_PRICE, apiFetch,
-  calcAbsorption, convertUnit, useInterval,
-  Modal, SBadge, Spinner, SparkLine, Ic, calcPeatAbsorption
+  API, CREDIT_PRICE, apiFetch,
+  calcAbsorption, convertUnit,
+  Modal, SBadge, Spinner, SparkLine, Ic,
 } from "./shared.jsx";
 
 export function Dashboard({ parcels, alerts, company, setPage, t }) {
@@ -21,16 +21,18 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [histModal, setHistModal] = useState(false);
   const [histParcelId, setHistParcelId] = useState("LP-001");
   const [histData, setHistData] = useState([]);
-  const [lang, setLang] = useState('en'); 
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
-  const [stockPrice, setStockPrice] = useState({ symbol:"", price:"", prev:"" });
+  const [stockPrice, setStockPrice] = useState({ symbol: "", price: "", prev: "" });
   const [showStockInput, setShowStockInput] = useState(false);
   const [prevKpi, setPrevKpi] = useState(null);
   const [kpiDelta, setKpiDelta] = useState({ abs: 0, em: 0, net: 0 });
 
+  // WebSocket: live IoT
   useEffect(() => {
+    let socket;
     try {
-      const socket = io("https://carbon-trust-be.onrender.com");
+      const wsBase = API.replace(/\/api$/, "");
+      socket = io(wsBase);
       socket.on("iot_live", ({ parcelId, data }) => {
         if (parcelId === "LP-001") {
           setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });
@@ -39,14 +41,14 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           setCH(arr => [...arr.slice(-19), data.co2]);
         }
       });
-      return () => socket.disconnect();
     } catch {
+      // fallback: mock animation
       const id = setInterval(() => {
-        setLiveIoT(prevIoT => {
-          const temp = +(iotPoint.temp + (Math.random() - .5) * .4).toFixed(1);
-          const hum  = +(iotPoint.hum  + (Math.random() - .5) * 1.2).toFixed(0);
-          const co2  = +(iotPoint.co2  + (Math.random() - .48) * 2).toFixed(1);
-          setTH(arr => [...arr.slice(-19), data.temp]);
+        setLiveIoT(prev => {
+          const temp = +(prev.temp + (Math.random() - .5) * .4).toFixed(1);
+          const hum  = +(prev.hum  + (Math.random() - .5) * 1.2).toFixed(0);
+          const co2  = +(prev.co2  + (Math.random() - .48) * 2).toFixed(1);
+          setTH(arr => [...arr.slice(-19), temp]);
           setHH(arr => [...arr.slice(-19), +hum]);
           setCH(arr => [...arr.slice(-19), co2]);
           return { temp, hum: +hum, co2 };
@@ -54,22 +56,16 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
       }, 2000);
       return () => clearInterval(id);
     }
+    return () => socket?.disconnect();
   }, []);
-
-async function handleDismiss(alertId) {
-  await fetch(`http://localhost:3000/api/alerts/${alertId}`, { method: "DELETE" });
-  setAlerts(prev => prev.filter(alertObj => alertObj.id !== alertId));
-}
-
-<Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} />
 
   async function openHistory(parcelId) {
     setHistParcelId(parcelId);
     const data = await apiFetch(`/iot/${parcelId}/history?hours=72`);
     if (data && Array.isArray(data)) {
-      setHistData(data.filter((_, i) => i % 6 === 0).map(dataPoint => ({
-        time: new Date(dataPoint.ts).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
-        temp: dataPoint.temp, hum: dataPoint.hum, co2: dataPoint.co2,
+      setHistData(data.filter((_, i) => i % 6 === 0).map(dp => ({
+        time: new Date(dp.ts).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }),
+        temp: dp.temp, hum: dp.hum, co2: dp.co2,
       })));
     } else {
       setHistData(Array.from({ length: 36 }, (_, i) => ({
@@ -82,12 +78,11 @@ async function handleDismiss(alertId) {
     setHistModal(true);
   }
 
-  const visibleAlerts = alerts.filter(alertObj => !dismissedAlerts.includes(alertObj.id));
-  const totalAbs = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0,  calcAbsorption(parcel)), 0).toFixed(2));
-  const totalEm  = parseFloat(parcels.reduce((sum, parcel) => sum + Math.max(0, -calcAbsorption(parcel)), 0).toFixed(2));  
+  const visibleAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
+  const totalAbs  = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
+  const totalEm   = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
 
-  // Compute delta % when parcels (conditions) change
   useEffect(() => {
     if (prevKpi) {
       const pct = (cur, prev) => prev === 0 ? 0 : +((cur - prev) / Math.abs(prev) * 100).toFixed(1);
@@ -95,13 +90,18 @@ async function handleDismiss(alertId) {
     }
     setPrevKpi({ abs: totalAbs, em: totalEm, net: netBal });
   }, [parcels]);
-  const credits   = Math.max(0, Math.floor(netBal * 12));
+
+  const credits    = Math.max(0, Math.floor(netBal * 12));
   const creditsUSD = (credits * CREDIT_PRICE).toLocaleString();
-  const cv = val => convertUnit(val, unit);
-  const uSuffix = t.dash.units[unit];
+  const cv         = val => convertUnit(val, unit);
+  const uSuffix    = t.dash.units[unit];
+
+  const typeIcon  = { peatland: "🌾", forest: "🌲", mangrove: "🌴" };
+  const statusBorder = s => s === "flooded" ? "border-l-blue-500" : s === "degraded" ? "border-l-amber-500" : s === "burned" ? "border-l-red-500" : "border-l-emerald-500";
 
   return (
     <div className="flex flex-col gap-3 pb-4 fade-up">
+
       {/* Hero */}
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg,#14532d 0%,#0f766e 100%)" }}>
         <div className="p-4">
@@ -110,7 +110,7 @@ async function handleDismiss(alertId) {
           <div className="flex gap-1 mt-3">
             {["t","kt","Mt","kg"].map(unitOpt => (
               <button key={unitOpt} onClick={() => setUnit(unitOpt)}
-                className={`text-xs px-2.5 py-1 rounded-full font-bold transition-all ${unit === u ? "bg-white text-green-800" : "bg-white/20 text-white/80 hover:bg-white/30"}`}>
+                className={`text-xs px-2.5 py-1 rounded-full font-bold transition-all ${unit === unitOpt ? "bg-white text-green-800" : "bg-white/20 text-white/80 hover:bg-white/30"}`}>
                 {t.dash.units[unitOpt]}
               </button>
             ))}
@@ -119,65 +119,60 @@ async function handleDismiss(alertId) {
       </div>
 
       {/* KPI cards */}
-<div className="px-4 grid grid-cols-3 gap-2">
-  {[
-    { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
-    { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
-    { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
-  ].map((kpiItem, i) => (
-    <div key={i} className="card p-3 text-center">
-      <p className="text-xl mb-0.5">{kpiItem.icon}</p>
-      <p className={`font-black text-sm ${kpiItem.color === "emerald" ? "text-emerald-700" : kpiItem.color === "red" ? "text-red-600" : "text-teal-700"}`}>
-        {kpiItem.v}
-      </p>
-      <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
-      {kpiItem.delta !== 0 && (
-        <p className={`text-xs font-bold mt-0.5 ${kpiItem.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
-          ({kpiItem.delta > 0 ? "▲" : "▼"}{Math.abs(kpiItem.delta)}%)
-        </p>
-      )}
-      <p className="text-xs text-gray-300 mt-0.5" title="Data Quality: based on satellite NDVI + IoT sensor">
-  ±{i === 0 ? "5" : i === 1 ? "8" : "6"}% DQ
-</p>
-      <p className="text-xs text-gray-500 leading-tight mt-0.5">{kpiItem.l}</p>
-    </div>
-  ))}
-</div>
-
-{/* Data Quality / Uncertainty card — #33 ESG */}
-<div className="px-4">
-  <div className="card px-4 py-3 flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      <span className="text-base">📊</span>
-      <div>
-        <p className="text-xs font-bold text-gray-700">Tingkat Kepercayaan Data</p>
-        <p className="text-xs text-gray-400">Digunakan dalam scoring ESG</p>
+      <div className="px-4 grid grid-cols-3 gap-2">
+        {[
+          { l: t.dash.totalAbs,  v: cv(totalAbs), color: "emerald", icon: "🌿", delta: kpiDelta.abs },
+          { l: t.dash.totalEm,   v: cv(totalEm),  color: "red",     icon: "🏭", delta: kpiDelta.em  },
+          { l: t.dash.netCarbon, v: cv(netBal),   color: netBal >= 0 ? "teal" : "red", icon: netBal >= 0 ? "⚖️" : "⚠️", delta: kpiDelta.net },
+        ].map((kpi, i) => (
+          <div key={i} className="card p-3 text-center">
+            <p className="text-xl mb-0.5">{kpi.icon}</p>
+            <p className={`font-black text-sm ${kpi.color === "emerald" ? "text-emerald-700" : kpi.color === "red" ? "text-red-600" : "text-teal-700"}`}>
+              {kpi.v}
+            </p>
+            <p className="text-xs text-gray-400 leading-tight">{uSuffix}</p>
+            {kpi.delta !== 0 && (
+              <p className={`text-xs font-bold mt-0.5 ${kpi.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                ({kpi.delta > 0 ? "▲" : "▼"}{Math.abs(kpi.delta)}%)
+              </p>
+            )}
+            <p className="text-xs text-gray-300 mt-0.5">±{i === 0 ? "5" : i === 1 ? "8" : "6"}% DQ</p>
+            <p className="text-xs text-gray-500 leading-tight mt-0.5">{kpi.l}</p>
+          </div>
+        ))}
       </div>
-    </div>
-    <div className="text-right">
-      <p className="font-black text-sm text-green-700">
-        {parcels.every(pc => pc.status === "healthy") ? "Tinggi" : parcels.some(pc => pc.status === "burned" || pc.status === "degraded") ? "Rendah" : "Sedang"}
-      </p>
-      <p className="text-xs text-gray-400">
-        {parcels.every(pc => pc.status === "healthy") ? "±5%" : parcels.some(pc => pc.status === "burned" || pc.status === "degraded") ? "±15%" : "±10%"} margin
-      </p>
-    </div>
-  </div>
-</div>
 
-{/* Quick links */}
-<div className="px-4 grid grid-cols-2 gap-2">
-  <button 
-    onClick={() => setPage("certificate")}
-    className="card p-3 flex items-center gap-2 active:scale-95 transition-all"
-  >
-    <span className="text-xl">📜</span>
-    <div className="text-left">
-      <p className="text-xs font-bold text-gray-700">Sertifikat</p>
-      <p className="text-xs text-gray-400">Kredit karbon</p>
-    </div>
-  </button>
-</div>
+      {/* Data Quality card */}
+      <div className="px-4">
+        <div className="card px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📊</span>
+            <div>
+              <p className="text-xs font-bold text-gray-700">Tingkat Kepercayaan Data</p>
+              <p className="text-xs text-gray-400">Digunakan dalam scoring ESG</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-black text-sm text-green-700">
+              {parcels.every(p => p.status === "healthy") ? "Tinggi" : parcels.some(p => p.status === "burned" || p.status === "degraded") ? "Rendah" : "Sedang"}
+            </p>
+            <p className="text-xs text-gray-400">
+              {parcels.every(p => p.status === "healthy") ? "±5%" : parcels.some(p => p.status === "burned" || p.status === "degraded") ? "±15%" : "±10%"} margin
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick link: Sertifikat */}
+      <div className="px-4 grid grid-cols-2 gap-2">
+        <button onClick={() => setPage("certificate")} className="card p-3 flex items-center gap-2 active:scale-95 transition-all">
+          <span className="text-xl">📜</span>
+          <div className="text-left">
+            <p className="text-xs font-bold text-gray-700">Sertifikat</p>
+            <p className="text-xs text-gray-400">Kredit karbon</p>
+          </div>
+        </button>
+      </div>
 
       {/* Credits */}
       <div className="px-4 grid grid-cols-2 gap-2">
@@ -193,128 +188,112 @@ async function handleDismiss(alertId) {
         </div>
       </div>
 
-      {/* Stock Price Card */}
-<div className="px-4">
-  <div className="card p-4">
-    <div className="flex items-center justify-between mb-2">
-      <p className="text-xs font-bold text-gray-700">📈 Harga Saham</p>
-      <button onClick={() => setShowStockInput(statItem => !statItem)}
-        className="text-xs text-green-600 font-bold hover:underline">
-        {showStockInput ? "Tutup" : "Input"}
-      </button>
-    </div>
-
-    {showStockInput && (
-      <div className="flex flex-col gap-2 mb-3 fade-up">
-        {[
-          { label:"Kode Saham", key:"symbol", ph:"TLKM" },
-          { label:"Harga Sekarang (Rp)", key:"price", ph:"3750" },
-          { label:"Harga Sebelumnya (Rp)", key:"prev", ph:"3900" },
-        ].map(stockField => (
-          <div key={f.key} className="flex gap-2 items-center">
-            <label className="text-xs text-gray-500 w-28 shrink-0">{f.label}</label>
-            <input type={f.key==="symbol"?"text":"number"} placeholder={f.ph}
-              value={stockPrice[f.key]}
-              onChange={e => setStockPrice(prevStock => ({...prevStock, [f.key]: e.target.value}))}
-              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
+      {/* Stock Price */}
+      <div className="px-4">
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-bold text-gray-700">📈 Harga Saham</p>
+            <button onClick={() => setShowStockInput(v => !v)} className="text-xs text-green-600 font-bold hover:underline">
+              {showStockInput ? "Tutup" : "Input"}
+            </button>
           </div>
-        ))}
-      </div>
-    )}
-
-    {stockPrice.symbol && stockPrice.price ? (() => {
-      const cur  = parseFloat(stockPrice.price) || 0;
-      const prev = parseFloat(stockPrice.prev)  || 0;
-      const delta = prev ? cur - prev : 0;
-      const pct   = prev ? +((delta / prev) * 100).toFixed(2) : 0;
-      const up    = delta >= 0;
-      return (
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-black text-gray-800">{stockPrice.symbol.toUpperCase()}</p>
-            <p className="text-xs text-gray-400">Harga terakhir</p>
-          </div>
-          <div className="text-right">
-            <p className="font-black text-lg text-gray-800">Rp {cur.toLocaleString("id-ID")}</p>
-            {prev > 0 && (
-              <p className={`text-xs font-bold ${up ? "text-emerald-600" : "text-red-500"}`}>
-                {up ? "▲" : "▼"} Rp {Math.abs(delta).toLocaleString("id-ID")} ({up ? "+" : ""}{pct}%)
-              </p>
-            )}
-          </div>
-        </div>
-      );
-    })() : (
-      <p className="text-xs text-gray-400 text-center py-1">Belum ada data saham</p>
-    )}
-  </div>
-</div>
-
-      {/* Active Carbon Projects — #6 */}
-{(() => {
-  const activeProjects = [
-    { id:"PRJ-A", name:"Rehabilitasi Gambut Riau", type:"peatland", area:320, status:"active",
-      absorption: parcels.find(pc=>pc.type==="peatland") ? calcAbsorption(parcels.find(pc=>pc.type==="peatland")) : 0,
-      startDate:"Jan 2024", method:"Rewetting & revegetasi", progress:68 },
-    { id:"PRJ-B", name:"Konservasi Hutan Kalimantan", type:"forest", area:450, status:"active",
-      absorption: parcels.find(pc=>pc.type==="forest") ? calcAbsorption(parcels.find(pc=>pc.type==="forest")) : 0,
-      startDate:"Mar 2023", method:"REDD+ protection", progress:85 },
-    { id:"PRJ-C", name:"Mangrove Pesisir Sumatra", type:"mangrove", area:85, status:"pending",
-      absorption: parcels.find(pc=>pc.type==="mangrove") ? calcAbsorption(parcels.find(pc=>pc.type==="mangrove")) : 0,
-      startDate:"Jun 2024", method:"Replanting & monitoring", progress:32 },
-  ];
-  const typeIcon = { peatland:"🌾", forest:"🌲", mangrove:"🌴" };
-  const statusColor = {
-    active:    "bg-emerald-100 text-emerald-700",
-    pending:   "bg-amber-100 text-amber-700",
-    completed: "bg-blue-100 text-blue-700",
-  };
-  return (
-    <div className="px-4">
-      <p className="text-sm font-bold text-gray-800 mb-2">
-        {t.dash?.activeProjects || "Proyek Karbon Aktif"}
-      </p>
-      <div className="flex flex-col gap-2">
-        {activeProjects.map(proj => (
-          <div key={proj.id} className="card p-4">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{typeIcon[proj.type]}</span>
+          {showStockInput && (
+            <div className="flex flex-col gap-2 mb-3 fade-up">
+              {[
+                { label: "Kode Saham", key: "symbol", ph: "TLKM" },
+                { label: "Harga Sekarang (Rp)", key: "price", ph: "3750" },
+                { label: "Harga Sebelumnya (Rp)", key: "prev", ph: "3900" },
+              ].map(field => (
+                <div key={field.key} className="flex gap-2 items-center">
+                  <label className="text-xs text-gray-500 w-28 shrink-0">{field.label}</label>
+                  <input type={field.key === "symbol" ? "text" : "number"} placeholder={field.ph}
+                    value={stockPrice[field.key]}
+                    onChange={e => setStockPrice(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
+                </div>
+              ))}
+            </div>
+          )}
+          {stockPrice.symbol && stockPrice.price ? (() => {
+            const cur   = parseFloat(stockPrice.price) || 0;
+            const prev  = parseFloat(stockPrice.prev)  || 0;
+            const delta = prev ? cur - prev : 0;
+            const pct   = prev ? +((delta / prev) * 100).toFixed(2) : 0;
+            const up    = delta >= 0;
+            return (
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-gray-800">{proj.name}</p>
-                  <p className="text-xs text-gray-400">{proj.method} · {proj.area} ha</p>
+                  <p className="font-black text-gray-800">{stockPrice.symbol.toUpperCase()}</p>
+                  <p className="text-xs text-gray-400">Harga terakhir</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-black text-lg text-gray-800">Rp {cur.toLocaleString("id-ID")}</p>
+                  {prev > 0 && (
+                    <p className={`text-xs font-bold ${up ? "text-emerald-600" : "text-red-500"}`}>
+                      {up ? "▲" : "▼"} Rp {Math.abs(delta).toLocaleString("id-ID")} ({up ? "+" : ""}{pct}%)
+                    </p>
+                  )}
                 </div>
               </div>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor[proj.status]}`}>
-                {t.dash?.projectStatus?.[proj.status] || proj.status}
-              </span>
-            </div>
+            );
+          })() : <p className="text-xs text-gray-400 text-center py-1">Belum ada data saham</p>}
+        </div>
+      </div>
 
-            {/* Progress bar */}
-            <div className="mb-2">
-              <div className="flex justify-between mb-1">
-                <p className="text-xs text-gray-400">Progress</p>
-                <p className="text-xs font-bold text-gray-600">{proj.progress}%</p>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5">
-                <div className="h-1.5 rounded-full transition-all"
-                  style={{ width:`${proj.progress}%`,
-                    background: proj.status==="active" ? "linear-gradient(90deg,#16a34a,#0d9488)" : "#f59e0b" }} />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <p className="text-xs text-gray-400">Mulai: {proj.startDate}</p>
-              <p className={`text-xs font-black ${proj.absorption < 0 ? "text-red-600" : "text-emerald-700"}`}>
-                {proj.absorption >= 0 ? "▲" : "▼"}{Math.abs(proj.absorption)} t/bulan
-              </p>
+      {/* Active Carbon Projects */}
+      {(() => {
+        const activeProjects = [
+          { id:"PRJ-A", name:"Rehabilitasi Gambut Riau", type:"peatland", area:320, status:"active",
+            absorption: calcAbsorption(parcels.find(p => p.type === "peatland") || {}),
+            startDate:"Jan 2024", method:"Rewetting & revegetasi", progress:68 },
+          { id:"PRJ-B", name:"Konservasi Hutan Kalimantan", type:"forest", area:450, status:"active",
+            absorption: calcAbsorption(parcels.find(p => p.type === "forest") || {}),
+            startDate:"Mar 2023", method:"REDD+ protection", progress:85 },
+          { id:"PRJ-C", name:"Mangrove Pesisir Sumatra", type:"mangrove", area:85, status:"pending",
+            absorption: calcAbsorption(parcels.find(p => p.type === "mangrove") || {}),
+            startDate:"Jun 2024", method:"Replanting & monitoring", progress:32 },
+        ];
+        const statusColor = { active: "bg-emerald-100 text-emerald-700", pending: "bg-amber-100 text-amber-700", completed: "bg-blue-100 text-blue-700" };
+        return (
+          <div className="px-4">
+            <p className="text-sm font-bold text-gray-800 mb-2">{t.dash?.activeProjects || "Proyek Karbon Aktif"}</p>
+            <div className="flex flex-col gap-2">
+              {activeProjects.map(proj => (
+                <div key={proj.id} className="card p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{typeIcon[proj.type] || "🏞️"}</span>
+                      <div>
+                        <p className="text-xs font-bold text-gray-800">{proj.name}</p>
+                        <p className="text-xs text-gray-400">{proj.method} · {proj.area} ha</p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor[proj.status]}`}>
+                      {t.dash?.projectStatus?.[proj.status] || proj.status}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="flex justify-between mb-1">
+                      <p className="text-xs text-gray-400">Progress</p>
+                      <p className="text-xs font-bold text-gray-600">{proj.progress}%</p>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                      <div className="h-1.5 rounded-full transition-all"
+                        style={{ width: `${proj.progress}%`, background: proj.status === "active" ? "linear-gradient(90deg,#16a34a,#0d9488)" : "#f59e0b" }} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-400">Mulai: {proj.startDate}</p>
+                    <p className={`text-xs font-black ${proj.absorption < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                      {proj.absorption >= 0 ? "▲" : "▼"}{Math.abs(proj.absorption)} t/bulan
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-})()}
+        );
+      })()}
 
       {/* IoT Sensors */}
       <div className="px-4">
@@ -328,19 +307,19 @@ async function handleDismiss(alertId) {
         <div className="grid grid-cols-3 gap-2">
           {[
             { l: "Temperature", v: `${liveIoT.temp}°C`, c: "#ef4444", d: tH },
-            { l: "Humidity",    v: `${liveIoT.hum}%`,  c: "#3b82f6", d: hH },
-            { l: "CO₂ Abs.",   v: `${liveIoT.co2}t`,  c: "#10b981", d: cH },
-          ].map((statItem, i) => (
+            { l: "Humidity",    v: `${liveIoT.hum}%`,   c: "#3b82f6", d: hH },
+            { l: "CO₂ Abs.",   v: `${liveIoT.co2}t`,    c: "#10b981", d: cH },
+          ].map((sensor, i) => (
             <div key={i} className="card p-3">
-              <p className="text-xs text-gray-400">{statItem.l}</p>
-              <p className="font-black text-gray-800 text-base">{statItem.v}</p>
-              <SparkLine data={statItem.d} color={statItem.c} h={24} />
+              <p className="text-xs text-gray-400">{sensor.l}</p>
+              <p className="font-black text-gray-800 text-base">{sensor.v}</p>
+              <SparkLine data={sensor.d} color={sensor.c} h={24} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Land parcels */}
+      {/* Land Parcels */}
       <div className="px-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-bold text-gray-800">{t.dash.myProjects}</p>
@@ -348,18 +327,20 @@ async function handleDismiss(alertId) {
         </div>
         <div className="flex flex-col gap-2">
           {parcels.map(parcel => {
-            const abs = calcAbsorption(parcelItem);
+            const abs = calcAbsorption(parcel);
             const isEm = abs < 0;
             return (
-              <div key={parcelItem.id} className={`card flex items-center gap-3 p-3 border-l-4 ${p.status==="flooded"?"border-l-blue-500":p.status==="degraded"?"border-l-amber-500":p.status==="burned"?"border-l-red-500":"border-l-emerald-500"}`}>
-                <span className="text-2xl">{parcelItem.type==="forest"?"🌲":parcelItem.type==="peatland"?"🌾":parcelItem.type==="mangrove"?"🌴":"🏞️"}</span>
+              <div key={parcel.id} className={`card flex items-center gap-3 p-3 border-l-4 ${statusBorder(parcel.status)}`}>
+                <span className="text-2xl">{typeIcon[parcel.type] || "🏞️"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-800 truncate">{parcelItem.name}</p>
-                  <p className="text-xs text-gray-500">{parcelItem.area} ha · NDVI {parcelItem.ndvi}</p>
+                  <p className="text-xs font-bold text-gray-800 truncate">{parcel.name}</p>
+                  <p className="text-xs text-gray-500">{parcel.area} ha · NDVI {parcel.ndvi}</p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-xs font-black ${isEm?"text-red-600":"text-emerald-700"}`}>{isEm?"▼":"▲"}{Math.abs(cv(abs))}{uSuffix}</p>
-                  <SBadge status={parcelItem.status} t={t} />
+                  <p className={`text-xs font-black ${isEm ? "text-red-600" : "text-emerald-700"}`}>
+                    {isEm ? "▼" : "▲"}{Math.abs(cv(abs))}{uSuffix}
+                  </p>
+                  <SBadge status={parcel.status} t={t} />
                 </div>
               </div>
             );
@@ -373,14 +354,14 @@ async function handleDismiss(alertId) {
           <p className="text-sm font-bold text-gray-800 mb-2">{t.dash.alerts}</p>
           <div className="flex flex-col gap-2">
             {visibleAlerts.map(alert => (
-              <div key={alertItem.id} className={`card flex items-start gap-3 p-3 border-l-4 ${a.type==="critical"?"border-l-red-500 bg-red-50":a.type==="warning"?"border-l-amber-500 bg-amber-50":"border-l-emerald-500 bg-emerald-50"}`}>
-                <span className="text-base flex-shrink-0 mt-0.5">{alertItem.type==="critical"?"🚨":alertItem.type==="warning"?"⚠️":"✅"}</span>
+              <div key={alert.id} className={`card flex items-start gap-3 p-3 border-l-4 ${alert.type === "critical" ? "border-l-red-500 bg-red-50" : alert.type === "warning" ? "border-l-amber-500 bg-amber-50" : "border-l-emerald-500 bg-emerald-50"}`}>
+                <span className="text-base flex-shrink-0 mt-0.5">{alert.type === "critical" ? "🚨" : alert.type === "warning" ? "⚠️" : "✅"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-700">{alertItem.parcelId}</p>
-                  <p className="text-xs text-gray-600">{alertItem.message}</p>
+                  <p className="text-xs font-bold text-gray-700">{alert.parcelId}</p>
+                  <p className="text-xs text-gray-600">{alert.message}</p>
                 </div>
                 <button onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}
-                  className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all" title={t.dash.dismiss}>
+                  className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all">
                   ×
                 </button>
               </div>
@@ -393,9 +374,9 @@ async function handleDismiss(alertId) {
       <Modal open={histModal} onClose={() => setHistModal(false)} title={`📈 IoT History — ${histParcelId} (72h)`} wide>
         <div className="mb-3 flex gap-2 flex-wrap">
           {parcels.map(parcel => (
-            <button key={parcelItem.id} onClick={() => openHistory(parcelItem.id)}
-              className={`text-xs px-3 py-1.5 rounded-full font-bold transition-all ${histParcelId===p.id?"bg-green-600 text-white":"bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-              {parcelItem.id}
+            <button key={parcel.id} onClick={() => openHistory(parcel.id)}
+              className={`text-xs px-3 py-1.5 rounded-full font-bold transition-all ${histParcelId === parcel.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              {parcel.id}
             </button>
           ))}
         </div>

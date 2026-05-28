@@ -4,16 +4,15 @@
  */
 import { useState } from "react";
 import {
-  COMPANY_ID, apiFetch, ABS_RATES,
+  apiFetch, ABS_RATES,
   calcAbsorption, useInterval,
   Modal, SBadge, Ic, Spinner, calcPeatAbsorption, peatHumidityRisk
 } from "./shared.jsx";
 
-export function LandPage({ parcels, setParcels, t, lang }) {
+export function LandPage({ parcels, setParcels, t, lang, companyId }) {
   const [addModal, setAddModal] = useState(false);
   const [simModal, setSimModal] = useState(false);
   const [selParcel, setSelParcel] = useState(null);
-  const parcelId = parcel._id || parcel.id;
   const [ownershipDocs, setOwnershipDocs] = useState({}); // { parcelId: { file, country, type } }
   const [docError, setDocError]           = useState("");
   const [docUploaded, setDocUploaded]     = useState({});
@@ -60,7 +59,7 @@ function handleOwnershipUpload(parcelId, e) {
     setSaving(true);
     const res = await apiFetch("/parcels", {
       method: "POST",
-      body: JSON.stringify({ ...form, companyId: COMPANY_ID }),
+      body: JSON.stringify({ ...form, companyId }),
     });
     const newP = res || {
       id: "LP-" + String(parcels.length + 1).padStart(3, "0"),
@@ -86,7 +85,7 @@ function handleOwnershipUpload(parcelId, e) {
   async function changeStatus(id, status) {
     await apiFetch(`/parcels/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
     const ndviMap = { healthy: 0.75, flooded: 0.45, degraded: 0.28, burned: 0.10, drying: 0.32 };
-    setParcels(prev => prev.map(pc => parcel.id === id ? { ...pc, status, ndvi: ndviMap[status] } : pc));
+    setParcels(prev => prev.map(pc => pc.id === id ? { ...pc, status, ndvi: ndviMap[status] } : pc));
     setSimModal(false);
   }
 
@@ -109,9 +108,9 @@ function handleOwnershipUpload(parcelId, e) {
           </button>
         </div>
         <div className="flex gap-4 mt-3 text-sm">
-          <div><p className="text-teal-300 text-xs">{t.land.area||"Area"}</p><p className="font-bold">{parcels.reduce((statusKey, p) => s + parcel.area, 0).toLocaleString()} ha</p></div>
-          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalAbs||"Absorption"}</p><p className="font-bold text-green-300">+{parcels.reduce((statusKey, p) => s + Math.max(0, calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
-          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalEm||"Emission"}</p><p className="font-bold text-red-300">{parcels.reduce((statusKey, p) => s + Math.max(0, -calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
+          <div><p className="text-teal-300 text-xs">{t.land.area||"Area"}</p><p className="font-bold">{parcels.reduce((sum, p) => sum + (p.area || 0), 0).toLocaleString()} ha</p></div>
+          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalAbs||"Absorption"}</p><p className="font-bold text-green-300">+{parcels.reduce((sum, p) => sum + Math.max(0, calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
+          <div className="border-l border-white/20 pl-4"><p className="text-teal-300 text-xs">{t.dash.totalEm||"Emission"}</p><p className="font-bold text-red-300">{parcels.reduce((sum, p) => sum + Math.max(0, -calcAbsorption(p)), 0).toFixed(1)} t/mo</p></div>
         </div>
       </div>
 
@@ -144,7 +143,7 @@ function handleOwnershipUpload(parcelId, e) {
                 const [bx, by] = positions[idx] || [200, 120];
                 const sc = SS[parcel.status] || "#22c55e";
                 return (
-                  <g key={parcel.id} onClick={() => setSelParcel(parcelItem)} style={{ cursor: "pointer" }}>
+                  <g key={parcel.id} onClick={() => setSelParcel(parcel)} style={{ cursor: "pointer" }}>
                     <rect x={bx} y={by} width={100} height={70} fill={LF[parcel.type]} opacity={selParcel?.id === parcel.id ? .7 : .4}
                       stroke={sc} strokeWidth={selParcel?.id === parcel.id ? 3 : 2}
                       strokeDasharray={parcel.status !== "healthy" ? "6,3" : "none"} rx="4" />
@@ -424,7 +423,7 @@ function handleOwnershipUpload(parcelId, e) {
         {displayParcels.map(parcel => {
           const abs = calcAbsorption(parcel);
           return (
-            <button key={parcel.id} onClick={() => setSelParcel(selParcel?.id === parcel.id ? null : pc)}
+            <button key={parcel.id} onClick={() => setSelParcel(selParcel?.id === parcel.id ? null : parcel)}
               className={`card flex items-center gap-3 p-3 text-left transition-all ${selParcel?.id === parcel.id ? "border-2 border-green-400 shadow-md" : ""}`}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
                 style={{ background: LF[parcel.type] + "22" }}>
@@ -457,7 +456,7 @@ function handleOwnershipUpload(parcelId, e) {
             {Object.keys(ABS_RATES[selParcel.type] || {}).map(statusKey => {
               const rate = ABS_RATES[selParcel.type][statusKey];
               const monthly = +((rate * selParcel.area) / 12).toFixed(1);
-              const active = selParcel.status === s;
+              const active = selParcel.status === statusKey;
               return (
                 <button key={statusKey} onClick={() => changeStatus(selParcel.id, statusKey)}
                   className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${active ? "border-green-500 bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
@@ -519,11 +518,11 @@ function handleOwnershipUpload(parcelId, e) {
         { l:"Latitude",             k:"lat",            ph:"-6.2088",                          type:"number" },
         { l:"Longitude",            k:"lng",            ph:"106.8456",                         type:"number" },
       ].map(field => (
-        <div key={f.k}>
-          <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
-          <input type={f.type || "text"} placeholder={f.ph}
-            value={form[f.k]}
-            onChange={e => setForm(prev => ({ ...prev, [f.k]: e.target.value }))}
+        <div key={field.k}>
+          <label className="text-xs font-bold text-gray-600 block mb-1">{field.l}</label>
+          <input type={field.type || "text"} placeholder={field.ph}
+            value={form[field.k]}
+            onChange={e => setForm(prev => ({ ...prev, [field.k]: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
         </div>
       ))}
@@ -673,13 +672,13 @@ function handleOwnershipUpload(parcelId, e) {
           { l: t.land.lng, k: "lng", ph: "113.9213", type: "number" },
           { l: "Humidity Sensor (%)", k: "humidity", ph: "65", type: "number" },
         ].map(field => (
-          <div key={f.k}>
-            <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
+          <div key={field.k}>
+            <label className="text-xs font-bold text-gray-600 block mb-1">{field.l}</label>
             <input 
-              type={f.type || "text"} 
-              placeholder={f.ph} 
-              value={form[f.k] || ""} 
-              onChange={e => setForm(prev => ({ ...prev, [f.k]: e.target.value }))}
+              type={field.type || "text"} 
+              placeholder={field.ph} 
+              value={form[field.k] || ""} 
+              onChange={e => setForm(prev => ({ ...prev, [field.k]: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" 
             />
           </div>
@@ -690,7 +689,7 @@ function handleOwnershipUpload(parcelId, e) {
           <label className="text-xs font-bold text-gray-600 block mb-1">{t.land.type}</label>
           <select value={form.type || ""} onChange={e => setForm(prev => ({ ...prev, type: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-            {Object.entries(t.land.types || {}).map(([typeKey, typeLabel]) => <option key={typeKey} value={typeKey}>{v}</option>)}
+            {Object.entries(t.land.types || {}).map(([typeKey, typeLabel]) => <option key={typeKey} value={typeKey}>{typeLabel}</option>)}
           </select>
         </div>
 

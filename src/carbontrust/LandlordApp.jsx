@@ -273,7 +273,7 @@ export default function LandlordApp({ onLogout, onExit, user, lang }) {
                             <div className="ll-parcel-type">{pc.area} ha · {pc.type}</div>
                           </div>
                         </div>
-                        <span className={`ll-badge ${BADGE_CLASS[pc.status] || "ll-badge-healthy"}`}>{p.status}</span>
+                        <span className={`ll-badge ${BADGE_CLASS[pc.status] || "ll-badge-healthy"}`}>{pc.status}</span>
                       </div>
                     </div>
                   ))}

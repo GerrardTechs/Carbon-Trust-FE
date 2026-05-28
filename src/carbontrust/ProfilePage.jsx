@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
+import { API, apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
 
 // ─── Data kuesioner inline (atau ganti dengan: import qData from "./quisioner.json") ───
 const Q_DATA = {
@@ -50,7 +50,7 @@ const Q_DATA = {
   ],
 };
 
-export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qStatus, updateQStatus }) {
+export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qStatus, updateQStatus, companyId }) {
   console.log("ProfilePage t:", t);
   console.log("ProfilePage onExit:", onExit);
   // ── Modal states ──────────────────────────────────────────────────────────
@@ -128,9 +128,10 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
   const [isoCert, setIsoCert]     = useState(null);
   const [certError, setCertError] = useState("");
   const [isoVerified, setIsoVerified] = useState(false);
+  const [isoUploading, setIsoUploading] = useState(false);
 
 function handleIsoUpload(e) {
-  const file = ent.target.files[0];
+  const file = e.target.files[0];
   if (!file) return;
   const allowed = ["application/pdf", "image/jpeg", "image/png"];
   if (!allowed.includes(file.type)) {
@@ -140,6 +141,33 @@ function handleIsoUpload(e) {
   }
   setIsoCert(file);
   setCertError("");
+}
+
+async function submitIso() {
+  if (!isoCert || !companyId) return;
+  try {
+    setIsoUploading(true);
+    const session = JSON.parse(localStorage.getItem("carbon_session") || "{}");
+    const fd = new FormData();
+    fd.append("isoCert", isoCert);
+    const res = await fetch(`${API}/company/${companyId}/upload-iso`, {
+      method: "POST",
+      headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+      body: fd,
+    });
+    const data = await res.json();
+    if (data?.success) {
+      setIsoVerified(true);
+      setCompany(comp => ({ ...comp, isoCertVerified: false }));
+      setCertError("");
+    } else {
+      setCertError(data?.message || "Gagal upload sertifikat");
+    }
+  } catch {
+    setCertError("Gagal upload sertifikat");
+  } finally {
+    setIsoUploading(false);
+  }
 }
 
   // ─── ESG questions ────────────────────────────────────────────────────────
@@ -157,7 +185,7 @@ function handleIsoUpload(e) {
 
   // ─── API helpers ──────────────────────────────────────────────────────────
   async function saveProfile() {
-    await apiFetch(`/company/${COMPANY_ID}`, { method:"PUT", body:JSON.stringify(form) });
+    await apiFetch(`/company/${companyId}`, { method:"PUT", body:JSON.stringify(form) });
     setCompany(comp => ({ ...comp, ...form }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -166,22 +194,19 @@ function handleIsoUpload(e) {
 
   async function generateWallet() {
     if (company?.walletGenerated) return;
-    const res = await apiFetch(`/company/${COMPANY_ID}/generate-wallet`, { method:"POST" });
-    if (res?.walletId) setCompany(comp => ({ ...comp, walletId:res.walletId, walletGenerated:true }));
+    const walletId = `0x${Math.random().toString(16).slice(2, 18)}${Date.now().toString(16).slice(-8)}`.slice(0, 34);
+    setCompany(comp => ({ ...comp, walletId, walletGenerated:true }));
   }
 
   async function submitESG() {
     setEsgSubmitting(true);
-    const res = await apiFetch("/esg/submit", {
-      method:"POST",
-      body:JSON.stringify({ companyId:COMPANY_ID, answers:esgAnswers.map((ans,i) => ({ questionId:i+1, selectedIndex:ans })) }),
-    });
     const baseScore = Math.round(
-      esgAnswers.reduce((sum,ans) => sum + (4-ans)*(100/(ESG_QUESTIONS.length*3)), 0)
+      esgAnswers.reduce((sum, ans) => sum + (4 - ans) * (100 / (ESG_QUESTIONS.length * 3)), 0)
     );
     // Carbon bonus: serapan > emisi = +5, iso verified = +5
     const carbonBonus = (company?.esgStatus === "verified" ? 5 : 0) + (isoVerified ? 5 : 0);
-    const score = Math.min(100, (res?.esgScore || baseScore) + carbonBonus);    setCompany(comp => ({ ...comp, esgScore:score, esgStatus:"verified" }));
+    const score = Math.min(100, baseScore + carbonBonus);
+    setCompany(comp => ({ ...comp, esgScore:score, esgStatus:"verified" }));
     setEsgSubmitting(false);
     setEsgModal(false);
   }
@@ -329,7 +354,7 @@ function handleIsoUpload(e) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-gray-800 truncate">{land.name}</p>
-                    <p className="text-xs text-gray-500">{land.landType} · {land.area ? `${l.area} ha` : "-"}</p>
+                    <p className="text-xs text-gray-500">{land.landType} · {land.area ? `${land.area} ha` : "-"}</p>
                     <p className="text-xs text-gray-400 truncate">{land.location || "-"}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
@@ -525,10 +550,10 @@ function handleIsoUpload(e) {
   {certError && <p className="text-xs text-red-600">{certError}</p>}
 
   {isoCert && !isoVerified && (
-    <button onClick={() => setIsoVerified(true)}
+    <button onClick={submitIso} disabled={isoUploading}
       className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
       style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-      Submit untuk Verifikasi
+      {isoUploading ? "Uploading..." : "Submit untuk Verifikasi"}
     </button>
   )}
 
@@ -628,10 +653,10 @@ function handleIsoUpload(e) {
             <svg width="180" height="200" viewBox="0 0 180 200">
               <ellipse cx="90" cy="175" rx="50" ry="7" fill="#d1fae5" opacity=".7" />
               {si > 0 && <rect x={90-[3,4,5,6,7][Math.min(si,4)]} y={175-[10,45,75,105,125][Math.min(si,4)]} width={[6,8,10,12,14][Math.min(si,4)]} height={[10,45,75,105,125][Math.min(si,4)]} rx="3" fill="#92400e" />}
-              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([treeColor,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
-              {si >= 2 && [["#4ade80",76,128,16,12,0],["#22c55e",104,123,14,11,.2],["#16a34a",90,108,18,14,.4]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
-              {si >= 3 && [["#16a34a",90,88,28,23,0],["#15803d",67,103,23,18,.15],["#166534",114,98,23,18,.3],["#22c55e",90,73,20,16,.45]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
-              {si >= 4 && [["#15803d",90,68,38,32,0],["#16a34a",57,88,30,26,.1],["#166534",126,83,30,26,.2]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}sum` }} />))}
+              {si >= 1 && [["#86efac",85,140,12,9,0],["#4ade80",98,138,10,8,.3]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
+              {si >= 2 && [["#4ade80",76,128,16,12,0],["#22c55e",104,123,14,11,.2],["#16a34a",90,108,18,14,.4]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
+              {si >= 3 && [["#16a34a",90,88,28,23,0],["#15803d",67,103,23,18,.15],["#166534",114,98,23,18,.3],["#22c55e",90,73,20,16,.45]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
+              {si >= 4 && [["#15803d",90,68,38,32,0],["#16a34a",57,88,30,26,.1],["#166534",126,83,30,26,.2]].map(([comp,cx,cy,rx,ry,d],i) => (<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={comp} style={{ transformOrigin:`${cx}px ${cy+ry}px`, animation:"sway 3s ease-in-out infinite", animationDelay:`${d}s` }} />))}
               {si === 0 && <><ellipse cx="90" cy="168" rx="7" ry="4" fill="#86efac" /><line x1="90" y1="164" x2="90" y2="158" stroke="#22c55e" strokeWidth="2" /></>}
             </svg>
           </div>
@@ -666,17 +691,17 @@ function handleIsoUpload(e) {
             { l: t.profile?.emailLabel  || "Institutional Email",       k:"email",         type:"email" },
             { l: t.profile?.removalProjectLabel || "Carbon Removal Project", k:"removalProject", type:"text" },
           ].map(fieldItem => (
-            <div key={f.k}>
-              <label className="text-xs font-bold text-gray-600 block mb-1">{f.l}</label>
-              <input type={f.type} value={form[f.k] || ""} onChange={ent=> setForm(prev => ({ ...prev, [f.k]:ent.target.value }))}
+            <div key={fieldItem.k}>
+              <label className="text-xs font-bold text-gray-600 block mb-1">{fieldItem.l}</label>
+              <input type={fieldItem.type} value={form[fieldItem.k] || ""} onChange={e => setForm(prev => ({ ...prev, [fieldItem.k]: e.target.value }))}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
             </div>
           ))}
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.entityTypeLabel || "Entity / Company Type"}</label>
-            <select value={form.entity || ""} onChange={ent=> setForm(frm => ({ ...frm, entity:ent.target.value }))}
+            <select value={form.entity || ""} onChange={e => setForm(prev => ({ ...prev, entity: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-              {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(ent=> <option key={e}>{e}</option>)}
+              {["PT (Perseroan Terbatas)","PT Tbk (Terbuka)","BUMN","Koperasi","CV","Yayasan","NGO","Other"].map(entity => <option key={entity}>{entity}</option>)}
             </select>
             <div className="flex flex-col gap-2">
   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">📍 Lokasi</p>
@@ -684,21 +709,21 @@ function handleIsoUpload(e) {
     <label className="text-xs font-bold text-gray-600 block mb-1">🏢 Alamat Kantor</label>
     <input type="text" placeholder="e.g. Jl. Sudirman No. 1, Jakarta Selatan"
       value={form.location || ""}
-      onChange={ent=> setForm(frm => ({ ...frm, location: ent.target.value }))}
+      onChange={e => setForm(prev => ({ ...prev, location: e.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
   <div>
     <label className="text-xs font-bold text-gray-600 block mb-1">🌿 Alamat Site / Lahan</label>
     <input type="text" placeholder="e.g. Kec. Kuala Kapuas, Kalimantan Tengah"
       value={form.siteAddress || ""}
-      onChange={ent=> setForm(frm => ({ ...frm, siteAddress: ent.target.value }))}
+      onChange={e => setForm(prev => ({ ...prev, siteAddress: e.target.value }))}
       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
   </div>
 </div>
           </div>
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-1">{t.profile?.bizTypeLabel || "Business Activity Type"}</label>
-            <select value={form.bizType || ""} onChange={ent=> setForm(frm => ({ ...frm, bizType:ent.target.value }))}
+            <select value={form.bizType || ""} onChange={e => setForm(prev => ({ ...prev, bizType: e.target.value }))}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
             </select>
@@ -773,7 +798,7 @@ function handleIsoUpload(e) {
       </Modal>
 
       {/* Exit Modal */}
-      <Modal open={exitModal} onClose={() => setExitModal(true)} title={`🚪 ${t.exit?.title || "Exit Application"}`}>
+      <Modal open={exitModal} onClose={() => setExitModal(false)} title={`🚪 ${t.exit?.title || "Exit Application"}`}>
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-500 text-center">{t.exit?.desc || "What would you like to do?"}</p>
           
@@ -812,26 +837,26 @@ function handleIsoUpload(e) {
                 { label: "Nama Perusahaan", key: "name", type: "text", ph: "e.g. PT Hijau Lestari" },
                 { label: "Lokasi / Alamat", key: "location", type: "text", ph: "e.g. Jakarta Selatan" },
               ].map(fieldItem => (
-                <div key={f.key}>
-                  <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
-                  <input type={f.type} placeholder={f.ph}
-                    value={assetForm[f.key] || ""}
-                    onChange={ent=> setAssetForm(prev => ({ ...prev, [f.key]: ent.target.value }))}
+                <div key={fieldItem.key}>
+                  <label className="text-xs font-bold text-gray-600 block mb-1">{fieldItem.label}</label>
+                  <input type={fieldItem.type} placeholder={fieldItem.ph}
+                    value={assetForm[fieldItem.key] || ""}
+                    onChange={e => setAssetForm(prev => ({ ...prev, [fieldItem.key]: e.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Entitas</label>
                 <select value={assetForm.type || "PT"}
-                  onChange={ent=> setAssetForm(frm => ({ ...frm, type: ent.target.value }))}
+                  onChange={e => setAssetForm(prev => ({ ...prev, type: e.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
-                  {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(ent=> <option key={e}>{e}</option>)}
+                  {["PT", "PT Tbk", "CV", "BUMN", "Koperasi", "Yayasan", "NGO", "Other"].map(entity => <option key={entity}>{entity}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Usaha</label>
                 <select value={assetForm.bizType || "Manufacturing"}
-                  onChange={ent=> setAssetForm(frm => ({ ...frm, bizType: ent.target.value }))}
+                  onChange={e => setAssetForm(prev => ({ ...prev, bizType: e.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {["Manufacturing","Plantation","Mining","Energy","Transportation","Construction","Finance","Technology","Healthcare","Other"].map(biz => <option key={biz}>{biz}</option>)}
                 </select>
@@ -844,18 +869,18 @@ function handleIsoUpload(e) {
                 { label: "Lokasi", key: "location", type: "text", ph: "e.g. Kab. Siak, Riau" },
                 { label: "Luas (ha)", key: "area", type: "number", ph: "e.g. 250" },
               ].map(fieldItem => (
-                <div key={f.key}>
-                  <label className="text-xs font-bold text-gray-600 block mb-1">{f.label}</label>
-                  <input type={f.type} placeholder={f.ph}
-                    value={assetForm[f.key] || ""}
-                    onChange={ent=> setAssetForm(frm => ({ ...frm, [f.key]: ent.target.value }))}
+                <div key={fieldItem.key}>
+                  <label className="text-xs font-bold text-gray-600 block mb-1">{fieldItem.label}</label>
+                  <input type={fieldItem.type} placeholder={fieldItem.ph}
+                    value={assetForm[fieldItem.key] || ""}
+                    onChange={e => setAssetForm(prev => ({ ...prev, [fieldItem.key]: e.target.value }))}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">Jenis Lahan</label>
                 <select value={assetForm.landType || "forest"}
-                  onChange={ent=> setAssetForm(frm => ({ ...frm, landType: ent.target.value }))}
+                  onChange={e => setAssetForm(prev => ({ ...prev, landType: e.target.value }))}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400">
                   {[["forest","🌲 Hutan"],["peatland","🌾 Gambut"],["mangrove","🌴 Mangrove"],["agricultural","🌱 Pertanian"],["industrial","🏭 Industri"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>

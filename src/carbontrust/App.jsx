@@ -1,6 +1,10 @@
 /**
  * CarbonTrust — App.jsx
- * Root component: state management, routing, global style injection.
+ * FIXED:
+ *   - Hapus /alerts?companyId= (tidak ada di BE)
+ *   - Hapus /transactions?companyId= (tidak ada di BE)
+ *   - Alert sepenuhnya di-derive dari status parcel (sudah ada useEffect-nya)
+ *   - companyId dari userData session, bukan hardcode
  */
 import { useState, useEffect } from "react";
 import {
@@ -18,7 +22,6 @@ import {VerifyPage}       from "./VerifyPage.jsx";
 import {ProfilePage}      from "./ProfilePage.jsx";
 import {CertificatePage}  from "./CertificatePage.jsx";
 
-
 export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
   const [lang,     setLang]     = useState(initialLang);
@@ -30,15 +33,12 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
 
   const t = TR[lang] ?? TR["en"];
 
-  // ── qStatus harus dideklarasikan SEBELUM renderPage ────────────────────────
+  // qStatus dideklarasikan SEBELUM renderPage
   const [qStatus, setQStatus] = useState(() => {
-    const saved = localStorage.getItem("carbon_q_status");
-    return saved ? JSON.parse(saved) : {
-      isComplete: false,
-      lastUpdated: null,
-      resetCount: 0,
-      answers: {}
-    };
+    try {
+      const saved = localStorage.getItem("carbon_q_status");
+      return saved ? JSON.parse(saved) : { isComplete: false, lastUpdated: null, resetCount: 0, answers: {} };
+    } catch { return { isComplete: false, lastUpdated: null, resetCount: 0, answers: {} }; }
   });
 
   const updateQStatus = (newData) => {
@@ -47,54 +47,65 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
     localStorage.setItem("carbon_q_status", JSON.stringify(updated));
   };
 
-  const companyId = userData?.id || userData?._id || COMPANY_ID;
+  // companyId dari session user, fallback ke COMPANY_ID
+  const companyId = userData?.id || userData?._id || userData?.companyId || COMPANY_ID;
 
-  // Load real data from backend (fallback: mock data stays)
+  // Load data dari BE
+  // FIX: hapus /alerts dan /transactions — endpoint tidak ada di BE
   useEffect(() => {
     apiFetch(`/parcels?companyId=${companyId}`).then(fetchedData => {
-      if (fetchedData?.length) setParcels(fetchedData);
-    });
-    apiFetch(`/alerts?companyId=${companyId}`).then(fetchedData => {
-      if (Array.isArray(fetchedData)) setAlerts(fetchedData);
+      if (Array.isArray(fetchedData) && fetchedData.length) setParcels(fetchedData);
     });
     apiFetch(`/company/${companyId}`).then(fetchedData => {
       if (fetchedData?.id || fetchedData?._id) setCompany(fetchedData);
     });
-    apiFetch(`/transactions?companyId=${companyId}`).then(fetchedData => {
-      if (fetchedData?.length) setActiveTx(fetchedData[fetchedData.length - 1]);
-    });
-  }, []);
+  }, [companyId]);
 
-  // Derive alerts from parcel status changes
-  // BUG FIX: was using `p.id` (undefined) instead of `pc.id`
+  // Derive alerts dari status parcel (tidak perlu endpoint BE terpisah)
   useEffect(() => {
     const dynamic = [
-      ...parcels.filter(pc => pc.status === "flooded").map(pc => ({ id:`fl-${pc.id}`, parcelId:pc.id, type:"critical", message:`MNDWI > 0.42 — Flood confirmed · ${pc.name}`, time:new Date().toISOString() })),
-      ...parcels.filter(pc => pc.status === "degraded" && pc.type === "peatland").map(pc => ({ id:`pd-${pc.id}`, parcelId:pc.id, type:"warning", message:`${pc.name}: Peat degrading, NDVI=${pc.ndvi}, becoming emitter`, time:new Date().toISOString() })),
-      ...parcels.filter(pc => pc.status === "burned").map(pc => ({ id:`br-${pc.id}`, parcelId:pc.id, type:"critical", message:`FIRE detected at ${pc.name} — Credits suspended`, time:new Date().toISOString() })),
-      ...parcels.filter(pc => pc.status === "healthy").map(pc => ({ id:`ok-${pc.id}`, parcelId:pc.id, type:"info", message:`${pc.name}: All sensors normal, NDVI stable ${pc.ndvi}`, time:new Date().toISOString() })),
+      ...parcels.filter(pc => pc.status === "flooded").map(pc => ({
+        id: `fl-${pc.id}`, parcelId: pc.id, type: "critical",
+        message: `MNDWI > 0.42 — Flood confirmed · ${pc.name}`, time: new Date().toISOString(),
+      })),
+      ...parcels.filter(pc => pc.status === "degraded" && pc.type === "peatland").map(pc => ({
+        id: `pd-${pc.id}`, parcelId: pc.id, type: "warning",
+        message: `${pc.name}: Peat degrading, NDVI=${pc.ndvi}, becoming emitter`, time: new Date().toISOString(),
+      })),
+      ...parcels.filter(pc => pc.status === "burned").map(pc => ({
+        id: `br-${pc.id}`, parcelId: pc.id, type: "critical",
+        message: `FIRE detected at ${pc.name} — Credits suspended`, time: new Date().toISOString(),
+      })),
+      ...parcels.filter(pc => pc.status === "drying").map(pc => ({
+        id: `dr-${pc.id}`, parcelId: pc.id, type: "warning",
+        message: `${pc.name}: Peatland drying detected, humidity check required`, time: new Date().toISOString(),
+      })),
+      ...parcels.filter(pc => pc.status === "healthy").map(pc => ({
+        id: `ok-${pc.id}`, parcelId: pc.id, type: "info",
+        message: `${pc.name}: All sensors normal, NDVI stable ${pc.ndvi}`, time: new Date().toISOString(),
+      })),
     ];
     setAlerts(dynamic.length ? dynamic : MOCK_ALERTS);
   }, [parcels]);
 
+  // Dismiss alert: hanya update local state (tidak ada DELETE /alerts di BE)
+  function handleDismiss(alertId) {
+    setAlerts(prev => prev.filter(alertItem => alertItem.id !== alertId));
+  }
+
   const renderPage = () => {
     switch (page) {
       case "home":        return <Dashboard    parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} activeTx={activeTx} qStatus={qStatus} />;
-      case "land":        return <LandPage     parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} />;
-      case "calc":        return <CalcPage     t={t} setPage={setPage} />;
+      case "land":        return <LandPage     parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} companyId={companyId} />;
+      case "calc":        return <CalcPage     t={t} setPage={setPage} companyId={companyId} />;
       case "tx":          return <TxPage       tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} />;
       case "market":      return <MarketPage   t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;
-      case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} />;
-      case "verify":      return <VerifyPage   t={t} parcels={parcels} lang={lang} setPage={setPage} />;
-      case "profile":     return <ProfilePage  company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus} />;
+      case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} companyId={companyId} />;
+      case "verify":      return <VerifyPage   t={t} parcels={parcels} lang={lang} setPage={setPage} companyId={companyId} />;
+      case "profile":     return <ProfilePage  company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus} companyId={companyId} />;
       default:            return <Dashboard    parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
     }
   };
-
-  async function handleDismiss(alertId) {
-    await fetch(`https://carbon-trust-be.onrender.com/api/alerts/${alertId}`, { method: "DELETE" });
-    setAlerts(prev => prev.filter(alertItem => alertItem.id !== alertId));
-  }
 
   return (
     <div className="min-h-screen" style={{ background: "#f1f5f1" }}>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { API } from "../carbontrust/shared.jsx";
 
 // ─── design tokens ─────────────────────────────────────────
 const G = {
@@ -1197,7 +1198,7 @@ function generateInstitutionId(companyName) {
   if (!companyName || !companyName.trim()) return "";
   const stopWords = ["pt", "cv", "tbk", "persero", "the", "and", "&", "-"];
   const words = companyName.trim().split(/\s+/).filter(
-    wrd => !stopWords.includes(w.toLowerCase().replace(/[^a-z]/g, ""))
+    wrd => !stopWords.includes(wrd.toLowerCase().replace(/[^a-z]/g, ""))
   );
   const prefix = words
     .slice(0, 3)
@@ -1948,7 +1949,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
 async function handleLogin() {
   setLoginError("");
   try {
-    const res = await fetch("https://carbon-trust-be.onrender.com/api/auth/login", {
+    const res = await fetch(`${API}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(loginForm),
@@ -1975,8 +1976,8 @@ async function handleLogin() {
   
     try {
       const endpoint = role === "landlord"
-        ? "https://carbon-trust-be.onrender.com/api/auth/register-landlord"
-        : "https://carbon-trust-be.onrender.com/api/auth/register-company";
+        ? `${API}/auth/register-landlord`
+        : `${API}/auth/register-company`;
   
       const response = await fetch(endpoint, {
         method: "POST",
@@ -2020,7 +2021,7 @@ async function handleLogin() {
   async function handleAdminLogin() {
     setAdminError("");
     try {
-      const res = await fetch("https://carbon-trust-be.onrender.com/api/auth/admin-login", {
+      const res = await fetch(`${API}/auth/admin-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(adminForm),

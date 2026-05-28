@@ -3,17 +3,18 @@
  * MRV & Verification: satellite view, IoT log, ISO 14064 download
  */
 import { useState } from "react";
-import { useInterval, Spinner, Ic } from "./shared.jsx";
+import { API, useInterval, Spinner, Ic } from "./shared.jsx";
 
 
-export function VerifyPage({ t, parcels }) {
+export function VerifyPage({ t, parcels, companyId }) {
   const [isoCert, setIsoCert]     = useState(null);
-const [certError, setCertError] = useState("");
-const [verified, setVerified]   = useState(false);
+  const [certError, setCertError] = useState("");
+  const [verified, setVerified]   = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [dl, setDl] = useState(false);
   const [done, setDone] = useState(false);
   const [scanLine, setScanLine] = useState(0);
-  useInterval(() => setScanLine(prev => (l + 1) % 100), 30);
+  useInterval(() => setScanLine(prev => (prev + 1) % 100), 30);
 
   function handleIsoUpload(e) {
     const file = e.target.files[0];
@@ -27,6 +28,32 @@ const [verified, setVerified]   = useState(false);
     setIsoCert(file);
     setCertError("");
     setVerified(false);
+  }
+
+  async function submitIsoVerification() {
+    if (!isoCert || !companyId) return;
+    try {
+      setUploading(true);
+      const session = JSON.parse(localStorage.getItem("carbon_session") || "{}");
+      const fd = new FormData();
+      fd.append("isoCert", isoCert);
+      const res = await fetch(`${API}/company/${companyId}/upload-iso`, {
+        method: "POST",
+        headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+        body: fd,
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setVerified(true);
+        setCertError("");
+      } else {
+        setCertError(data?.message || "Upload sertifikat gagal");
+      }
+    } catch {
+      setCertError("Gagal upload sertifikat");
+    } finally {
+      setUploading(false);
+    }
   }
 
   const geoLog = [
@@ -45,7 +72,7 @@ const [verified, setVerified]   = useState(false);
         <p className="font-black text-xl">MRV Report · ISO 14064:2018</p>
         <div className="flex gap-2 mt-2 flex-wrap">
           {["ISO 14064:2018", "VCS Verra", "Gold Standard", "IPCC 2006"].map(badgeLabel => (
-            <span key={b} className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{b}</span>
+            <span key={badgeLabel} className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{badgeLabel}</span>
           ))}
         </div>
       </div>
@@ -135,10 +162,11 @@ const [verified, setVerified]   = useState(false);
 
   {isoCert && !verified && (
     <button
-      onClick={() => setVerified(true)}
+      onClick={submitIsoVerification}
+      disabled={uploading}
       className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
       style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-      Submit untuk Verifikasi
+      {uploading ? "Uploading..." : "Submit untuk Verifikasi"}
     </button>
   )}
 </div>
