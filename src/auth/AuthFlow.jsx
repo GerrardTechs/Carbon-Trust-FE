@@ -1899,40 +1899,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     } else {
       setStep("register");
     }
-  } 
-  {step === "adminLogin" && (
-    <div className="screen fade-up" style={{ padding:"40px 28px" }}>
-      <button className="back-btn" onClick={() => setStep("role")}>← Back</button>
-      <div style={{ textAlign:"center", marginBottom:32 }}>
-        <div style={{ fontSize:48, marginBottom:12 }}>🛡️</div>
-        <h2 style={{ fontFamily:"inherit", fontSize:22, fontWeight:900, color:G.slate800 }}>Admin Login</h2>
-        <p style={{ fontSize:13, color:G.slate400, marginTop:6 }}>CarbonTrust Platform Admin</p>
-      </div>
-  
-      <div className="field-group">
-        <label className="label">Username</label>
-        <input className="input-field" type="text" placeholder="admin"
-          value={adminForm.username}
-          onChange={e => setAdminForm(prev => ({ ...prev, username: e.target.value }))} />
-      </div>
-  
-      <div className="field-group" style={{ marginTop:12 }}>
-        <label className="label">Password</label>
-        <input className="input-field" type="password" placeholder="••••••••"
-          value={adminForm.password}
-          onChange={e => setAdminForm(prev => ({ ...prev, password: e.target.value }))} />
-      </div>
-  
-      {adminError && (
-        <p style={{ color:G.err, fontSize:12, marginTop:8 }}>{adminError}</p>
-      )}
-  
-      <button className="btn-primary" style={{ marginTop:24, width:"100%" }}
-        onClick={handleAdminLogin}>
-        Masuk sebagai Admin →
-      </button>
-    </div>
-  )}
+  }
 
   function handleGuest() {
     if (onComplete) onComplete("guest", null, lang);
@@ -2114,6 +2081,44 @@ async function handleLogin() {
           onBack={() => setStep("welcome")}
           lang={lang}
         />
+      )}
+      {step === "adminLogin" && (
+        <div className="shell">
+          <div style={{ padding: "16px 28px 0", display: "flex", justifyContent: "center" }}>
+            <ProgressDots step="role" />
+          </div>
+          <div className="screen fade-up" style={{ padding:"40px 28px" }}>
+            <button className="back-btn" onClick={() => setStep("role")}>{Icons.arrowLeft} Back</button>
+            <div style={{ textAlign:"center", marginBottom:32 }}>
+              <div style={{ fontSize:48, marginBottom:12 }}>🛡️</div>
+              <h2 style={{ fontFamily:"inherit", fontSize:22, fontWeight:900, color:G.slate800 }}>Admin Login</h2>
+              <p style={{ fontSize:13, color:G.slate400, marginTop:6 }}>CarbonTrust Platform Admin</p>
+            </div>
+
+            <div className="field-group">
+              <label className="label">Username</label>
+              <input className="input-field" type="text" placeholder="admin"
+                value={adminForm.username}
+                onChange={e => setAdminForm(prev => ({ ...prev, username: e.target.value }))} />
+            </div>
+
+            <div className="field-group" style={{ marginTop:12 }}>
+              <label className="label">Password</label>
+              <input className="input-field" type="password" placeholder="••••••••"
+                value={adminForm.password}
+                onChange={e => setAdminForm(prev => ({ ...prev, password: e.target.value }))} />
+            </div>
+
+            {adminError && (
+              <p style={{ color:G.err, fontSize:12, marginTop:8 }}>{adminError}</p>
+            )}
+
+            <button className="btn-primary" style={{ marginTop:24, width:"100%" }}
+              onClick={handleAdminLogin}>
+              Masuk sebagai Admin →
+            </button>
+          </div>
+        </div>
       )}
       {step === "register" && (
         <RegisterPage
