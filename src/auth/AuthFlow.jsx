@@ -1997,7 +1997,7 @@ async function handleLogin() {
       if (data.success) {
         if (onComplete) onComplete("admin", data.user, lang, data.token);
       } else {
-        setAdminError(data.error || "Login gagal");
+        setAdminError(data.message || "Login gagal");
       }
     } catch {
       setAdminError("Tidak bisa terhubung ke server");
