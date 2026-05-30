@@ -7,7 +7,7 @@
  *   - PATCH /bids/:id/accept dan /reject ditambah untuk seller
  */
 import { useState, useEffect, useCallback } from "react";
-import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "./shared.jsx";
+import { apiFetch, MOCK_PROJECTS, Modal, Ic } from "../shared.jsx";
 
 // FIX: param `tipe`, bukan `t` (t = variabel terjemahan, crash saat dipakai di sini)
 const projIcon = tipe =>

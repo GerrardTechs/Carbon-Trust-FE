@@ -3,7 +3,7 @@
  * MRV & Verification: satellite view, IoT log, ISO 14064 download
  */
 import { useState } from "react";
-import { API, useInterval, Spinner, Ic } from "./shared.jsx";
+import { API, useInterval, Spinner, Ic } from "../shared.jsx";
 
 
 export function VerifyPage({ t, parcels, companyId }) {

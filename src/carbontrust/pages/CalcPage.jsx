@@ -14,7 +14,7 @@
  *   - Uncertainty indicator (dari pedigree matrix Excel)
  */
 import { useState, useMemo } from "react";
-import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR, apiFetch } from "./shared.jsx";
+import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR, apiFetch } from "../shared.jsx";
 
 // Group EF keys by scope
 const SCOPE_KEYS = { 1: [], 2: [], 3: [] };

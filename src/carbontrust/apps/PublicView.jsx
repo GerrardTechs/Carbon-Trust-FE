@@ -4,7 +4,7 @@
  * FIXED: t→typeStr, q→qStr, p.name→pItem.name, filter chips var
  */
 import { useState, useEffect } from "react";
-import { API } from "./shared.jsx";
+import { API } from "../shared.jsx";
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');

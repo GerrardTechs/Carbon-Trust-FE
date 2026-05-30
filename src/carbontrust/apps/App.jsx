@@ -11,16 +11,16 @@ import {
   COMPANY_ID, apiFetch, GCSS,
   MOCK_PARCELS, MOCK_ALERTS, MOCK_COMPANY, MOCK_PROJECTS,
   TR, Header, BottomNav,
-} from "./shared.jsx";
+} from "../shared.jsx";
 
-import {Dashboard}        from "./Dashboard.jsx";
-import {LandPage}         from "./LandPage.jsx";
-import {CalcPage}         from "./CalcPage.jsx";
-import {MarketPage}       from "./MarketPage.jsx";
-import {TxPage}           from "./TxPage.jsx";
-import {VerifyPage}       from "./VerifyPage.jsx";
-import {ProfilePage}      from "./ProfilePage.jsx";
-import {CertificatePage}  from "./CertificatePage.jsx";
+import {Dashboard}        from "../pages/Dashboard.jsx";
+import {LandPage}         from "../pages/LandPage.jsx";
+import {CalcPage}         from "../pages/CalcPage.jsx";
+import {MarketPage}       from "../pages/MarketPage.jsx";
+import {TxPage}           from "../pages/TxPage.jsx";
+import {VerifyPage}       from "../pages/VerifyPage.jsx";
+import {ProfilePage}      from "../pages/ProfilePage.jsx";
+import {CertificatePage}  from "../pages/CertificatePage.jsx";
 
 export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");

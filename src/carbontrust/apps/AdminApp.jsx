@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "./shared.jsx";
+import { apiFetch } from "../shared.jsx";
 
 // ─── Shield SVG Logo ─────────────────────────────────────────────────────────
 const ShieldLogo = ({ size = 48 }) => (

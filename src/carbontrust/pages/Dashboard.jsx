@@ -9,7 +9,7 @@ import {
   API, CREDIT_PRICE, apiFetch,
   calcAbsorption, convertUnit,
   Modal, SBadge, Spinner, SparkLine, Ic,
-} from "./shared.jsx";
+} from "../shared.jsx";
 
 export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [liveIoT, setLiveIoT] = useState({ temp: 24.7, hum: 68, co2: 142 });

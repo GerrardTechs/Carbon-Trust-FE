@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Ic } from "./shared.jsx"; // Menyimpan import ikon jika nanti dibutuhkan
+import { Ic } from "../shared.jsx"; // Menyimpan import ikon jika nanti dibutuhkan
 
 const ESCROW_STEPS = [
   { key: "escrow",   label: "Dana dalam escrow",             desc: "Token ditahan sistem, belum diteruskan ke penjual." },

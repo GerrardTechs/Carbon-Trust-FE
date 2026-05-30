@@ -7,7 +7,7 @@ import {
   apiFetch, ABS_RATES,
   calcAbsorption, useInterval,
   Modal, SBadge, Ic, Spinner, calcPeatAbsorption, peatHumidityRisk
-} from "./shared.jsx";
+} from "../shared.jsx";
 
 export function LandPage({ parcels, setParcels, t, lang, companyId }) {
   const [addModal, setAddModal] = useState(false);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Spinner, Ic, apiFetch } from "./shared.jsx";
+import { Spinner, Ic, apiFetch } from "../shared.jsx";
 
 function calcAbsorption(parcel) {
   const BASE = {
