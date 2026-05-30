@@ -95,9 +95,9 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     }
   };
 
-  async function registerLandlordAfterVerify() {
+  async function registerLandlordAfterVerify(token) {
     try {
-      const result = await registerLandlord({ ...userData, verificationToken });
+      const result = await registerLandlord({ ...userData, verificationToken: token });
       if (result.success) {
         setStep("success");
         setTimeout(() => {
@@ -122,7 +122,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     if (role === "company") {
       setStep("operational");
     } else if (role === "landlord") {
-      registerLandlordAfterVerify();
+      registerLandlordAfterVerify(tokenFromEmail); // ← pass langsung, tidak tunggu setState
     }
   }
 
