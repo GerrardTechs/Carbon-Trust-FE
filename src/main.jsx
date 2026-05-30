@@ -22,10 +22,10 @@ function RootApp() {
   });
 
   const handleLogin = (role, user, lang, token) => {
-    const userData = { role, user, lang, token };
+    const userData = { role: user?.role || role, user, lang, token };
     setSession(userData);
     localStorage.setItem("carbon_session", JSON.stringify(userData));
-    setIsAppActive(true);
+    setIsAppActive(role === "admin");
   };
 
   const handleLogout = () => {
@@ -131,14 +131,6 @@ function RootApp() {
     />
   );
 }
-
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  if (args[0]?.includes?.('Cannot access')) {
-    console.trace('TDZ Error location:');
-  }
-  originalConsoleError(...args);
-};
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -57,7 +57,13 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       if (Array.isArray(fetchedData) && fetchedData.length) setParcels(fetchedData);
     });
     apiFetch(`/company/${companyId}`).then(fetchedData => {
-      if (fetchedData?.id || fetchedData?._id) setCompany(fetchedData);
+      if (fetchedData?.id || fetchedData?._id) {
+        setCompany(prev => ({
+          ...prev,
+          ...fetchedData,
+          walletGenerated: !!(fetchedData.walletId && fetchedData.walletGenerated !== false),
+        }));
+      }
     });
   }, [companyId]);
 

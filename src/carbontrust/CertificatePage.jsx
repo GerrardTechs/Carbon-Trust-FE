@@ -19,10 +19,17 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   const [downloaded, setDownloaded]   = useState(false);
   const [certData, setCertData]       = useState(null);
 
+  const [certError, setCertError] = useState("");
+
   useEffect(() => {
     if (!companyId) return;
     apiFetch(`/certificate/${companyId}`).then(data => {
-      if (data?.success || data?.certNumber) setCertData(data);
+      if (data?.success) {
+        setCertData(data);
+        setCertError(data.preview ? (data.isoPendingMessage || "") : "");
+      } else if (data?.message) {
+        setCertError(data.message);
+      }
     });
   }, [companyId]);
 
@@ -102,6 +109,15 @@ export function CertificatePage({ t, parcels, company, companyId }) {
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-6 fade-up">
+
+      {certData?.preview && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+          <p className="text-xs font-bold text-amber-800">⏳ Pratinjau Sertifikat</p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            {certError || "Upload ISO 14064 di Profil dan tunggu verifikasi admin untuk sertifikat resmi."}
+          </p>
+        </div>
+      )}
 
       {/* Header */}
       <div className="rounded-2xl p-4 text-white" style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>

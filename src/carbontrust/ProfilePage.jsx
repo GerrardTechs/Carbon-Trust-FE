@@ -193,9 +193,15 @@ async function submitIso() {
   }
 
   async function generateWallet() {
-    if (company?.walletGenerated) return;
-    const walletId = `0x${Math.random().toString(16).slice(2, 18)}${Date.now().toString(16).slice(-8)}`.slice(0, 34);
-    setCompany(comp => ({ ...comp, walletId, walletGenerated:true }));
+    if (company?.walletGenerated && company?.walletId) return;
+    const data = await apiFetch(`/company/${companyId}/wallet`, { method: "POST" });
+    if (data?.walletId) {
+      setCompany(comp => ({
+        ...comp,
+        walletId: data.walletId,
+        walletGenerated: true,
+      }));
+    }
   }
 
   async function submitESG() {

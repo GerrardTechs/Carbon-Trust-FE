@@ -68,7 +68,7 @@ const LANGS = {
       passwordLabel: "Password",
       passwordPlaceholder: "Min. 8 characters",
       createBtn: "Create account & verify email",
-      otpNote: "A 4-character verification code will be sent to your email.",
+      otpNote: "A verification link will be sent to your institutional email.",
       strength: { weak: "Weak", fair: "Fair", good: "Good", strong: "Strong" },
       errors: {
         nameReq: "Name is required",
@@ -82,15 +82,17 @@ const LANGS = {
     verify: {
       back: "Back",
       title: "Check your email",
-      desc: "We sent a 4-character verification code to",
-      desc2: ". Enter it below to verify your account.",
+      desc: "We sent a verification link to",
+      desc2: ". Open the link in your email, or paste the verification code below.",
+      tokenLabel: "Verification code",
+      tokenPlaceholder: "Paste code from email",
       btn: "Verify & continue",
       didntReceive: "Didn't receive it?",
-      resend: "Resend code",
+      resend: "Resend email",
       resendIn: "Resend in",
       spamNote: "Check your spam folder if you don't see it within a minute.",
-      codeResent: "Code resent!",
-      invalidCode: "Invalid code. Please try again.",
+      codeResent: "Verification email resent!",
+      invalidCode: "Invalid or expired code. Please try again.",
     },
     operational: {
       back: "Back",
@@ -177,7 +179,7 @@ const LANGS = {
       passwordLabel: "Kata Sandi",
       passwordPlaceholder: "Min. 8 karakter",
       createBtn: "Buat akun & verifikasi email",
-      otpNote: "Kode verifikasi 4 karakter akan dikirim ke email Anda.",
+      otpNote: "Tautan verifikasi akan dikirim ke email Anda.",
       strength: { weak: "Lemah", fair: "Cukup", good: "Baik", strong: "Kuat" },
       errors: {
         nameReq: "Nama wajib diisi",
@@ -191,15 +193,17 @@ const LANGS = {
     verify: {
       back: "Kembali",
       title: "Cek email Anda",
-      desc: "Kami mengirim kode verifikasi 4 karakter ke",
-      desc2: ". Masukkan di bawah untuk memverifikasi akun Anda.",
+      desc: "Kami mengirim tautan verifikasi ke",
+      desc2: ". Buka tautan di email, atau tempel kode verifikasi di bawah.",
+      tokenLabel: "Kode verifikasi",
+      tokenPlaceholder: "Tempel kode dari email",
       btn: "Verifikasi & lanjutkan",
-      didntReceive: "Tidak menerima kode?",
-      resend: "Kirim ulang kode",
+      didntReceive: "Tidak menerima email?",
+      resend: "Kirim ulang email",
       resendIn: "Kirim ulang dalam",
       spamNote: "Periksa folder spam jika tidak muncul dalam satu menit.",
-      codeResent: "Kode dikirim ulang!",
-      invalidCode: "Kode tidak valid. Coba lagi.",
+      codeResent: "Email verifikasi dikirim ulang!",
+      invalidCode: "Kode tidak valid atau kedaluwarsa.",
     },
     operational: {
       back: "Kembali",
@@ -1262,9 +1266,26 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    const ok = await onSubmit(form);
     setLoading(false);
-    onSubmit(form);
+    if (ok === false) return;
+  }
+
+  async function checkUsernameAvailable(name) {
+    const u = form[name]?.trim();
+    if (!u) return;
+    try {
+      const res = await fetch(`${API}/auth/check-username?username=${encodeURIComponent(u)}`);
+      const data = await res.json();
+      if (data.available === false) {
+        setErrors(prev => ({
+          ...prev,
+          username: data.reason === "reserved"
+            ? (lang === "id" ? "Username sistem — gunakan nama lain" : "Reserved system username")
+            : (lang === "id" ? "Username sudah digunakan" : "Username already taken"),
+        }));
+      }
+    } catch { /* ignore */ }
   }
 
   const rt = (LANGS[lang].register[role] || LANGS[lang].register.company);
@@ -1342,6 +1363,7 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
               placeholder={t.usernamePlaceholder}
               value={form.username}
               onChange={e => setField("username", e.target.value)}
+              onBlur={() => checkUsernameAvailable("username")}
             />
             {errors.username && <p className="err-msg">{errors.username}</p>}
           </div>
@@ -1481,17 +1503,13 @@ function RegisterPage({ role, onSubmit, onBack, lang }) {
   );
 }
 
-// ─── SCREEN 4: OTP Verify ────────────────────────────────────
-const OTP_LEN = 4;
-
-function VerifyOTPPage({ email, onVerified, onBack, lang }) {
-  const [cells, setCells] = useState(Array(OTP_LEN).fill(""));
-  const [shake, setShake] = useState(false);
+// ─── SCREEN 4: Email verification ────────────────────────────
+function VerifyEmailPage({ email, role, userData, onVerified, onBack, onResend, lang, initialToken = "" }) {
+  const [token, setToken] = useState(initialToken);
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [resendCd, setResendCd] = useState(30);
   const [resent, setResent] = useState(false);
-  const inputsRef = useRef([]);
 
   const t = LANGS[lang].verify;
 
@@ -1501,55 +1519,49 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
     return () => clearTimeout(id);
   }, [resendCd]);
 
-  function handleCellChange(idx, val) {
-    const ch = val.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(-1);
-    const next = [...cells];
-    next[idx] = ch;
-    setCells(next);
-    setErrMsg("");
-    if (ch && idx < OTP_LEN - 1) inputsRef.current[idx + 1]?.focus();
-    if (ch && next.every(cellVal => cellVal !== "")) submitOTP(next.join(""));
-  }
-
-  function handleKeyDown(idx, e) {
-    if (e.key === "Backspace" && !cells[idx] && idx > 0) inputsRef.current[idx - 1]?.focus();
-    if (e.key === "ArrowLeft"  && idx > 0)               inputsRef.current[idx - 1]?.focus();
-    if (e.key === "ArrowRight" && idx < OTP_LEN - 1)     inputsRef.current[idx + 1]?.focus();
-  }
-
-  function handlePaste(e) {
-    e.preventDefault();
-    const text = e.clipboardData.getData("text").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, OTP_LEN);
-    const next = [...cells];
-    [...text].forEach((ch, i) => { if (i < OTP_LEN) next[i] = ch; });
-    setCells(next);
-    inputsRef.current[Math.min(text.length, OTP_LEN - 1)]?.focus();
-    if (text.length === OTP_LEN) submitOTP(text);
-  }
-
-  async function submitOTP(code) {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (code.length === OTP_LEN) {
-      setLoading(false);
-      onVerified();
-    } else {
-      setShake(true);
-      setErrMsg(t.invalidCode);
-      setCells(Array(OTP_LEN).fill(""));
-      setTimeout(() => { setShake(false); inputsRef.current[0]?.focus(); }, 400);
-      setLoading(false);
+  useEffect(() => {
+    if (initialToken && initialToken.length >= 8) {
+      submitToken(initialToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function submitToken(code) {
+    const trimmed = (code || token).trim();
+    if (trimmed.length < 8) {
+      setErrMsg(t.invalidCode);
+      return;
+    }
+    setLoading(true);
+    setErrMsg("");
+    try {
+      const res = await fetch(`${API}/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: trimmed, email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onVerified(data.verificationToken);
+      } else {
+        setErrMsg(data.message || t.invalidCode);
+      }
+    } catch {
+      setErrMsg(lang === "id" ? "Tidak bisa terhubung ke server" : "Cannot reach server");
+    }
+    setLoading(false);
   }
 
   async function resend() {
-    if (resendCd > 0) return;
-    setResent(true);
-    setResendCd(60);
-    setTimeout(() => setResent(false), 3000);
+    if (resendCd > 0 || !onResend) return;
+    setResent(false);
+    const ok = await onResend();
+    if (ok) {
+      setResent(true);
+      setResendCd(60);
+      setTimeout(() => setResent(false), 3000);
+    }
   }
-
-  const filled = cells.filter(cellVal => cellVal !== "").length;
 
   return (
     <div className="shell">
@@ -1574,21 +1586,16 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
           <span className="otp-email">{email}</span>{t.desc2}
         </p>
 
-        <div className="otp-row" onPaste={handlePaste}>
-          {cells.map((val, idx) => (
-            <input
-              key={idx}
-              ref={el => inputsRef.current[idx] = el}
-              className={`otp-cell ${val ? "filled" : ""} ${shake ? "error" : ""}`}
-              maxLength={1}
-              value={val}
-              autoFocus={idx === 0}
-              onChange={e => handleCellChange(idx, e.target.value)}
-              onKeyDown={e => handleKeyDown(idx, e)}
-              inputMode="text"
-              autoComplete="one-time-code"
-            />
-          ))}
+        <div className="field-group" style={{ marginTop: 20 }}>
+          <label className="label">{t.tokenLabel}</label>
+          <input
+            className={`input-field ${errMsg ? "error" : ""}`}
+            type="text"
+            placeholder={t.tokenPlaceholder}
+            value={token}
+            onChange={e => { setToken(e.target.value.trim()); setErrMsg(""); }}
+            autoComplete="one-time-code"
+          />
         </div>
 
         {errMsg && <p className="err-msg" style={{ textAlign: "center", marginTop: 10 }}>{errMsg}</p>}
@@ -1597,7 +1604,7 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
           {loading ? (
             <button className="btn-primary" disabled><span className="spinner" /></button>
           ) : (
-            <button className="btn-primary" disabled={filled < OTP_LEN} onClick={() => submitOTP(cells.join(""))}>
+            <button className="btn-primary" disabled={token.length < 8} onClick={() => submitToken(token)}>
               {t.btn}
             </button>
           )}
@@ -1613,6 +1620,11 @@ function VerifyOTPPage({ email, onVerified, onBack, lang }) {
         <p style={{ textAlign: "center", fontSize: 11, color: G.slate400, marginTop: 20, lineHeight: 1.5 }}>
           {t.spamNote}
         </p>
+        {role === "company" && (
+          <p style={{ textAlign: "center", fontSize: 11, color: G.green700, marginTop: 12, fontWeight: 600 }}>
+            {lang === "id" ? "Setelah verifikasi, lanjut isi data operasional perusahaan." : "After verification, continue with your company profile."}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1881,7 +1893,16 @@ function SuccessPage({ role, name, lang }) {
 // ─── Main AuthFlow component ─────────────────────────────────
 // Full flow: welcome → role → register → verify → operational → calcmethod → success → dashboard
 export default function AuthFlow({ onComplete, initialLang = "id" }) {
-  const [step, setStep] = useState("welcome");
+  const urlToken = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("verifyToken")
+    : null;
+
+  const [step, setStep] = useState(urlToken ? "verify" : "welcome");
+  const [pendingEmail] = useState(() =>
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("email")
+      : null
+  );
   const [role, setRole] = useState(null);
   const [lang, setLang] = useState(initialLang);
 
@@ -1889,6 +1910,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
   const [userData,        setUserData]        = useState(null);
   const [operationalData, setOperationalData] = useState(null);
   const [calcData,        setCalcData]        = useState(null);
+  const [verificationToken, setVerificationToken] = useState(urlToken || "");
   const [adminForm,  setAdminForm]  = useState({ username:"", password:"" });
   const [adminError, setAdminError] = useState("");
 
@@ -1905,9 +1927,32 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     if (onComplete) onComplete("guest", null, lang);
   }
 
-  function handleRegister(formData) {
+  async function sendVerificationEmail(formData) {
+    const res = await fetch(`${API}/auth/send-verification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        role,
+        phone: formData.phone,
+        location: formData.location,
+      }),
+    });
+    return res.json();
+  }
+
+  async function handleRegister(formData) {
+    const result = await sendVerificationEmail(formData);
+    if (!result.success) {
+      alert(result.message || "Gagal mengirim email verifikasi");
+      return false;
+    }
     setUserData(formData);
     setStep("verify");
+    return true;
   }
 
   const [loginForm, setLoginForm] = useState({ email:"", password:"" });
@@ -1937,31 +1982,28 @@ async function handleLogin() {
       ...userData,
       ...operationalData,
       ...finalCalcData,
-      role,
+      verificationToken,
+      calcMethod: finalCalcData?.calcMethod,
+      equityPct: finalCalcData?.equityShare,
     };
     setCalcData(finalCalcData);
-  
+
     try {
       const endpoint = role === "landlord"
         ? `${API}/auth/register-landlord`
         : `${API}/auth/register-company`;
-  
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(completeData),
       });
       const result = await response.json();
-  
+
       if (result.success) {
         setStep("success");
         setTimeout(() => {
-          if (onComplete) onComplete(
-            result.user.role,
-            result.user,
-            lang,
-            result.token
-          );
+          if (onComplete) onComplete(result.user.role, result.user, lang, result.token);
         }, 2000);
       } else {
         alert(result.message || "Gagal registrasi.");
@@ -1972,15 +2014,39 @@ async function handleLogin() {
     }
   };
 
-  function handleVerified() {
-    // After email verify: company → operational details; landlord → skip to success
+  async function registerLandlordAfterVerify() {
+    try {
+      const response = await fetch(`${API}/auth/register-landlord`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...userData, verificationToken }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setStep("success");
+        setTimeout(() => {
+          if (onComplete) onComplete(result.user.role, result.user, lang, result.token);
+        }, 2000);
+      } else {
+        alert(result.message || "Gagal registrasi landlord.");
+      }
+    } catch {
+      alert("Gagal terhubung ke backend.");
+    }
+  }
+
+  function handleVerified(tokenFromEmail) {
+    setVerificationToken(tokenFromEmail);
+    if (typeof window !== "undefined" && window.history.replaceState) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("verifyToken");
+      url.searchParams.delete("email");
+      window.history.replaceState({}, "", url.pathname);
+    }
     if (role === "company") {
       setStep("operational");
-    } else {
-      setStep("success");
-      setTimeout(() => {
-        if (onComplete) onComplete(role, { userData }, lang);
-      }, 2200);
+    } else if (role === "landlord") {
+      registerLandlordAfterVerify();
     }
   }
 
@@ -2009,13 +2075,6 @@ async function handleLogin() {
     setStep("calcmethod");
   }
 
-  function handleCalcMethod(data) {
-    setCalcData(data);
-    setStep("success");
-    setTimeout(() => {
-      if (onComplete) onComplete(role, { userData, operationalData, calcData: data }, lang);
-    }, 2200);
-  }
 
   return (
     <>
@@ -2050,13 +2109,13 @@ async function handleLogin() {
       <label className="label">Email</label>
       <input className="input-field" type="email" placeholder="email@perusahaan.com"
         value={loginForm.email}
-        onChange={prev => setLoginForm(frm => ({ ...frm, email: prev.target.value }))} />
+        onChange={e => setLoginForm(frm => ({ ...frm, email: e.target.value }))} />
     </div>
     <div className="field-group" style={{ marginTop:12 }}>
       <label className="label">Password</label>
       <input className="input-field" type="password" placeholder="••••••••"
         value={loginForm.password}
-        onChange={prev => setLoginForm(frm => ({ ...frm, password: prev.target.value }))} />
+        onChange={e => setLoginForm(frm => ({ ...frm, password: e.target.value }))} />
     </div>
 
     {loginError && <p style={{ color:G.err, fontSize:12, marginTop:8 }}>{loginError}</p>}
@@ -2179,10 +2238,14 @@ async function handleLogin() {
         />
       )}
       {step === "verify" && (
-        <VerifyOTPPage
-          email={userData?.email}
+        <VerifyEmailPage
+          email={userData?.email || pendingEmail}
+          role={role}
+          userData={userData}
+          initialToken={urlToken || verificationToken}
           onVerified={handleVerified}
-          onBack={() => setStep("register")}
+          onBack={() => setStep(userData ? "register" : "welcome")}
+          onResend={userData ? () => sendVerificationEmail(userData).then(r => r.success) : null}
           lang={lang}
         />
       )}

@@ -39,12 +39,21 @@ export async function apiFetch(path, opts = {}) {
     const res = await fetch(`${API}${path}`, {
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(opts.headers || {}),
       },
       ...opts,
     });
-    return await res.json();
-  } catch { return null; }
+    const data = await res.json().catch(() => null);
+    if (!res.ok && data && !data.message) {
+      data.message = `HTTP ${res.status}`;
+    }
+    if (!res.ok && data) data._httpStatus = res.status;
+    return data;
+  } catch (err) {
+    console.error("apiFetch error:", path, err);
+    return null;
+  }
 }
 
 // ─── TRANSLATIONS ──────────────────────────────────────────────────────────
@@ -657,7 +666,7 @@ export function LangSel({ lang, setLang }) {
         <div className="absolute right-0 top-10 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-36">
           {Object.keys(TR).map(langCode => (
             <button key={langCode} onClick={() => { setLang(langCode); setOpen(false); }}
-              className={`flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-gray-50 ${lang === k ? "bg-green-50 text-green-700 font-bold" : "text-gray-700"}`}>
+              className={`flex items-center gap-2.5 w-full px-4 py-2.5 text-sm hover:bg-gray-50 ${lang === langCode ? "bg-green-50 text-green-700 font-bold" : "text-gray-700"}`}>
               <span>{TR[langCode].flag}</span><span>{TR[langCode].label}</span>
             </button>
           ))}

@@ -14,7 +14,7 @@
  *   - Uncertainty indicator (dari pedigree matrix Excel)
  */
 import { useState, useMemo } from "react";
-import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR } from "./shared.jsx";
+import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR, apiFetch } from "./shared.jsx";
 
 // Group EF keys by scope
 const SCOPE_KEYS = { 1: [], 2: [], 3: [] };
@@ -185,7 +185,7 @@ function ScopeDonut({ s1, s2, s3 }) {
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
-export function CalcPage({ t = TR.en }) {
+export function CalcPage({ t = TR.en, companyId }) {
   const [inputs, setInputs]     = useState(Object.fromEntries(Object.keys(EF).map(efKey => [efKey, ""])));
   const [result, setResult]     = useState(null);
   const [activeScope, setScope] = useState(1);   // 1 | 2 | 3 | "total"
@@ -219,10 +219,11 @@ export function CalcPage({ t = TR.en }) {
   // ─── KALKULASI ─────────────────────────────────────────────────────────────
   // Formula: GHG_i = Activity_i × EF_i  (GHG Protocol, sesuai Excel Quantis/WBCSD)
   // Total = Σ Scope1_i + Σ Scope2_i + Σ Scope3_i
-  function calculate() {
+  async function calculate() {
     const eqFactor = method === "equity" ? (parseFloat(equityPct) || 100) / 100 : 1;
     let s1 = 0, s2 = 0, s3 = 0;
     const breakdown = [];
+    const apiInputs = {};
 
     Object.entries(EF).forEach(([efKey, ef]) => {
       const raw = parseFloat(inputs[efKey]) || 0;
@@ -235,6 +236,9 @@ export function CalcPage({ t = TR.en }) {
       // GHG_i = Activity × EF × equityFactor
       const effectiveVal = isTkm ? raw * tons : raw;
       const em = +(effectiveVal * ef.ef * eqFactor).toFixed(3);
+
+      apiInputs[efKey] = raw;
+      if (isTkm) apiInputs[`${efKey}Tons`] = tons;
 
       if (ef.scope === 1) s1 += em;
       else if (ef.scope === 2) s2 += em;
@@ -251,13 +255,36 @@ export function CalcPage({ t = TR.en }) {
     const total   = +(s1 + s2 + s3).toFixed(2);
     const leakage = +(s1 * 0.05 + s3 * 0.10).toFixed(2);
 
-    setResult({
+    const nextResult = {
       total, s1: +s1.toFixed(2), s2: +s2.toFixed(2), s3: +s3.toFixed(2),
       leakage, breakdown,
       creditsNeeded: Math.ceil(total / 1000),
-    });
+    };
+    setResult(nextResult);
 
-    // Auto-pindah ke tab Total setelah hitung
+    if (companyId) {
+      const saved = await apiFetch("/emissions/calculate-v2", {
+        method: "POST",
+        body: JSON.stringify({
+          companyId,
+          method,
+          equityPct: method === "equity" ? parseFloat(equityPct) || 100 : 100,
+          inputs: apiInputs,
+        }),
+      });
+      if (saved?.success) {
+        setResult(prev => ({
+          ...prev,
+          total: saved.total ?? prev.total,
+          s1: saved.scope1 ?? prev.s1,
+          s2: saved.scope2 ?? prev.s2,
+          s3: saved.scope3 ?? prev.s3,
+          leakage: saved.leakage ?? prev.leakage,
+          creditsNeeded: saved.creditsNeeded ?? prev.creditsNeeded,
+        }));
+      }
+    }
+
     setScope("total");
     setTotalDetailScope(null);
   }
