@@ -2142,89 +2142,134 @@ async function handleLogin() {
         />
       )}
 
-      {step === "adminLogin" && (
-  <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased flex flex-col justify-center px-4 sm:px-6 py-12">
-    
-    <div className="w-full max-w-md mx-auto">
-      {/* Progress Dots Indicator */}
-      <div className="flex justify-center mb-8">
-        <ProgressDots step="role" />
-      </div>
+{step === "adminLogin" && (
+  <div className="shell">
+    <div style={{ padding: "16px 28px 0", display: "flex", justifyContent: "center" }}>
+      <ProgressDots step="role" />
+    </div>
 
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-10 relative overflow-hidden animate-fade-in">
-        
-        {/* Soft Background Glow Effect */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-teal-50 rounded-full blur-3xl opacity-60"></div>
-        
-        {/* Back Button */}
-        <button 
-          onClick={() => setStep("role")}
-          className="group flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-teal-700 transition-colors mb-8"
-        >
-          <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          Kembali
-        </button>
+    <div className="auth-header">
+      <button className="back-btn" onClick={() => setStep("role")}>
+        {Icons.arrowLeft} {lang === "id" ? "Kembali" : "Back"}
+      </button>
+      <h2 className="auth-title">Admin Login</h2>
+      <p className="auth-sub">
+        {lang === "id" ? "Masuk ke panel kontrol utama CarbonTrust" : "Log in to the main CarbonTrust control panel"}
+      </p>
+    </div>
 
-
-        {/* Brand & Logo Section */}
-        <div className="text-center mb-8">
-  <div className="relative w-24 h-24 mx-auto mb-4 drop-shadow-md hover:scale-105 transition-transform duration-300">
-    <img 
-      src="/logoadm.png"
-      alt="Carbon Trust Logo" 
-      className="w-full h-full object-cover rounded-full border-4 border-teal-600 bg-white"
-    />
-    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-900 text-[9px] text-white font-black px-2.5 py-0.5 rounded-full tracking-wider border border-slate-700 whitespace-nowrap uppercase">
-      Admin Control
-    </span>
-  </div>
-
-  <h2 className="text-2xl font-black text-slate-900 tracking-tight mt-3">Admin Login</h2>
-  <p className="text-xs font-semibold text-slate-500 mt-1.5 uppercase tracking-wider">CarbonTrust Platform</p>
-</div>
-
-        {/* Login Fields */}
-        <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase text-slate-500 tracking-wider">Username</label>
-            <input 
-              className="w-full px-4 py-3.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm font-semibold shadow-sm"
-              type="text" 
-              placeholder="Masukkan username..."
-              value={adminForm.username}
-              onChange={e => setAdminForm(prev => ({ ...prev, username: e.target.value }))} 
-            />
+    <div className="screen" style={{ paddingTop: 0 }}>
+      {/* Brand & Logo Section */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 32, marginTop: 10 }}>
+        <div style={{
+          position: "relative",
+          width: 96, 
+          height: 96, 
+          borderRadius: "50%",
+          padding: 4,
+          background: G.white,
+          border: `2px solid ${G.teal600}`,
+          boxShadow: `0 12px 32px -8px ${G.teal700}60`,
+          animation: "popIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"
+        }}>
+          <img 
+            src="/logoadm.png" 
+            alt="Carbon Trust Logo" 
+            style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", backgroundColor: G.white }} 
+            onError={e => { e.target.style.display = "none"; }}
+          />
+          {/* Badge "Control" kecil di bawah logo */}
+          <div style={{
+            position: "absolute",
+            bottom: -6,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: G.slate800,
+            color: G.white,
+            fontSize: 9,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            letterSpacing: ".1em",
+            textTransform: "uppercase",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
+          }}>
+            Control
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase text-slate-500 tracking-wider">Password</label>
-            <input 
-              className="w-full px-4 py-3.5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm font-semibold shadow-sm tracking-widest"
-              type="password" 
-              placeholder="••••••••"
-              value={adminForm.password}
-              onChange={e => setAdminForm(prev => ({ ...prev, password: e.target.value }))} 
-            />
-          </div>
-
-          {/* Error Message Box */}
-          {adminError && (
-            <div className="bg-rose-50 text-rose-700 text-xs font-bold p-3.5 rounded-xl border border-rose-100 flex items-start gap-2.5 mt-2 animate-shake">
-              <svg className="w-4 h-4 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-              <span>{adminError}</span>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button 
-            className="w-full mt-6 py-4 px-6 bg-teal-800 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
-            onClick={handleAdminLogin}
-          >
-            <span>Masuk sebagai Admin</span>
-            <span className="text-teal-300 group-hover:translate-x-1 transition-transform">→</span>
-          </button>
         </div>
       </div>
+
+      {/* Login Fields */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+        <div className="field-group">
+          <label className="label" style={{ color: G.teal700 }}>Username</label>
+          <input 
+            className={`input-field ${adminError ? "error" : ""}`}
+            type="text" 
+            placeholder={lang === "id" ? "Masukkan username..." : "Enter username..."}
+            value={adminForm.username}
+            onChange={e => {
+              setAdminForm(prev => ({ ...prev, username: e.target.value }));
+              setAdminError(""); // Hapus error saat mulai mengetik
+            }} 
+          />
+        </div>
+
+        <div className="field-group">
+          <label className="label" style={{ color: G.teal700 }}>Password</label>
+          <input 
+            className={`input-field ${adminError ? "error" : ""}`}
+            type="password" 
+            placeholder="••••••••"
+            value={adminForm.password}
+            onChange={e => {
+              setAdminForm(prev => ({ ...prev, password: e.target.value }));
+              setAdminError(""); // Hapus error saat mulai mengetik
+            }} 
+          />
+        </div>
+
+        {/* Error Message Box */}
+        {adminError && (
+          <div style={{
+            padding: "12px 16px", 
+            background: G.errBg, 
+            border: `1.5px solid ${G.err}`, 
+            borderRadius: 12, 
+            color: G.err, 
+            fontSize: 13, 
+            display: "flex", 
+            alignItems: "center", 
+            gap: 10,
+            animation: "shake 0.3s ease"
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span style={{ fontWeight: 700 }}>{adminError}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <button 
+        className="btn-primary"
+        onClick={handleAdminLogin}
+        style={{ 
+          background: `linear-gradient(135deg, ${G.teal700}, ${G.slate800})`,
+          boxShadow: `0 8px 20px -6px ${G.teal700}80`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          border: `1px solid ${G.teal600}`
+        }}
+      >
+        {lang === "id" ? "Masuk sebagai Admin" : "Login as Admin"}
+        <span style={{ color: G.teal100, transition: "transform 0.2s", fontSize: 18, lineHeight: 0 }}>→</span>
+      </button>
     </div>
   </div>
 )}
