@@ -36,16 +36,17 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   const netMonthly  = parseFloat((totalAbs - totalEm).toFixed(2));
   const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
   const netCredits  = Math.max(0, Math.floor(netAnnual));
+
+  // Nomor sertifikat deterministik dari companyId — harus sebelum showCertNo
+  const certNo = `CT-CERT-${(company?.id || "COMP-001").replace(/[^A-Z0-9]/g,"")}-${new Date().getFullYear()}`;
+  const issuedAt = new Date().toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
+
   const showCertNo = certData?.certNumber || certNo;
   const showAbs = certData?.totalAbsorption ?? totalAbs;
   const showEm = certData?.totalEmission ?? totalEm;
   const showMonthly = certData?.netMonthly ?? netMonthly;
   const showAnnual = certData?.netAnnual ?? netAnnual;
   const showCredits = certData?.netCredits ?? netCredits;
-
-  // Nomor sertifikat deterministik dari companyId
-  const certNo = `CT-CERT-${(company?.id || "COMP-001").replace(/[^A-Z0-9]/g,"")}-${new Date().getFullYear()}`;
-  const issuedAt = new Date().toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
 
   function handleDownload() {
     setDownloading(true);

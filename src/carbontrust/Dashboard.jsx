@@ -4,7 +4,6 @@
  * FIXED: all variable name inconsistencies, stray JSX, wrong API URLs
  */
 import { useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import {
   API, CREDIT_PRICE, apiFetch,
@@ -27,23 +26,41 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [prevKpi, setPrevKpi] = useState(null);
   const [kpiDelta, setKpiDelta] = useState({ abs: 0, em: 0, net: 0 });
 
-  // WebSocket: live IoT
+  // WebSocket: live IoT (native ws — BE pakai 'ws', bukan socket.io)
   useEffect(() => {
-    let socket;
+    let ws;
+    let mockId;
     try {
-      const wsBase = API.replace(/\/api$/, "");
-      socket = io(wsBase);
-      socket.on("iot_live", ({ parcelId, data }) => {
-        if (parcelId === "LP-001") {
-          setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });
-          setTH(arr => [...arr.slice(-19), data.temp]);
-          setHH(arr => [...arr.slice(-19), +data.hum]);
-          setCH(arr => [...arr.slice(-19), data.co2]);
-        }
-      });
+      const wsBase = API.replace(/\/api$/, "").replace(/^http/, "ws");
+      ws = new WebSocket(wsBase);
+      ws.onmessage = (evt) => {
+        try {
+          const { event, data } = JSON.parse(evt.data);
+          if (event === "iot_live" && data?.parcelId === "LP-001") {
+            setLiveIoT({ temp: data.temp, hum: data.hum, co2: data.co2 });
+            setTH(arr => [...arr.slice(-19), data.temp]);
+            setHH(arr => [...arr.slice(-19), +data.hum]);
+            setCH(arr => [...arr.slice(-19), data.co2]);
+          }
+        } catch { /* ignore parse errors */ }
+      };
+      ws.onerror = () => {
+        // fallback ke mock animasi jika WS gagal konek
+        mockId = setInterval(() => {
+          setLiveIoT(prev => {
+            const temp = +(prev.temp + (Math.random() - .5) * .4).toFixed(1);
+            const hum  = +(prev.hum  + (Math.random() - .5) * 1.2).toFixed(0);
+            const co2  = +(prev.co2  + (Math.random() - .48) * 2).toFixed(1);
+            setTH(arr => [...arr.slice(-19), temp]);
+            setHH(arr => [...arr.slice(-19), +hum]);
+            setCH(arr => [...arr.slice(-19), co2]);
+            return { temp, hum: +hum, co2 };
+          });
+        }, 2000);
+      };
     } catch {
-      // fallback: mock animation
-      const id = setInterval(() => {
+      // fallback langsung jika WebSocket tidak tersedia
+      mockId = setInterval(() => {
         setLiveIoT(prev => {
           const temp = +(prev.temp + (Math.random() - .5) * .4).toFixed(1);
           const hum  = +(prev.hum  + (Math.random() - .5) * 1.2).toFixed(0);
@@ -54,9 +71,11 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           return { temp, hum: +hum, co2 };
         });
       }, 2000);
-      return () => clearInterval(id);
     }
-    return () => socket?.disconnect();
+    return () => {
+      ws?.close();
+      if (mockId) clearInterval(mockId);
+    };
   }, []);
 
   async function openHistory(parcelId) {

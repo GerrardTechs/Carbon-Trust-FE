@@ -394,7 +394,7 @@ export function CalcPage({ t = TR.en }) {
     const { s1, s2, s3, total, leakage, creditsNeeded, breakdown } = result;
 
     // Kontribusi persen
-    const pct = (val) => total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
+    const pct = (val) => total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
 
     return (
       <div className="flex flex-col gap-3">
