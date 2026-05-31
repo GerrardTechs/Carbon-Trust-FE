@@ -1,11 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { API } from "../../carbontrust/shared.jsx";
 import { G } from "../constants/tokens.js";
 import { LANGS } from "../i18n/langs.js";
 import { Icons } from "../utils/icons.jsx";
-import { ProgressDots } from "../components/ProgressDots.jsx";
-
-
 export function SuccessPage({ role, name, lang }) {
   const t = LANGS[lang].success;
   const m = t[role] || t.company;

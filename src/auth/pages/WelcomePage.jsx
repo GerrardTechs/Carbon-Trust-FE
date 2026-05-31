@@ -1,5 +1,3 @@
-import { useState, useRef, useEffect } from "react";
-import { API } from "../../carbontrust/shared.jsx";
 import { G } from "../constants/tokens.js";
 import { LANGS } from "../i18n/langs.js";
 import { Icons } from "../utils/icons.jsx";
@@ -45,7 +43,7 @@ export function WelcomePage({ onContinue, lang, setLang }) {
         <LangSwitcher lang={lang} setLang={setLang} />
         <p className="terms-note">
           {t.terms}{" "}
-          <a href="#">{t.termsLink}</a> {t.and} <a href="#">{t.privacyLink}</a>
+          <a href="#">{t.termsLink}</a> {t.and} <a href="/privacy">{t.privacyLink}</a>
         </p>
       </div>
     </div>

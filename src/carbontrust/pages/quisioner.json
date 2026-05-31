@@ -1,0 +1,27 @@
+{
+  "sections": [
+    {
+      "section": "Scope 1",
+      "questions": [
+        {
+          "label": "Konsumsi bahan bakar stationary (liter/tahun)",
+          "type": "number"
+        },
+        {
+          "label": "Jenis bahan bakar utama",
+          "type": "dropdown",
+          "options": ["Solar", "Bensin", "Gas Alam", "LPG", "Lainnya"]
+        }
+      ]
+    },
+    {
+      "section": "Scope 2",
+      "questions": [
+        {
+          "label": "Konsumsi listrik (kWh/tahun)",
+          "type": "number"
+        }
+      ]
+    }
+  ]
+}

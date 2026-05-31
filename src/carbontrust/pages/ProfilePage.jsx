@@ -98,7 +98,7 @@ export function ProfilePage({ company, setCompany, t, lang, onLogout, onExit, qS
       }
     } else {
       if (assetEditItem) {
-        setMyLands(prev => prev.map(landItem => landItem.id === assetEditItem.id ? { ...landItem, ...assetForm } : l));
+        setMyLands(prev => prev.map(landItem => landItem.id === assetEditItem.id ? { ...landItem, ...assetForm } : landItem));
       } else {
         setMyLands(prev => [...prev, { ...assetForm, id: "l" + Date.now() }]);
       }

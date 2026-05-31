@@ -1,11 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import { API } from "../../carbontrust/shared.jsx";
+import { useState, useRef } from "react";
 import { G } from "../constants/tokens.js";
 import { LANGS } from "../i18n/langs.js";
 import { Icons } from "../utils/icons.jsx";
 import { ProgressDots } from "../components/ProgressDots.jsx";
-
-
 export function CalcMethodPage({ onSubmit, onBack, lang }) {
   const [form, setForm] = useState({
     calcMethod: "", equityShare: "", ghgInventory: null, carbonRemoval: null,

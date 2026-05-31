@@ -476,21 +476,18 @@ export const EF = {
 export const EF_LABELS = {
   genset:"Genset (Solar/HSD)", boiler:"Boiler (Solar/HSD)", furnace:"Furnace (Solar/HSD)",
   lpg:"LPG", naturalGas:"Gas Alam (m³)", coal:"Batubara",
-  diesel:"Diesel kendaraan", petrol:"Bensin/Premium",
-  truck:"Truk besar / Fuso", smallTruck:"Truk kecil / Pick-up",
-  opCar:"Mobil operasional", bus:"Bus / Minibus",
   refrigerant:"Refrigerant AC",
   electricity:"Listrik PLN (kWh)", heatSteam:"Panas/Steam beli",
   bizTravel:"Perjalanan bisnis", commuting:"Komuter karyawan",
   freightRoad:"Pengiriman darat", freightShip:"Pengiriman laut",
   fuelDelivery:"Ongkir bahan bakar",
   waste:"Limbah operasional",
-  truck:      "Truk Besar / Fuso (>5 ton)",
-smallTruck: "Truk Kecil / Pick-up (<5 ton)",
-opCar:      "Mobil Operasional (BBM/Bensin)",
-bus:        "Bus / Minibus Penumpang",
-diesel:     "Kendaraan Diesel (umum)",
-petrol:     "Kendaraan Bensin (umum)",
+  truck: "Truk Besar / Fuso (>5 ton)",
+  smallTruck: "Truk Kecil / Pick-up (<5 ton)",
+  opCar: "Mobil Operasional (BBM/Bensin)",
+  bus: "Bus / Minibus Penumpang",
+  diesel: "Kendaraan Diesel (umum)",
+  petrol: "Kendaraan Bensin (umum)",
 };
 
 // Category labels for grouping in CalcPage

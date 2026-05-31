@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import AuthFlow from "../auth/AuthFlow";
+import AuthFlow from "../auth/AuthFlow.jsx";
 import CarbonTrust from "../carbontrust/apps/App.jsx";
 import AdminApp from "../carbontrust/apps/AdminApp.jsx";
 import LandlordApp from "../carbontrust/apps/LandlordApp.jsx";
 import PublicView from "../carbontrust/apps/PublicView.jsx";
-import PrivacyPage from "../pages/PrivacyPage.jsx";
+import PrivacyPage from "../auth/pages/PrivacyPage.jsx";
 
 export default function RootApp() {
   const isPrivacy = window.location.pathname.startsWith("/privacy");
-if (isPrivacy) return <PrivacyPage />;
-
   const isPublic = window.location.pathname.startsWith("/public") ||
                    new URLSearchParams(window.location.search).get("view") === "public";
 
@@ -21,6 +19,8 @@ if (isPrivacy) return <PrivacyPage />;
   const [isAppActive, setIsAppActive] = useState(() => {
     return !!localStorage.getItem("carbon_session");
   });
+
+  if (isPrivacy) return <PrivacyPage />;
 
   const handleLogin = (role, user, lang, token) => {
     const userData = { role: user?.role || role, user, lang, token };

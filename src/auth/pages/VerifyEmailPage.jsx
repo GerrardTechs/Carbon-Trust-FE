@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { API } from "../../carbontrust/shared.jsx";
 import { G } from "../constants/tokens.js";
 import { LANGS } from "../i18n/langs.js";
