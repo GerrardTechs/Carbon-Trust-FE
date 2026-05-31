@@ -4,8 +4,12 @@ import CarbonTrust from "../carbontrust/apps/App.jsx";
 import AdminApp from "../carbontrust/apps/AdminApp.jsx";
 import LandlordApp from "../carbontrust/apps/LandlordApp.jsx";
 import PublicView from "../carbontrust/apps/PublicView.jsx";
+import PrivacyPage from "../pages/PrivacyPage.jsx";
 
 export default function RootApp() {
+  const isPrivacy = window.location.pathname.startsWith("/privacy");
+if (isPrivacy) return <PrivacyPage />;
+
   const isPublic = window.location.pathname.startsWith("/public") ||
                    new URLSearchParams(window.location.search).get("view") === "public";
 
