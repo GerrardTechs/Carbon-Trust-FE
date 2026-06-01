@@ -5,9 +5,11 @@ import AdminApp from "../carbontrust/apps/AdminApp.jsx";
 import LandlordApp from "../carbontrust/apps/LandlordApp.jsx";
 import PublicView from "../carbontrust/apps/PublicView.jsx";
 import PrivacyPage from "../auth/pages/PrivacyPage.jsx";
+import TermsPage   from "../auth/pages/TermsPage.jsx";
 
 export default function RootApp() {
   const isPrivacy = window.location.pathname.startsWith("/privacy");
+  const isTerms   = window.location.pathname.startsWith("/terms");
   const isPublic = window.location.pathname.startsWith("/public") ||
                    new URLSearchParams(window.location.search).get("view") === "public";
 
@@ -21,6 +23,7 @@ export default function RootApp() {
   });
 
   if (isPrivacy) return <PrivacyPage />;
+  if (isTerms)   return <TermsPage />;
 
   const handleLogin = (role, user, lang, token) => {
     const userData = { role: user?.role || role, user, lang, token };
@@ -70,7 +73,16 @@ export default function RootApp() {
       .wb-logout { background: none; border: none; font-size: 13px; font-weight: 700; color: #94a3b8; cursor: pointer; text-align: center; font-family: inherit; text-decoration: underline; transition: color .15s; padding: 4px 0; }
       .wb-logout:hover { color: #dc2626; }
     `;
-    const isId = session.lang === "id";
+    const L = session.lang || "id";
+    const WB_T = {
+      en: { tag:"Session Saved",      headline:"Welcome\nBack!",               sub:"Your account is still active. Continue your carbon activities.",    verified:"✓ Verified",      blockchainReady:"Blockchain Ready",      enter:"Enter Dashboard →",    switch_:"Switch Account / Logout" },
+      id: { tag:"Sesi Tersimpan",     headline:"Selamat Datang\nKembali!",     sub:"Akun Anda masih aktif. Lanjutkan aktivitas karbon Anda.",          verified:"✓ Terverifikasi", blockchainReady:"Siap Blockchain",       enter:"Masuk ke Dashboard →", switch_:"Ganti Akun / Logout" },
+      tr: { tag:"Oturum Kaydedildi", headline:"Tekrar\nHoş Geldiniz!",        sub:"Hesabınız hâlâ aktif. Karbon faaliyetlerinize devam edin.",         verified:"✓ Doğrulandı",   blockchainReady:"Blockchain Hazır",      enter:"Panele Gir →",         switch_:"Hesabı Değiştir / Çıkış" },
+      zh: { tag:"会话已保存",          headline:"欢迎\n回来！",                  sub:"您的帐户仍然有效。继续您的碳活动。",                                    verified:"✓ 已验证",       blockchainReady:"区块链就绪",            enter:"进入仪表板 →",         switch_:"切换账户 / 退出" },
+      ko: { tag:"세션 저장됨",         headline:"다시\n오신 것을 환영합니다!",   sub:"계정이 아직 활성 상태입니다. 탄소 활동을 계속하세요.",               verified:"✓ 인증됨",       blockchainReady:"블록체인 준비",          enter:"대시보드 →",            switch_:"계정 전환 / 로그아웃" },
+      ja: { tag:"セッション保存済",    headline:"おかえり\nなさい！",             sub:"アカウントはまだ有効です。カーボン活動を続けましょう。",               verified:"✓ 認証済み",     blockchainReady:"ブロックチェーン準備完了", enter:"ダッシュボードへ →",   switch_:"アカウント切替 / ログアウト" },
+    };
+    const wb = WB_T[L] || WB_T.en;
     const displayName = session.user?.name || "PT. Nusantara Hijau";
     return (
       <div className="wb-shell">
@@ -80,12 +92,12 @@ export default function RootApp() {
             <div className="wb-logo-ring">
               <img src="/logo_depan.svg" alt="CarbonTrust Logo" />
             </div>
-            <span className="wb-tag">{isId ? "Sesi Tersimpan" : "Session Saved"}</span>
-            <h2 className="wb-headline">{isId ? "Selamat Datang\nKembali!" : "Welcome\nBack!"}</h2>
+            <span className="wb-tag">{wb.tag}</span>
+            <h2 className="wb-headline">{wb.headline}</h2>
             <p className="wb-name">{displayName}</p>
-            <p className="wb-sub">{isId ? "Akun Anda masih aktif. Lanjutkan aktivitas karbon Anda." : "Your account is still active. Continue your carbon activities."}</p>
+            <p className="wb-sub">{wb.sub}</p>
             <div className="wb-pills">
-              <span className="wb-pill wb-pill-green">{isId ? "✓ Terverifikasi" : "✓ Verified"}</span>
+              <span className="wb-pill wb-pill-green">{wb.verified}</span>
               <span className="wb-pill wb-pill-teal">ISO 14064</span>
               <span className="wb-pill wb-pill-green">{isId ? "Blockchain Siap" : "Blockchain Ready"}</span>
             </div>
@@ -99,10 +111,10 @@ export default function RootApp() {
           </div>
           <div className="wb-bottom">
             <button className="wb-btn-primary" onClick={() => setIsAppActive(true)}>
-              {isId ? "Masuk ke Dashboard →" : "Enter Dashboard →"}
+              {wb.enter}
             </button>
             <button className="wb-logout" onClick={handleLogout}>
-              {isId ? "Ganti Akun / Logout" : "Switch Account / Logout"}
+              {wb.switch_}
             </button>
           </div>
         </div>
@@ -111,7 +123,7 @@ export default function RootApp() {
   }
 
   if (session?.role === "admin") {
-    return <AdminApp onLogout={handleLogout} user={session.user} />;
+    return <AdminApp onLogout={handleLogout} user={session.user} lang={session.lang} />;
   }
 
   if (session?.role === "landlord") {

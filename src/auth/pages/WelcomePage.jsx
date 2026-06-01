@@ -43,7 +43,7 @@ export function WelcomePage({ onContinue, lang, setLang }) {
         <LangSwitcher lang={lang} setLang={setLang} />
         <p className="terms-note">
           {t.terms}{" "}
-          <a href="#">{t.termsLink}</a> {t.and} <a href="/privacy">{t.privacyLink}</a>
+          <a href="/terms">{t.termsLink}</a> {t.and} <a href="/privacy">{t.privacyLink}</a>
         </p>
       </div>
     </div>
