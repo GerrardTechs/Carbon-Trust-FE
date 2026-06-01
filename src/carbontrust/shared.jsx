@@ -444,62 +444,267 @@ export function peatHumidityRisk(humidity) {
 
 // Diesel density: 1 liter = 0.832 kg → EF 2.68 kg CO₂/liter (IPCC 2006)
 // Solar/HSD conversion: input liter → auto convert to kg (×0.832) internally
+// ─────────────────────────────────────────────────────────────────────────────
+// EMISSION FACTORS (EF) — IPCC 2006 + ESDM Indonesia
+// Semua nilai dalam kgCO₂e per unit yang tercantum di field "unit"
+// Sumber: IPCC 2006 GL Vol.2 Energy, ESDM 2021, GHG Protocol, Defra 2023
+// ─────────────────────────────────────────────────────────────────────────────
 export const EF = {
-  // ── Scope 1: Stationary Combustion ──────────────────────────
-  genset:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Genset (Solar/HSD)" },
-  boiler:      { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Boiler (Solar/HSD)" },
-  furnace:     { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Furnace (Solar/HSD)" },
-  lpg:         { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"LPG" },
-  naturalGas:  { ef:2.04,  unit:"m³",   scope:1, category:"stationary", source:"Natural Gas" },
-  coal:        { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Coal / Batubara" },
-  // ── Scope 1: Mobile Combustion / Transport ──────────────────
-  diesel:      { ef:2.68,  unit:"liter", scope:1, category:"mobile", source:"Diesel (kendaraan)" },
-  petrol:      { ef:2.31,  unit:"liter", scope:1, category:"mobile", source:"Bensin/Premium" },
-  truck:       { ef:0.120, unit:"km",    scope:1, category:"mobile", source:"Truk besar / Fuso" },
-  smallTruck:  { ef:0.085, unit:"km",    scope:1, category:"mobile", source:"Truk kecil / Pick-up" },
-  opCar:       { ef:0.171, unit:"km",    scope:1, category:"mobile", source:"Mobil operasional" },
-  bus:         { ef:0.089, unit:"km",    scope:1, category:"mobile", source:"Bus / Minibus" },
-  // ── Scope 1: Fugitive ───────────────────────────────────────
-  refrigerant: { ef:1430,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant AC (R-22)" },
-  // ── Scope 2: Purchased Energy ───────────────────────────────
-  electricity: { ef:0.87,  unit:"kWh",  scope:2, category:"electricity", source:"Grid PLN (kWh)" },
-  heatSteam:   { ef:0.26,  unit:"kWh",  scope:2, category:"steam", source:"Purchased Heat/Steam" },
-  // ── Scope 3: Value Chain ────────────────────────────────────
-  bizTravel:   { ef:0.255, unit:"km",   scope:3, category:"travel", source:"Business Travel (pesawat)" },
-  commuting:   { ef:0.21,  unit:"km",   scope:3, category:"travel", source:"Commuting karyawan" },
-  freightRoad: { ef:0.062, unit:"ton·km",scope:3, category:"freight", source:"Pengiriman darat (ton·km)" },
-  freightShip: { ef:0.012, unit:"ton·km",scope:3, category:"freight", source:"Pengiriman laut (ton·km)" },
-  fuelDelivery:{ ef:0.062, unit:"km",   scope:3, category:"freight", source:"Ongkir bahan bakar (km)" },
-  waste:       { ef:0.5,   unit:"kg",   scope:3, category:"waste", source:"Limbah operasional" },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCOPE 1 — DIRECT EMISSIONS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Stationary Combustion: BOILER ────────────────────────────────────────
+  boilerCoal:        { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Boiler — Batubara" },
+  boilerHSD:         { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Boiler — Solar/Diesel (HSD)" },
+  boilerIFO:         { ef:3.17,  unit:"liter", scope:1, category:"stationary", source:"Boiler — Fuel Oil (IFO/MFO)" },
+  boilerKerosene:    { ef:2.54,  unit:"liter", scope:1, category:"stationary", source:"Boiler — Kerosene/Minyak Tanah" },
+  boilerLPG:         { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"Boiler — LPG" },
+  boilerNatGas:      { ef:2.04,  unit:"m³",    scope:1, category:"stationary", source:"Boiler — Gas Alam (Natural Gas)" },
+  boilerLNG:         { ef:2.75,  unit:"kg",    scope:1, category:"stationary", source:"Boiler — LNG" },
+  boilerCNG:         { ef:2.69,  unit:"m³",    scope:1, category:"stationary", source:"Boiler — CNG" },
+
+  // ── Stationary Combustion: GENSET ────────────────────────────────────────
+  gensetCoal:        { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Genset — Batubara" },
+  gensetHSD:         { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Genset — Solar/Diesel (HSD)" },
+  gensetIFO:         { ef:3.17,  unit:"liter", scope:1, category:"stationary", source:"Genset — Fuel Oil (IFO/MFO)" },
+  gensetKerosene:    { ef:2.54,  unit:"liter", scope:1, category:"stationary", source:"Genset — Kerosene/Minyak Tanah" },
+  gensetLPG:         { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"Genset — LPG" },
+  gensetNatGas:      { ef:2.04,  unit:"m³",    scope:1, category:"stationary", source:"Genset — Gas Alam (Natural Gas)" },
+  gensetLNG:         { ef:2.75,  unit:"kg",    scope:1, category:"stationary", source:"Genset — LNG" },
+  gensetCNG:         { ef:2.69,  unit:"m³",    scope:1, category:"stationary", source:"Genset — CNG" },
+
+  // ── Stationary Combustion: FURNACE ───────────────────────────────────────
+  furnaceCoal:       { ef:2.42,  unit:"kg",    scope:1, category:"stationary", source:"Furnace — Batubara" },
+  furnaceHSD:        { ef:2.68,  unit:"liter", scope:1, category:"stationary", source:"Furnace — Solar/Diesel (HSD)" },
+  furnaceIFO:        { ef:3.17,  unit:"liter", scope:1, category:"stationary", source:"Furnace — Fuel Oil (IFO/MFO)" },
+  furnaceKerosene:   { ef:2.54,  unit:"liter", scope:1, category:"stationary", source:"Furnace — Kerosene/Minyak Tanah" },
+  furnaceLPG:        { ef:3.00,  unit:"kg",    scope:1, category:"stationary", source:"Furnace — LPG" },
+  furnaceNatGas:     { ef:2.04,  unit:"m³",    scope:1, category:"stationary", source:"Furnace — Gas Alam (Natural Gas)" },
+  furnaceLNG:        { ef:2.75,  unit:"kg",    scope:1, category:"stationary", source:"Furnace — LNG" },
+  furnaceCNG:        { ef:2.69,  unit:"m³",    scope:1, category:"stationary", source:"Furnace — CNG" },
+
+  // ── Mobile Combustion: Kendaraan Penumpang (Light Duty) ──────────────────
+  carPetrol:         { ef:0.171, unit:"km",    scope:1, category:"mobile", source:"Mobil Penumpang — Bensin (Car)" },
+  carDiesel:         { ef:0.163, unit:"km",    scope:1, category:"mobile", source:"Mobil Penumpang — Diesel (Car)" },
+  vanPetrol:         { ef:0.210, unit:"km",    scope:1, category:"mobile", source:"Van — Bensin" },
+  vanDiesel:         { ef:0.195, unit:"km",    scope:1, category:"mobile", source:"Van — Diesel" },
+  motorcycle:        { ef:0.103, unit:"km",    scope:1, category:"mobile", source:"Sepeda Motor (Motorcycle)" },
+
+  // ── Mobile Combustion: Kendaraan Berat (Heavy Duty) ─────────────────────
+  truck:             { ef:0.120, unit:"km",    scope:1, category:"mobile", source:"Truk Besar (>5 ton)" },
+  trailer:           { ef:0.150, unit:"km",    scope:1, category:"mobile", source:"Trailer" },
+  dumpTruck:         { ef:0.145, unit:"km",    scope:1, category:"mobile", source:"Dump Truck" },
+  smallTruck:        { ef:0.085, unit:"km",    scope:1, category:"mobile", source:"Truk Kecil / Pick-up (<5 ton)" },
+  busMobile:         { ef:0.089, unit:"km",    scope:1, category:"mobile", source:"Bus / Minibus" },
+
+  // ── Mobile Combustion: Alat Berat (Off-road) ─────────────────────────────
+  excavator:         { ef:2.68,  unit:"liter", scope:1, category:"offroad", source:"Excavator (Solar/HSD)" },
+  bulldozer:         { ef:2.68,  unit:"liter", scope:1, category:"offroad", source:"Bulldozer (Solar/HSD)" },
+  wheelLoader:       { ef:2.68,  unit:"liter", scope:1, category:"offroad", source:"Wheel Loader (Solar/HSD)" },
+
+  // ── Mobile Combustion: Transportasi Khusus ───────────────────────────────
+  aircraftOwned:     { ef:2.55,  unit:"km",    scope:1, category:"transport_special", source:"Pesawat (milik perusahaan)" },
+  jetOwned:          { ef:3.10,  unit:"km",    scope:1, category:"transport_special", source:"Jet Pribadi (milik perusahaan)" },
+  shipOwned:         { ef:0.015, unit:"ton·km",scope:1, category:"transport_special", source:"Kapal (milik perusahaan)" },
+  locomotiveOwned:   { ef:0.030, unit:"ton·km",scope:1, category:"transport_special", source:"Lokomotif (milik perusahaan)" },
+
+  // ── Scope 1: Fugitive Emissions ──────────────────────────────────────────
+  // EF = GWP × annual leak rate (kg leaked = charge × units × leak_rate)
+  // GWP bersumber IPCC AR5. Unit: kg refrigerant leaked
+  fugR22:            { ef:1810,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-22 (AC — GWP 1810)" },
+  fugR410A:          { ef:2088,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-410A (AC Split — GWP 2088)" },
+  fugR134a:          { ef:1430,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-134a (Kulkas — GWP 1430)" },
+  fugR404A:          { ef:3922,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-404A (Cold Storage — GWP 3922)" },
+  fugR407C:          { ef:1774,  unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-407C (GWP 1774)" },
+  fugR32:            { ef:675,   unit:"kg",    scope:1, category:"fugitive", source:"Refrigerant R-32 (AC Inverter — GWP 675)" },
+  fugSF6:            { ef:23500, unit:"kg",    scope:1, category:"fugitive", source:"SF₆ — Transformator / Switchgear (GWP 23500)" },
+
+  // ── Scope 1: Process Emissions ───────────────────────────────────────────
+  // EF = tonCO₂e per ton produk. Sumber: IPCC 2006 Vol.3 Industrial Processes
+  processCement:     { ef:520,   unit:"ton",   scope:1, category:"process", source:"Produksi Semen — CO₂ (0.52 tCO₂/ton)" },
+  processLime:       { ef:790,   unit:"ton",   scope:1, category:"process", source:"Produksi Kapur — CO₂ (0.79 tCO₂/ton)" },
+  processSteel:      { ef:3148,  unit:"ton",   scope:1, category:"process", source:"Produksi Baja — CO₂ (3.148 tCO₂/ton)" },
+  processAluminium:  { ef:2200,  unit:"ton",   scope:1, category:"process", source:"Produksi Aluminium — CO₂+CF₄+C₂F₆ (2.2 tCO₂e/ton)" },
+  processAmmonia:    { ef:2000,  unit:"ton",   scope:1, category:"process", source:"Produksi Amonia — CO₂ (2.0 tCO₂/ton)" },
+  processUrea:       { ef:400,   unit:"ton",   scope:1, category:"process", source:"Produksi Urea — CO₂ (0.4 tCO₂/ton)" },
+  processOilGas:     { ef:2000,  unit:"ton",   scope:1, category:"process", source:"Oil & Gas Extraction — CO₂ (2.0 tCO₂/ton)" },
+  processCoalMining: { ef:25000, unit:"ton",   scope:1, category:"process", source:"Penambangan Batubara — CH₄ (×25 GWP, per ton batubara)" },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCOPE 2 — INDIRECT ENERGY
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Listrik — GWP per grid/negara ────────────────────────────────────────
+  elecIPCC:          { ef:0.850, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — IPCC Default (0.85 kgCO₂e/kWh)" },
+  elecESdm:          { ef:0.870, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — ESDM Indonesia (0.87 kgCO₂e/kWh)" },
+  elecUK:            { ef:0.207, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — UK Grid (0.207 kgCO₂e/kWh, Defra 2023)" },
+  elecUS:            { ef:0.367, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — US Average Grid (0.367 kgCO₂e/kWh, EPA 2023)" },
+  elecGermany:       { ef:0.380, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — Germany Grid (0.38 kgCO₂e/kWh)" },
+  elecFrance:        { ef:0.052, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — France Grid (0.052 kgCO₂e/kWh)" },
+  elecAustralia:     { ef:0.790, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — Australia Grid (0.79 kgCO₂e/kWh)" },
+  elecJapan:         { ef:0.470, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — Japan Grid (0.47 kgCO₂e/kWh)" },
+  elecChina:         { ef:0.581, unit:"kWh",   scope:2, category:"electricity", source:"Listrik — China Grid (0.581 kgCO₂e/kWh)" },
+
+  // ── Uap / Steam ──────────────────────────────────────────────────────────
+  steam:             { ef:74.14, unit:"GJ",    scope:2, category:"steam", source:"Purchased Steam (74.14 kgCO₂e/GJ, IPCC)" },
+  chilledWater:      { ef:0.25,  unit:"ton",   scope:2, category:"steam", source:"Chilled Water (0.25 kgCO₂e/ton, estimasi)" },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCOPE 3 — VALUE CHAIN
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Purchased Goods & Services ───────────────────────────────────────────
+  purchasedGoods:    { ef:0.3,   unit:"ton",   scope:3, category:"upstream_goods", source:"Purchased Goods & Services (avg 0.3 tCO₂e/ton)" },
+  capitalGoods:      { ef:0.5,   unit:"unit",  scope:3, category:"upstream_goods", source:"Capital Goods (avg 0.5 tCO₂e/unit, estimasi)" },
+
+  // ── Upstream Transport & Distribution ────────────────────────────────────
+  freightRoad:       { ef:0.062, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Darat — Truk (0.062 kgCO₂e/ton·km)" },
+  freightShip:       { ef:0.012, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Laut — Kapal (0.012 kgCO₂e/ton·km)" },
+  freightRail:       { ef:0.028, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Kereta Api (0.028 kgCO₂e/ton·km)" },
+  freightAir:        { ef:0.602, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Udara — Pesawat kargo (0.602 kgCO₂e/ton·km)" },
+  freightRefrig:     { ef:0.110, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Berpendingin/Reefer (0.11 kgCO₂e/ton·km)" },
+
+  // ── Downstream Transport & Distribution ──────────────────────────────────
+  dfreightRoad:      { ef:0.062, unit:"ton·km",scope:3, category:"freight_down", source:"Distribusi Darat — Truk" },
+  dfreightShip:      { ef:0.012, unit:"ton·km",scope:3, category:"freight_down", source:"Distribusi Laut — Kapal" },
+  dfreightRail:      { ef:0.028, unit:"ton·km",scope:3, category:"freight_down", source:"Distribusi Kereta Api" },
+  dfreightAir:       { ef:0.602, unit:"ton·km",scope:3, category:"freight_down", source:"Distribusi Udara — Pesawat" },
+  dfreightRefrig:    { ef:0.110, unit:"ton·km",scope:3, category:"freight_down", source:"Distribusi Berpendingin/Reefer" },
+
+  // ── Business Travel ──────────────────────────────────────────────────────
+  bizTravelAir:      { ef:0.255, unit:"km",    scope:3, category:"travel", source:"Perjalanan Bisnis — Pesawat (avg 0.255 kgCO₂e/km)" },
+  bizTravelTrain:    { ef:0.041, unit:"km",    scope:3, category:"travel", source:"Perjalanan Bisnis — Kereta Api" },
+  bizTravelCarRental:{ ef:0.171, unit:"km",    scope:3, category:"travel", source:"Perjalanan Bisnis — Mobil Sewaan/Pribadi" },
+  bizTravelBus:      { ef:0.089, unit:"km",    scope:3, category:"travel", source:"Perjalanan Bisnis — Bus/Transportasi Umum" },
+
+  // ── Employee Commuting ───────────────────────────────────────────────────
+  commutePrivateCar: { ef:0.171, unit:"km",    scope:3, category:"commute", source:"Komuter — Mobil Pribadi" },
+  commuteMotorcycle: { ef:0.103, unit:"km",    scope:3, category:"commute", source:"Komuter — Sepeda Motor" },
+  commutePublicBus:  { ef:0.089, unit:"km",    scope:3, category:"commute", source:"Komuter — Bus/Transportasi Umum" },
+
+  // ── Waste Generated in Operations ────────────────────────────────────────
+  wasteLandfill:     { ef:0.50,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Dibuang ke TPA (Landfill)" },
+  wasteIncineration: { ef:0.43,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Insinerasi" },
+  wasteRecycled:     { ef:0.02,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Didaur Ulang" },
+  wasteCompost:      { ef:0.01,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Kompos" },
+
+  // ── Use of Sold Products & End-of-Life ───────────────────────────────────
+  useSoldProducts:   { ef:0.5,   unit:"unit",  scope:3, category:"downstream_use", source:"Penggunaan Produk Terjual (avg estimasi)" },
+  eolSoldProducts:   { ef:0.3,   unit:"ton",   scope:3, category:"downstream_use", source:"End-of-Life Produk Terjual" },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ENERGI TERBARUKAN (tidak menambah emisi — nilai EF = 0, dicatat sebagai offset)
+  // Sumber: IPCC 2006 Vol.2 Ch.2 Table 2.2 (biogenic tidak dihitung sebagai emisi net)
+  // ══════════════════════════════════════════════════════════════════════════
+  renewWoodWaste:    { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Kayu / Wood Waste (biogenic — net zero)" },
+  renewBlackLiquor:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Black Liquor / Sulphite Lyes (biogenic)" },
+  renewSolidBiomass: { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Solid Biomass lainnya (biogenic)" },
+  renewCharcoal:     { ef:0,     unit:"kg",    scope:1, category:"renewable", source:"Charcoal / Arang (biogenic)" },
+  renewBiogasoline:  { ef:0,     unit:"liter", scope:1, category:"renewable", source:"Biogasoline (biogenic)" },
+  renewBiodiesel:    { ef:0,     unit:"liter", scope:1, category:"renewable", source:"Biodiesel (biogenic)" },
+  renewLiquidBiofuel:{ ef:0,     unit:"liter", scope:1, category:"renewable", source:"Liquid Biofuel lainnya (biogenic)" },
+  renewLandfillGas:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Landfill Gas (biogenic)" },
+  renewSludgeGas:    { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Sludge Gas (biogenic)" },
+  renewOtherBiogas:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Biogas lainnya (biogenic)" },
+  renewMuniWaste:    { ef:0,     unit:"ton",   scope:1, category:"renewable", source:"Municipal Waste — fraksi biomassa" },
+  renewPeat:         { ef:0.38,  unit:"GJ",    scope:1, category:"renewable", source:"Peat / Gambut (IPCC: 0.38 kgCO₂e/GJ — dicatat terpisah)" },
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EF_LABELS — label ringkas untuk tampilan di UI CalcPage
+// ─────────────────────────────────────────────────────────────────────────────
 export const EF_LABELS = {
-  genset:"Genset (Solar/HSD)", boiler:"Boiler (Solar/HSD)", furnace:"Furnace (Solar/HSD)",
-  lpg:"LPG", naturalGas:"Gas Alam (m³)", coal:"Batubara",
-  refrigerant:"Refrigerant AC",
-  electricity:"Listrik PLN (kWh)", heatSteam:"Panas/Steam beli",
-  bizTravel:"Perjalanan bisnis", commuting:"Komuter karyawan",
-  freightRoad:"Pengiriman darat", freightShip:"Pengiriman laut",
-  fuelDelivery:"Ongkir bahan bakar",
-  waste:"Limbah operasional",
-  truck: "Truk Besar / Fuso (>5 ton)",
-  smallTruck: "Truk Kecil / Pick-up (<5 ton)",
-  opCar: "Mobil Operasional (BBM/Bensin)",
-  bus: "Bus / Minibus Penumpang",
-  diesel: "Kendaraan Diesel (umum)",
-  petrol: "Kendaraan Bensin (umum)",
+  // Stationary
+  boilerCoal:"Boiler — Batubara", boilerHSD:"Boiler — Solar/HSD", boilerIFO:"Boiler — IFO/MFO",
+  boilerKerosene:"Boiler — Kerosene", boilerLPG:"Boiler — LPG", boilerNatGas:"Boiler — Gas Alam",
+  boilerLNG:"Boiler — LNG", boilerCNG:"Boiler — CNG",
+  gensetCoal:"Genset — Batubara", gensetHSD:"Genset — Solar/HSD", gensetIFO:"Genset — IFO/MFO",
+  gensetKerosene:"Genset — Kerosene", gensetLPG:"Genset — LPG", gensetNatGas:"Genset — Gas Alam",
+  gensetLNG:"Genset — LNG", gensetCNG:"Genset — CNG",
+  furnaceCoal:"Furnace — Batubara", furnaceHSD:"Furnace — Solar/HSD", furnaceIFO:"Furnace — IFO/MFO",
+  furnaceKerosene:"Furnace — Kerosene", furnaceLPG:"Furnace — LPG", furnaceNatGas:"Furnace — Gas Alam",
+  furnaceLNG:"Furnace — LNG", furnaceCNG:"Furnace — CNG",
+  // Mobile light duty
+  carPetrol:"Mobil — Bensin", carDiesel:"Mobil — Diesel",
+  vanPetrol:"Van — Bensin", vanDiesel:"Van — Diesel",
+  motorcycle:"Sepeda Motor",
+  // Mobile heavy duty
+  truck:"Truk Besar (>5 ton)", trailer:"Trailer", dumpTruck:"Dump Truck",
+  smallTruck:"Truk Kecil / Pick-up", busMobile:"Bus / Minibus",
+  // Off-road
+  excavator:"Excavator", bulldozer:"Bulldozer", wheelLoader:"Wheel Loader",
+  // Special transport
+  aircraftOwned:"Pesawat (milik perusahaan)", jetOwned:"Jet Pribadi",
+  shipOwned:"Kapal (milik perusahaan)", locomotiveOwned:"Lokomotif",
+  // Fugitive
+  fugR22:"AC — R-22 (GWP 1810)", fugR410A:"AC Split — R-410A (GWP 2088)",
+  fugR134a:"Kulkas — R-134a (GWP 1430)", fugR404A:"Cold Storage — R-404A (GWP 3922)",
+  fugR407C:"R-407C (GWP 1774)", fugR32:"AC Inverter — R-32 (GWP 675)",
+  fugSF6:"SF₆ — Trafo/Switchgear (GWP 23500)",
+  // Process
+  processCement:"Produksi Semen", processLime:"Produksi Kapur",
+  processSteel:"Produksi Baja", processAluminium:"Produksi Aluminium",
+  processAmmonia:"Produksi Amonia", processUrea:"Produksi Urea",
+  processOilGas:"Oil & Gas Extraction", processCoalMining:"Penambangan Batubara (CH₄)",
+  // Scope 2
+  elecIPCC:"Listrik — IPCC Default", elecESdm:"Listrik — ESDM Indonesia",
+  elecUK:"Listrik — UK", elecUS:"Listrik — US",
+  elecGermany:"Listrik — Jerman", elecFrance:"Listrik — Prancis",
+  elecAustralia:"Listrik — Australia", elecJapan:"Listrik — Jepang",
+  elecChina:"Listrik — China",
+  steam:"Uap/Steam Beli (GJ)", chilledWater:"Chilled Water (ton)",
+  // Scope 3 goods
+  purchasedGoods:"Barang & Jasa Dibeli", capitalGoods:"Barang Modal",
+  // Freight upstream
+  freightRoad:"Pengiriman Darat", freightShip:"Pengiriman Laut",
+  freightRail:"Pengiriman Kereta", freightAir:"Pengiriman Udara",
+  freightRefrig:"Pengiriman Berpendingin",
+  // Freight downstream
+  dfreightRoad:"Distribusi Darat", dfreightShip:"Distribusi Laut",
+  dfreightRail:"Distribusi Kereta", dfreightAir:"Distribusi Udara",
+  dfreightRefrig:"Distribusi Berpendingin",
+  // Travel
+  bizTravelAir:"Perjalanan Bisnis — Pesawat", bizTravelTrain:"Perjalanan Bisnis — Kereta",
+  bizTravelCarRental:"Perjalanan Bisnis — Mobil", bizTravelBus:"Perjalanan Bisnis — Bus",
+  // Commuting
+  commutePrivateCar:"Komuter — Mobil Pribadi", commuteMotorcycle:"Komuter — Motor",
+  commutePublicBus:"Komuter — Bus Umum",
+  // Waste
+  wasteLandfill:"Limbah — TPA", wasteIncineration:"Limbah — Insinerasi",
+  wasteRecycled:"Limbah — Daur Ulang", wasteCompost:"Limbah — Kompos",
+  // Downstream use
+  useSoldProducts:"Penggunaan Produk Terjual", eolSoldProducts:"End-of-Life Produk",
+  // Renewable
+  renewWoodWaste:"Kayu / Wood Waste", renewBlackLiquor:"Black Liquor",
+  renewSolidBiomass:"Solid Biomass", renewCharcoal:"Charcoal/Arang",
+  renewBiogasoline:"Biogasoline", renewBiodiesel:"Biodiesel",
+  renewLiquidBiofuel:"Liquid Biofuel lainnya", renewLandfillGas:"Landfill Gas",
+  renewSludgeGas:"Sludge Gas", renewOtherBiogas:"Biogas lainnya",
+  renewMuniWaste:"Municipal Waste (biomassa)", renewPeat:"Gambut/Peat",
 };
 
-// Category labels for grouping in CalcPage
+// ─────────────────────────────────────────────────────────────────────────────
+// EF_CATEGORIES — label grup untuk grouping di CalcPage
+// ─────────────────────────────────────────────────────────────────────────────
 export const EF_CATEGORIES = {
-  stationary: "Pembakaran Stasioner (Genset/Boiler/Furnace)",
-  mobile:     "Transportasi & Kendaraan",
-  fugitive:   "Emisi Fugitif",
-  electricity:"Listrik yang Dibeli",
-  steam:      "Panas / Steam",
-  travel:     "Perjalanan & Komuter",
-  freight:    "Pengiriman & Logistik",
-  waste:      "Limbah",
+  stationary:      "Pembakaran Stasioner (Boiler / Genset / Furnace)",
+  mobile:          "Kendaraan Penumpang & Berat",
+  offroad:         "Alat Berat (Off-road)",
+  transport_special:"Transportasi Khusus (Pesawat / Kapal / Lokomotif)",
+  fugitive:        "Emisi Fugitif (Refrigeran & Gas)",
+  process:         "Emisi Proses Industri",
+  electricity:     "Listrik yang Dibeli",
+  steam:           "Uap / Chilled Water",
+  upstream_goods:  "Barang & Jasa Hulu",
+  freight_up:      "Pengiriman Upstream",
+  freight_down:    "Distribusi Downstream",
+  travel:          "Perjalanan Bisnis",
+  commute:         "Komuter Karyawan",
+  waste:           "Limbah Operasional",
+  downstream_use:  "Penggunaan & End-of-Life Produk",
+  renewable:       "Energi Terbarukan (Biogenik)",
 };
 
 // ─── UTILS ─────────────────────────────────────────────────────────────────
