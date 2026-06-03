@@ -99,7 +99,7 @@ export default function RootApp() {
             <div className="wb-pills">
               <span className="wb-pill wb-pill-green">{wb.verified}</span>
               <span className="wb-pill wb-pill-teal">ISO 14064</span>
-              <span className="wb-pill wb-pill-green">{isId ? "Blockchain Siap" : "Blockchain Ready"}</span>
+              <span className="wb-pill wb-pill-green">{wb.blockchainReady}</span>
             </div>
           </div>
           <div className="wb-wave">
