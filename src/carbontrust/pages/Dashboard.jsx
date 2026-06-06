@@ -21,8 +21,6 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [histParcelId, setHistParcelId] = useState("LP-001");
   const [histData, setHistData] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
-  const [stockPrice, setStockPrice] = useState({ symbol: "", price: "", prev: "" });
-  const [showStockInput, setShowStockInput] = useState(false);
   const [prevKpi, setPrevKpi] = useState(null);
   const [kpiDelta, setKpiDelta] = useState({ abs: 0, em: 0, net: 0 });
 
@@ -204,58 +202,6 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           <p className="text-xs text-teal-600 font-semibold">{t.dash.creditsUSD}</p>
           <p className="font-black text-teal-700 text-xl">${creditsUSD}</p>
           <p className="text-xs text-teal-600">@ ${CREDIT_PRICE}/t</p>
-        </div>
-      </div>
-
-      {/* Stock Price */}
-      <div className="px-4">
-        <div className="card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-bold text-gray-700">📈 Harga Saham</p>
-            <button onClick={() => setShowStockInput(v => !v)} className="text-xs text-green-600 font-bold hover:underline">
-              {showStockInput ? "Tutup" : "Input"}
-            </button>
-          </div>
-          {showStockInput && (
-            <div className="flex flex-col gap-2 mb-3 fade-up">
-              {[
-                { label: "Kode Saham", key: "symbol", ph: "TLKM" },
-                { label: "Harga Sekarang (Rp)", key: "price", ph: "3750" },
-                { label: "Harga Sebelumnya (Rp)", key: "prev", ph: "3900" },
-              ].map(field => (
-                <div key={field.key} className="flex gap-2 items-center">
-                  <label className="text-xs text-gray-500 w-28 shrink-0">{field.label}</label>
-                  <input type={field.key === "symbol" ? "text" : "number"} placeholder={field.ph}
-                    value={stockPrice[field.key]}
-                    onChange={e => setStockPrice(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-green-400" />
-                </div>
-              ))}
-            </div>
-          )}
-          {stockPrice.symbol && stockPrice.price ? (() => {
-            const cur   = parseFloat(stockPrice.price) || 0;
-            const prev  = parseFloat(stockPrice.prev)  || 0;
-            const delta = prev ? cur - prev : 0;
-            const pct   = prev ? +((delta / prev) * 100).toFixed(2) : 0;
-            const up    = delta >= 0;
-            return (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-black text-gray-800">{stockPrice.symbol.toUpperCase()}</p>
-                  <p className="text-xs text-gray-400">Harga terakhir</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-lg text-gray-800">Rp {cur.toLocaleString("id-ID")}</p>
-                  {prev > 0 && (
-                    <p className={`text-xs font-bold ${up ? "text-emerald-600" : "text-red-500"}`}>
-                      {up ? "▲" : "▼"} Rp {Math.abs(delta).toLocaleString("id-ID")} ({up ? "+" : ""}{pct}%)
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })() : <p className="text-xs text-gray-400 text-center py-1">Belum ada data saham</p>}
         </div>
       </div>
 

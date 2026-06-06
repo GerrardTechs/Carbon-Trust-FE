@@ -16,14 +16,7 @@ const projIcon = tipe =>
   tipe?.includes("Blue")   ? "🌊" :
   (tipe?.includes("Peat")  || tipe?.includes("Gambut")) ? "🌾" : "🌿";
 
-const MOCK_INBOX = [
-  { id:"msg-001", from:"Borneo Green Alliance", fromFlag:"🇮🇩", projId:"PRJ-001",
-    text:"Terima kasih atas bid Anda! Kami tertarik untuk berdiskusi lebih lanjut mengenai volume pembelian.",
-    time:"2 jam lalu", read:false },
-  { id:"msg-002", from:"Sumatra Peat Restore", fromFlag:"🇮🇩", projId:"PRJ-003",
-    text:"Bid Anda telah kami terima. Apakah Anda bersedia menaikkan bid ke $17.5/t untuk volume 500 ton?",
-    time:"1 hari lalu", read:true },
-];
+const MOCK_INBOX = [];
 
 export function MarketPage({ t, company, projects, setProjects }) {
   const [search,        setSearch]        = useState("");

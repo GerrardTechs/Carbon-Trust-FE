@@ -73,7 +73,7 @@ export default function RootApp() {
       .wb-logout { background: none; border: none; font-size: 13px; font-weight: 700; color: #94a3b8; cursor: pointer; text-align: center; font-family: inherit; text-decoration: underline; transition: color .15s; padding: 4px 0; }
       .wb-logout:hover { color: #dc2626; }
     `;
-    const L = session.lang || "id";
+    const L = session.lang || "en";
     const WB_T = {
       en: { tag:"Session Saved",      headline:"Welcome\nBack!",               sub:"Your account is still active. Continue your carbon activities.",    verified:"✓ Verified",      blockchainReady:"Blockchain Ready",      enter:"Enter Dashboard →",    switch_:"Switch Account / Logout" },
       id: { tag:"Sesi Tersimpan",     headline:"Selamat Datang\nKembali!",     sub:"Akun Anda masih aktif. Lanjutkan aktivitas karbon Anda.",          verified:"✓ Terverifikasi", blockchainReady:"Siap Blockchain",       enter:"Masuk ke Dashboard →", switch_:"Ganti Akun / Logout" },

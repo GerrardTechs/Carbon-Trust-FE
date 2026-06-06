@@ -752,11 +752,7 @@ export const MOCK_PARCELS = [
   { id:"LP-003",name:"Sumatra Mangrove Coast",  type:"mangrove", area:85, status:"flooded", ndvi:0.55,lat:-5.38,lng:105.27,absorptionMonthly:31.88 },
 ];
 export const MOCK_COMPANY = { id:"COMP-001",name:"PT. Nusantara Hijau Tbk",email:"esg@nusantarahijau.co.id",entity:"PT Tbk",bizType:"Manufacturing & Plantation",location:"South Jakarta, Indonesia",walletId:"0xA3f7b82e4c1d0F56789aB3dE4F2c9dC2",walletGenerated:true,esgScore:null,esgStatus:"not_started",totalTransactions:14,removalProject:"REDD+ Kalimantan A" };
-export const MOCK_ALERTS = [
-  { id:"ALT-001",parcelId:"LP-003",type:"critical",message:"MNDWI > 0.42 — Flood confirmed · Sentinel-2",time:new Date().toISOString() },
-  { id:"ALT-002",parcelId:"LP-002",type:"warning", message:"NDVI 0.31 (↓0.52) — Peat drying, high emission risk",time:new Date(Date.now()-1800000).toISOString() },
-  { id:"ALT-003",parcelId:"LP-001",type:"info",    message:"Sensor C-12: CO₂ flux normal, NDVI stable 0.78",time:new Date(Date.now()-3600000).toISOString() },
-];
+export const MOCK_ALERTS = [];
 export const MOCK_PROJECTS = [
   { id:"PRJ-001",company:"Borneo Green Alliance",country:"Indonesia",flag:"🇮🇩",price:18.5,available:3200,type:"Reforestation",verified:true,rating:4.9,ndvi:0.78,absRate:8.5, isLocked: false },
   { id:"PRJ-002",company:"Mekong Solar Co.",country:"Vietnam",flag:"🇻🇳",price:14.2,available:1800,type:"Renewable Energy",verified:true,rating:4.7,ndvi:null,absRate:0, isLocked: false },
