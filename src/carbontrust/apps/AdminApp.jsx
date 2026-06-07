@@ -330,18 +330,38 @@ export default function AdminApp({ onLogout, user }) {
                       </div>
 
                       {/* Stat mini */}
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:16 }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:6, marginTop:16 }}>
                         {[
-                          { label:"Area Lahan",     val: comp.parcelsCount                    },
-                          { label:"Total Serap",    val: `${comp.totalAbsorption ?? 0}t`      },
-                          { label:"Kredit Karbon",  val: (comp.netCredits || 0).toLocaleString(), green: true },
+                          { label:"Parcels",       val: comp.parcelsCount },
+                          { label:"Absorption/mo", val: `${comp.totalAbsorption ?? 0}t` },
+                          { label:"Emission/mo",   val: `${comp.totalEmission ?? 0}t`,  red: true },
+                          { label:"Net Credits",   val: (comp.netCredits || 0).toLocaleString(), green: true },
                         ].map((stat, i) => (
-                          <div key={i} style={{ background:"#f8fafc", borderRadius:16, padding:"10px 8px", textAlign:"center", border:"1px solid #f1f5f9" }}>
-                            <div style={{ fontSize:15, fontWeight:900, color: stat.green ? "#0f766e" : "#1e293b" }}>{stat.val}</div>
-                            <div style={{ fontSize:9, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".06em", marginTop:4 }}>{stat.label}</div>
+                          <div key={i} style={{ background:"#f8fafc", borderRadius:12, padding:"8px 6px", textAlign:"center", border:"1px solid #f1f5f9" }}>
+                            <div style={{ fontSize:13, fontWeight:900, color: stat.green ? "#0f766e" : stat.red ? "#dc2626" : "#1e293b" }}>{stat.val}</div>
+                            <div style={{ fontSize:8, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".06em", marginTop:3 }}>{stat.label}</div>
                           </div>
                         ))}
                       </div>
+                      {comp.emissionScope && (
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:4, marginTop:6 }}>
+                          {[
+                            { label:"Scope 1", val:`${((comp.emissionScope.s1||0)/1000/12).toFixed(1)}t/mo` },
+                            { label:"Scope 2", val:`${((comp.emissionScope.s2||0)/1000/12).toFixed(1)}t/mo` },
+                            { label:"Scope 3", val:`${((comp.emissionScope.s3||0)/1000/12).toFixed(1)}t/mo` },
+                          ].map((sc, i) => (
+                            <div key={i} style={{ background:"#fff1f2", borderRadius:8, padding:"5px 6px", textAlign:"center" }}>
+                              <div style={{ fontSize:11, fontWeight:700, color:"#dc2626" }}>{sc.val}</div>
+                              <div style={{ fontSize:8, color:"#94a3b8", textTransform:"uppercase", marginTop:1 }}>{sc.label}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {comp.lastEmissionUpdate && (
+                        <p style={{ fontSize:9, color:"#94a3b8", marginTop:4 }}>
+                          Last update: {new Date(comp.lastEmissionUpdate).toLocaleDateString()}
+                        </p>
+                      )}
 
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:14, padding:"0 2px" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:6 }}>

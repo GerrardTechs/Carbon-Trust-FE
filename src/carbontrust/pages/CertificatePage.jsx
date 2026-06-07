@@ -34,12 +34,29 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   }, [companyId]);
 
   // Hitung net kredit = total serapan - total emisi dari semua lahan
+  // ── Serapan dari lahan (tCO₂/bulan) ─────────────────────────────────────
   const totalAbs = parseFloat(
     parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0).toFixed(2)
   );
-  const totalEm = parseFloat(
-    parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2)
-  );
+
+  // ── Emisi perusahaan dari CalcPage (Scope 1+2+3) ─────────────────────────
+  // Baca dari localStorage yang disimpan saat user klik "Hitung Emisi" di CalcPage
+  const savedEmission = (() => {
+    try {
+      const raw = localStorage.getItem("carbon_emission_result");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  // total dari CalcPage dalam kg CO₂e → konversi ke tCO₂/bulan
+  const companyEmMonthly = savedEmission
+    ? parseFloat((savedEmission.total / 1000 / 12).toFixed(2))  // kg/yr ÷ 1000 ÷ 12 = t/bln
+    : parseFloat(parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2));
+
+  // Gunakan emisi dari CalcPage jika ada, fallback ke kalkulasi lahan
+  const totalEm     = companyEmMonthly;
+
+  // ── Net Carbon Credit ──────────────────────────────────────────────────────
+  // Net = Serapan - Emisi (per bulan) → × 12 = per tahun
   const netMonthly  = parseFloat((totalAbs - totalEm).toFixed(2));
   const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
   const netCredits  = Math.max(0, Math.floor(netAnnual));

@@ -299,6 +299,14 @@ export function CalcPage({ t = TR.en, companyId }) {
       creditsNeeded: Math.ceil(total / 1000),
     };
     setResult(nextResult);
+    // Simpan ke localStorage agar CertificatePage bisa baca
+    localStorage.setItem("carbon_emission_result", JSON.stringify({
+      total: nextResult.total,
+      s1: nextResult.s1,
+      s2: nextResult.s2,
+      s3: nextResult.s3,
+      savedAt: new Date().toISOString(),
+    }));
 
     if (companyId) {
       const saved = await apiFetch("/emissions/calculate-v2", {
