@@ -197,37 +197,26 @@ export function CalcPage({ t = TR.en, companyId }) {
   const [certOk, setCertOk]     = useState(false);
   const [freightTons, setFreightTons] = useState({ freightRoad: "", freightShip: "" });
 
-  // ── Renewable Offset State ────────────────────────────────────────────────
-  // Panel Surya
-  const [solarPanels,   setSolarPanels]   = useState("");   // jumlah lembar
-  const [solarWp,       setSolarWp]       = useState("");   // Wp per lembar
-  // Biogas
-  const [biogasInputs,  setBiogasInputs]  = useState({
-    organik: "", sapi: "", babi: "", ayam: "", pome: "",
-  });
-  // Proof uploads
-  const [solarProofs,   setSolarProofs]   = useState([]);   // max 3 files
+  // ── Renewable Offset ──────────────────────────────────────────────────────
+  const [solarPanels,   setSolarPanels]   = useState("");
+  const [solarWp,       setSolarWp]       = useState("");
+  const [solarSunHours, setSolarSunHours] = useState("3.5");
+  const [biogasInputs,  setBiogasInputs]  = useState({ organik:"", sapi:"", babi:"", ayam:"", pome:"" });
+  const [solarProofs,   setSolarProofs]   = useState([]);
   const [biogasProofs,  setBiogasProofs]  = useState([]);
 
-  // ── Derived renewable calcs ───────────────────────────────────────────────
-  // Panel Surya → kWh/bulan → kg CO₂e dihindari (offset Scope 2)
-  const solarKwhDay = (() => {
-    const n  = parseFloat(solarPanels) || 0;
-    const wp = parseFloat(solarWp)     || 0;
-    return +(n * wp * 3.5 * 0.75 / 1000).toFixed(3);  // kWh/hari
-  })();
-  const solarKwhMonth  = +(solarKwhDay  * 30).toFixed(2);
-  const solarOffsetKg  = +(solarKwhMonth * 0.87).toFixed(2); // EF PLN ESDM
+  // ── Derived solar ─────────────────────────────────────────────────────────
+  const solarKwhDay   = +(((parseFloat(solarPanels)||0) * (parseFloat(solarWp)||0) * (parseFloat(solarSunHours)||3.5) * 0.75) / 1000).toFixed(3);
+  const solarKwhMonth = +(solarKwhDay * 30).toFixed(2);
+  const solarOffsetKg = +(solarKwhMonth * 0.87).toFixed(2);
 
-  // Biogas → CH4 → tCO₂e/tahun → offset Scope 1
+  // ── Derived biogas ────────────────────────────────────────────────────────
   const BIOGAS_CONV = { organik:0.01, sapi:0.04, babi:0.06, ayam:0.07, pome:28.0 };
-  const biogasM3Ch4 = Object.entries(biogasInputs).reduce((sum, [k, v]) => {
-    return sum + (parseFloat(v) || 0) * (BIOGAS_CONV[k] || 0);
-  }, 0) * 0.60;
+  const biogasM3Ch4    = Object.entries(biogasInputs).reduce((s,[k,v]) => s + (parseFloat(v)||0) * (BIOGAS_CONV[k]||0), 0) * 0.60;
   const biogasTonCh4   = +(biogasM3Ch4 * 0.00067).toFixed(6);
   const biogasTCo2eDay = +(biogasTonCh4 * 28).toFixed(4);
   const biogasTCo2eYr  = +(biogasTCo2eDay * 365).toFixed(3);
-  const biogasOffsetKg = +(biogasTCo2eYr  / 12 * 1000).toFixed(2); // per bulan → kg
+  const biogasOffsetKg = +(biogasTCo2eYr / 12 * 1000).toFixed(2);
 
   // Tab "Total" — tampilkan rincian scope mana yang dipilih (collapse/expand)
   const [totalDetailScope, setTotalDetailScope] = useState(null);
@@ -284,29 +273,18 @@ export function CalcPage({ t = TR.en, companyId }) {
       });
     });
 
-    // ── Kurangi offset energi terbarukan ─────────────────────────────────────
-    // Panel Surya mengurangi Scope 2 (menggantikan listrik PLN)
-    s2 = Math.max(0, s2 - solarOffsetKg);
-    // Biogas mengurangi Scope 1 (menggantikan bahan bakar fosil)
-    s1 = Math.max(0, s1 - biogasOffsetKg);
-
     const total   = +(s1 + s2 + s3).toFixed(2);
+    const totalOffset = +(solarOffsetKg + biogasOffsetKg).toFixed(2);
+    const netEmission = +Math.max(0, total - totalOffset).toFixed(2);
     const leakage = +(s1 * 0.05 + s3 * 0.10).toFixed(2);
 
     const nextResult = {
       total, s1: +s1.toFixed(2), s2: +s2.toFixed(2), s3: +s3.toFixed(2),
+      totalOffset, netEmission, solarOffset: solarOffsetKg, biogasOffset: biogasOffsetKg,
       leakage, breakdown,
       creditsNeeded: Math.ceil(total / 1000),
     };
     setResult(nextResult);
-    // Simpan ke localStorage agar CertificatePage bisa baca
-    localStorage.setItem("carbon_emission_result", JSON.stringify({
-      total: nextResult.total,
-      s1: nextResult.s1,
-      s2: nextResult.s2,
-      s3: nextResult.s3,
-      savedAt: new Date().toISOString(),
-    }));
 
     if (companyId) {
       const saved = await apiFetch("/emissions/calculate-v2", {
@@ -343,7 +321,163 @@ export function CalcPage({ t = TR.en, companyId }) {
   const si = activeScope !== "total" ? SCOPE_INFO[activeScope] : null;
 
   // ─── SCOPE INPUT PANEL ─────────────────────────────────────────────────────
+  function renderOffsetPanel() {
+    return (
+      <div className="flex flex-col gap-4">
+        {result && (
+          <div className="card p-4 bg-teal-50 border-teal-200">
+            <p className="text-xs font-bold text-teal-700 mb-2">Net Carbon: Total Emisi - Total Offset</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { l:"Total Emisi",  v:result.total.toLocaleString()+" kg", c:"#dc2626" },
+                { l:"Total Offset", v:(result.totalOffset||0).toLocaleString()+" kg", c:"#0d9488" },
+                { l:"Net Emisi",    v:(result.netEmission||result.total).toLocaleString()+" kg", c:"#166534" },
+              ].map((item,i) => (
+                <div key={i} className="bg-white rounded-xl p-2.5 text-center">
+                  <p className="font-black text-xs" style={{ color:item.c }}>{item.v}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{item.l}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-teal-600 mt-2">Hitung emisi di Scope 1-3 dulu, lalu input offset.</p>
+          </div>
+        )}
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-2">
+            <span className="text-xl">☀️</span>
+            <div>
+              <p className="text-xs font-bold text-yellow-800">Solar Panel — Offset Scope 2</p>
+              <p className="text-xs text-yellow-600">Listrik sendiri mengurangi pembelian PLN</p>
+            </div>
+          </div>
+          <div className="p-4 flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Jumlah Panel (buah)</label>
+                <input type="number" min="0" placeholder="e.g. 20"
+                  value={solarPanels} onChange={e => setSolarPanels(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-yellow-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Kapasitas/Panel (Wp)</label>
+                <input type="number" min="0" placeholder="e.g. 400"
+                  value={solarWp} onChange={e => setSolarWp(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-yellow-400" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Jam Matahari Efektif (jam/hari)</label>
+                <input type="number" min="0" step="0.1" placeholder="e.g. 3.5"
+                  value={solarSunHours} onChange={e => setSolarSunHours(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-yellow-400" />
+                <p className="text-xs text-gray-400 mt-1">Jam sinar efektif per hari di lokasi Anda</p>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Faktor Efisiensi Sistem</label>
+                <div className="bg-gray-100 rounded-xl px-3 py-2 border border-gray-200">
+                  <p className="font-bold text-sm text-gray-600">0.75 (tetap)</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Persentase daya setelah rugi-rugi kabel, inverter, panas. Standar industri 75%.</p>
+              </div>
+            </div>
+            {solarPanels && solarWp && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5">
+                <div className="grid grid-cols-3 gap-1 mb-1">
+                  {[
+                    { l:"Energi/hari",  v:solarKwhDay+" kWh" },
+                    { l:"Energi/bulan", v:solarKwhMonth+" kWh" },
+                    { l:"Offset",       v:solarOffsetKg+" kg/bln" },
+                  ].map((row,i) => (
+                    <div key={i} className="bg-white rounded-lg p-2 text-center">
+                      <p className="font-black text-xs text-yellow-700">{row.v}</p>
+                      <p className="text-xs text-gray-400">{row.l}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs font-bold text-green-700">Offset: {solarOffsetKg} kg CO2e/bulan dari Scope 2</p>
+              </div>
+            )}
+            <label className="flex items-center gap-3 border-2 border-dashed border-yellow-300 rounded-xl p-3 cursor-pointer hover:bg-yellow-50">
+              <span className="text-2xl">📷</span>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-gray-700">
+                  {solarProofs.length > 0 ? solarProofs.length+" file" : "Upload bukti (foto panel / inverter)"}
+                </p>
+                <p className="text-xs text-gray-400">JPG / PNG / PDF</p>
+              </div>
+              <input type="file" multiple accept="image/*,.pdf" className="hidden"
+                onChange={e => setSolarProofs(Array.from(e.target.files).slice(0,3))} />
+            </label>
+          </div>
+        </div>
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 bg-green-50 border-b border-green-100 flex items-center gap-2">
+            <span className="text-xl">♻️</span>
+            <div>
+              <p className="text-xs font-bold text-green-800">Biogas — Offset Scope 1</p>
+              <p className="text-xs text-green-600">Limbah organik menggantikan bahan bakar fosil</p>
+            </div>
+          </div>
+          <div className="p-4 flex flex-col gap-3">
+            {[
+              { key:"organik", label:"Sampah Organik",      conv:0.01  },
+              { key:"sapi",    label:"Kotoran Sapi",        conv:0.04  },
+              { key:"babi",    label:"Kotoran Babi",        conv:0.06  },
+              { key:"ayam",    label:"Kotoran Ayam",        conv:0.07  },
+              { key:"pome",    label:"POME (Limbah Sawit)", conv:28.00 },
+            ].map(row => {
+              const mass = parseFloat(biogasInputs[row.key]) || 0;
+              const vol  = +(mass * row.conv).toFixed(4);
+              return (
+                <div key={row.key}>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-gray-700">{row.label}</label>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">x {row.conv} m3/kg</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="number" min="0" placeholder="0"
+                      value={biogasInputs[row.key]}
+                      onChange={e => setBiogasInputs(prev => ({ ...prev, [row.key]: e.target.value }))}
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
+                    <span className="bg-gray-100 rounded-xl px-3 flex items-center text-xs text-gray-500">kg</span>
+                  </div>
+                  {mass > 0 && (
+                    <p className="text-xs text-green-600 mt-1">{mass} x {row.conv} = <strong>{vol} m3 CH4</strong></p>
+                  )}
+                </div>
+              );
+            })}
+            {Object.values(biogasInputs).some(v => parseFloat(v) > 0) && (
+              <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 text-xs text-green-700">
+                <div className="flex justify-between"><span>Total CH4 (x60%)</span><strong>{biogasM3Ch4.toFixed(4)} m3</strong></div>
+                <div className="flex justify-between"><span>Massa CH4</span><strong>{biogasTonCh4} ton</strong></div>
+                <div className="flex justify-between"><span>Serapan harian (xGWP28)</span><strong>{biogasTCo2eDay} tCO2e/hari</strong></div>
+                <div className="flex justify-between font-bold mt-1 pt-1 border-t border-green-200">
+                  <span>Serapan tahunan</span><span>{biogasTCo2eYr} tCO2e/thn</span>
+                </div>
+                <p className="font-bold text-green-800 mt-1">Offset: {biogasOffsetKg} kg CO2e/bulan dari Scope 1</p>
+              </div>
+            )}
+            <label className="flex items-center gap-3 border-2 border-dashed border-green-300 rounded-xl p-3 cursor-pointer hover:bg-green-50">
+              <span className="text-2xl">📷</span>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-gray-700">
+                  {biogasProofs.length > 0 ? biogasProofs.length+" file" : "Upload bukti (foto reaktor / meter gas)"}
+                </p>
+                <p className="text-xs text-gray-400">JPG / PNG / PDF</p>
+              </div>
+              <input type="file" multiple accept="image/*,.pdf" className="hidden"
+                onChange={e => setBiogasProofs(Array.from(e.target.files))} />
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   function renderScopeInput() {
+    if (activeScope === "offset") return renderOffsetPanel();
     return (
       <>
         {/* Scope description */}
@@ -439,192 +573,6 @@ export function CalcPage({ t = TR.en, companyId }) {
             )}
           </div>
         ))}
-        {/* ── PANEL SURYA (tampil hanya di Scope 2) ── */}
-        {activeScope === 2 && (
-          <div className="card overflow-hidden">
-            <div className="px-4 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-2">
-              <span className="text-xl">☀️</span>
-              <div>
-                <p className="text-xs font-bold text-yellow-800">Solar Panel — Offset Scope 2</p>
-                <p className="text-xs text-yellow-600">Produksi listrik sendiri mengurangi pembelian PLN</p>
-              </div>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Jumlah Panel (buah)</label>
-                  <input type="number" min="0" placeholder="e.g. 20"
-                    value={solarPanels} onChange={e => setSolarPanels(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-yellow-400" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Kapasitas/Panel (Wp)</label>
-                  <input type="number" min="0" placeholder="e.g. 400"
-                    value={solarWp} onChange={e => setSolarWp(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-yellow-400" />
-                </div>
-              </div>
-              {/* Locked system values */}
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { l:"Jam Matahari Efektif", v:"3.5 jam",  note:"Standar Indonesia" },
-                  { l:"Faktor Efisiensi Sistem", v:"0.75",  note:"Losses daya" },
-                ].map((item, i) => (
-                  <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 flex flex-col">
-                    <span className="text-xs text-gray-400">{item.l}</span>
-                    <span className="font-bold text-sm text-gray-700">{item.v}</span>
-                    <span className="text-xs text-gray-400">{item.note}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Live calc */}
-              {solarPanels && solarWp && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 flex flex-col gap-1">
-                  <p className="text-xs font-bold text-yellow-800">📊 Estimasi Otomatis</p>
-                  <div className="grid grid-cols-3 gap-1 mt-1">
-                    {[
-                      { l:"Energi/hari",  v:`${solarKwhDay} kWh` },
-                      { l:"Energi/bulan", v:`${solarKwhMonth} kWh` },
-                      { l:"Offset CO₂",   v:`${solarOffsetKg} kg CO₂e/bln` },
-                    ].map((row, i) => (
-                      <div key={i} className="bg-white rounded-lg p-2 text-center">
-                        <p className="font-black text-xs text-yellow-700">{row.v}</p>
-                        <p className="text-xs text-gray-400">{row.l}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-yellow-700 mt-1">
-                    Rumus: {solarPanels} panel × {solarWp} Wp × 3.5 jam × 0.75 ÷ 1000 = {solarKwhDay} kWh/hari
-                  </p>
-                  <p className="text-xs font-bold text-green-700">
-                    ✅ {solarOffsetKg} kg CO₂e/bulan akan dikurangi dari Scope 2 Anda
-                  </p>
-                </div>
-              )}
-              {/* Upload bukti */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Upload Bukti (Foto Panel / kWh Meter)</label>
-                <label className="flex items-center gap-3 border-2 border-dashed border-yellow-300 rounded-xl p-3 cursor-pointer hover:bg-yellow-50">
-                  <span className="text-2xl">📷</span>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-gray-700">
-                      {solarProofs.length > 0 ? `${solarProofs.length} file dipilih` : "Foto panel / inverter / sertifikat produk"}
-                    </p>
-                    <p className="text-xs text-gray-400">JPG / PNG / PDF — maks 3 file</p>
-                  </div>
-                  <input type="file" multiple accept="image/*,.pdf" className="hidden"
-                    onChange={e => setSolarProofs(Array.from(e.target.files).slice(0,3))} />
-                </label>
-                {solarProofs.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {solarProofs.map((f,i) => (
-                      <span key={i} className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full font-bold">{f.name}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── BIOGAS (tampil hanya di Scope 1) ── */}
-        {activeScope === 1 && (
-          <div className="card overflow-hidden">
-            <div className="px-4 py-3 bg-green-50 border-b border-green-100 flex items-center gap-2">
-              <span className="text-xl">♻️</span>
-              <div>
-                <p className="text-xs font-bold text-green-800">Biogas — Offset Scope 1</p>
-                <p className="text-xs text-green-600">Produksi biogas dari limbah organik menggantikan bahan bakar fosil</p>
-              </div>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <p className="text-xs text-gray-500">Input massa limbah per jenis — faktor konversi CH₄ diterapkan otomatis</p>
-              {[
-                { key:"organik", label:"Sampah Organik",     conv:"0.01", unit:"m³/kg" },
-                { key:"sapi",    label:"Kotoran Sapi",       conv:"0.04", unit:"m³/kg" },
-                { key:"babi",    label:"Kotoran Babi",       conv:"0.06", unit:"m³/kg" },
-                { key:"ayam",    label:"Kotoran Ayam",       conv:"0.07", unit:"m³/kg" },
-                { key:"pome",    label:"POME (Limbah Sawit)",conv:"28.00",unit:"m³/kg" },
-              ].map(row => {
-                const mass = parseFloat(biogasInputs[row.key]) || 0;
-                const vol  = +(mass * parseFloat(row.conv)).toFixed(4);
-                return (
-                  <div key={row.key}>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-gray-700">{row.label}</label>
-                      <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                        × {row.conv} {row.unit}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <input type="number" min="0" placeholder="0"
-                        value={biogasInputs[row.key]}
-                        onChange={e => setBiogasInputs(prev => ({ ...prev, [row.key]: e.target.value }))}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400" />
-                      <span className="bg-gray-100 rounded-xl px-3 flex items-center text-xs font-medium text-gray-500">kg</span>
-                    </div>
-                    {mass > 0 && (
-                      <p className="text-xs text-green-600 mt-1 bg-green-50 rounded-lg px-2 py-1">
-                        {mass} kg × {row.conv} = <strong>{vol} m³ CH₄ potensial</strong>
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Summary kalkulasi */}
-              {Object.values(biogasInputs).some(v => parseFloat(v) > 0) && (
-                <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
-                  <p className="text-xs font-bold text-green-800 mb-2">📊 Kalkulasi Otomatis</p>
-                  <div className="flex flex-col gap-1 text-xs text-green-700">
-                    <div className="flex justify-between">
-                      <span>Total Volume CH₄ (×60% kandungan)</span>
-                      <strong>{biogasM3Ch4.toFixed(4)} m³</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Massa CH₄ (×0.00067 ton/m³)</span>
-                      <strong>{biogasTonCh4} ton</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Serapan harian (×GWP 28)</span>
-                      <strong>{biogasTCo2eDay} tCO₂e/hari</strong>
-                    </div>
-                    <div className="flex justify-between border-t border-green-200 pt-1 mt-1">
-                      <span className="font-bold">Serapan tahunan</span>
-                      <strong className="text-green-800">{biogasTCo2eYr} tCO₂e/tahun</strong>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-green-800 mt-2 pt-2 border-t border-green-200">
-                    ✅ {biogasOffsetKg} kg CO₂e/bulan akan dikurangi dari Scope 1 Anda
-                  </p>
-                </div>
-              )}
-
-              {/* Upload bukti */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Upload Bukti (Foto Instalasi / Meter Gas)</label>
-                <label className="flex items-center gap-3 border-2 border-dashed border-green-300 rounded-xl p-3 cursor-pointer hover:bg-green-50">
-                  <span className="text-2xl">📷</span>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-gray-700">
-                      {biogasProofs.length > 0 ? `${biogasProofs.length} file dipilih` : "Foto reaktor / volume meter / dokumen pendukung"}
-                    </p>
-                    <p className="text-xs text-gray-400">JPG / PNG / PDF</p>
-                  </div>
-                  <input type="file" multiple accept="image/*,.pdf" className="hidden"
-                    onChange={e => setBiogasProofs(Array.from(e.target.files))} />
-                </label>
-                {biogasProofs.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {biogasProofs.map((f,i) => (
-                      <span key={i} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-bold">{f.name}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </>
     );
   }
@@ -774,30 +722,6 @@ export function CalcPage({ t = TR.en, companyId }) {
           </p>
         </div>
 
-
-        {/* ── Disclaimer akurasi ── */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-bold text-amber-700 mb-1">📊 Accuracy Disclaimer</p>
-          <div className="flex flex-col gap-1">
-            {[
-              { scope:"Scope 1 — Direct",      level:"High (±5%)",   color:"#16a34a", note:"Accurate if real fuel volume is entered" },
-              { scope:"Scope 2 — Energy",       level:"High (±5%)",   color:"#16a34a", note:"Based on verified ESDM grid emission factor" },
-              { scope:"Scope 3 — Value Chain",  level:"Medium (±20%)",color:"#ca8a04", note:"Uses industry average estimates — high uncertainty" },
-            ].map((row, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-xs font-bold mt-0.5" style={{ color:row.color, minWidth:70 }}>{row.level}</span>
-                <div>
-                  <p className="text-xs font-bold text-gray-700">{row.scope}</p>
-                  <p className="text-xs text-gray-500">{row.note}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-amber-600 mt-2 pt-2 border-t border-amber-200">
-            This calculation is <strong>indicative and self-reported</strong>. It has not been audited by a third party. For regulatory reporting, use an accredited verifier.
-          </p>
-        </div>
-
         {/* ── Hitung ulang ── */}
         <button
           onClick={() => { setScope(1); setResult(null); setTotalDetailScope(null); }}
@@ -838,7 +762,18 @@ export function CalcPage({ t = TR.en, companyId }) {
             Scope {segItem}
           </button>
         ))}
-        {/* Tab Total — highlight beda jika sudah ada hasil */}
+        <button
+          onClick={() => setScope("offset")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeScope === "offset"
+              ? "text-white shadow-md"
+              : "bg-white border border-gray-200 text-gray-600"
+          }`}
+          style={activeScope === "offset" ? { background: "#0d9488" } : {}}
+        >
+          Offset
+        </button>
+        {/* Tab Total */}
         <button
           onClick={() => setScope("total")}
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border-2 ${

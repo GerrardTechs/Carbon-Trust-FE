@@ -52,8 +52,10 @@ export function CertificatePage({ t, parcels, company, companyId }) {
     ? parseFloat((savedEmission.total / 1000 / 12).toFixed(2))  // kg/yr ÷ 1000 ÷ 12 = t/bln
     : parseFloat(parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2));
 
-  // Gunakan emisi dari CalcPage jika ada, fallback ke kalkulasi lahan
-  const totalEm     = companyEmMonthly;
+  // Gunakan netEmission (sudah dikurangi offset) jika tersedia
+  const totalEm = savedEmission?.netEmission
+    ? parseFloat((savedEmission.netEmission / 1000 / 12).toFixed(2))  // net kg/yr → t/bln
+    : companyEmMonthly;
 
   // ── Net Carbon Credit ──────────────────────────────────────────────────────
   // Net = Serapan - Emisi (per bulan) → × 12 = per tahun
@@ -112,11 +114,11 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         "═══════════════════════════════════════════",
       ].join("\n");
 
-      const blob = new Blob([content], { type: "text/plain" });
+      const blob = new Blob([content], { type: "application/pdf" });
       const url  = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href     = url;
-      anchor.download = `${certNo}.txt`;
+      anchor.download = `${certNo}.pdf`;
       anchor.click();
       URL.revokeObjectURL(url);
       setDownloading(false);
@@ -241,7 +243,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
           ? <><Spinner /> Generating Certificate...</>
           : downloaded
           ? <>✅ Certificate Downloaded</>
-          : <><Ic.Dl /> Download Sertifikat (.txt)</>
+          : <><Ic.Dl /> Download Sertifikat (.pdf)</>
         }
       </button>
     </div>
