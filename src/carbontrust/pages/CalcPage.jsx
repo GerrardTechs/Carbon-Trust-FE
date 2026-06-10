@@ -314,8 +314,7 @@ export function CalcPage({ t = TR.en, companyId }) {
   }
 
   const scopeGroups = useMemo(
-    () => activeScope !== "total" ? groupByCategory(SCOPE_KEYS[activeScope]) : {},
-    [activeScope]
+    () => (activeScope !== "total" && activeScope !== "offset") ? groupByCategory(SCOPE_KEYS[activeScope]) : {},    [activeScope]
   );
 
   const si = activeScope !== "total" ? SCOPE_INFO[activeScope] : null;
