@@ -196,7 +196,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
             email: userData.email,
             username: userData.username,
             password: userData.password,
-            role,
+            role: role,
             phone: userData.phone,
             location: userData.location,
           }).then(r => r.success) : null}
