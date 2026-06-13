@@ -88,8 +88,8 @@ export default function RootApp() {
           <div className="wb-top">
             <div className="wb-logo-ring">
               <img src="/logo_depan.svg" alt="CarbonTrust Logo" />
-            </div>
             <span className="wb-tag">{wb.tag}</span>
+            </div>
             <h2 className="wb-headline">{wb.headline}</h2>
             <p className="wb-name">{displayName}</p>
             <p className="wb-sub">{wb.sub}</p>
