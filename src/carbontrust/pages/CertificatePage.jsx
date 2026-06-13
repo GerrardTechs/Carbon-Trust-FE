@@ -34,10 +34,15 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   }, [companyId]);
 
   // Hitung net kredit = total serapan - total emisi dari semua lahan
-  // ── Serapan dari lahan (tCO₂/bulan) ─────────────────────────────────────
-  const totalAbs = parseFloat(
-    parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0).toFixed(2)
-  );
+  // ── Serapan dari AbsorbPage (localStorage) ────────────────────────────────
+  const savedAbsorb = (() => {
+    try { return JSON.parse(localStorage.getItem('carbon_absorb_result') || 'null'); }
+    catch { return null; }
+  })();
+  // Fallback ke kalkulasi parcel jika AbsorbPage belum diisi
+  const totalAbs = savedAbsorb?.totalAbsorbKg != null
+    ? parseFloat((savedAbsorb.totalAbsorbKg / 1000 / 12 * 12).toFixed(2)) // kg/bln → t/bln (× 12 = t/thn)
+    : parseFloat(parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0).toFixed(2));
 
   // ── Emisi perusahaan dari CalcPage (Scope 1+2+3) ─────────────────────────
   // Baca dari localStorage yang disimpan saat user klik "Hitung Emisi" di CalcPage

@@ -60,7 +60,7 @@ export async function apiFetch(path, opts = {}) {
 export const TR = {
   en: {
     flag:"🇺🇸", label:"English",
-    nav:{ home:"Home", market:"Carbon Bursa", calc:"Total Emissions", land:"Carbon Absorption", verify:"Verification", profile:"Profile", tx:"Transaction" },
+    nav:{ home:"Home", absorb:"Carbon Absorption", market:"Carbon Bursa", calc:"Total Emissions", absorb:"Carbon Absorption", verify:"Verification", profile:"Profile", tx:"Transaction" },
     dash:{
       greeting:"Welcome back", tagline:"Welcome Back!",
       netCarbon:"Net Carbon Balance", totalEm:"Total Emissions", totalAbs:"Total Absorption",
@@ -164,7 +164,7 @@ ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
   },
   id: {
     flag: "🇮🇩", label: "Indonesia",
-    nav: { home: "Beranda", market: "Bursa Karbon", calc: "Total Emisi", land: "Serapan Karbon", verify: "Verifikasi", profile: "Profil", tx: "Transaksi" },
+    nav: { home: "Beranda", absorb: "Serapan Karbon", market: "Bursa Karbon", calc: "Total Emisi", absorb: "Serapan Karbon", verify: "Verifikasi", profile: "Profil", tx: "Transaksi" },
     dash: {
       greeting: "Selamat datang", tagline: "Valid · Real-Time · Bebas Fraud",
       netCarbon: "Saldo Karbon Bersih", totalEm: "Total Emisi", totalAbs: "Total Serapan",
@@ -268,7 +268,7 @@ ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
   },
   tr: {
     flag: "🇹🇷", label: "Türkçe",
-    nav: { home: "Ana Sayfa", market: "Karbon Borsası", calc: "Toplam Emisyon", land: "Karbon Emilimi", verify: "Doğrula", profile: "Profil", tx: "İşlemler" },
+    nav: { home: "Ana Sayfa", absorb: "Karbon Emilimi", market: "Karbon Borsası", calc: "Toplam Emisyon", absorb: "Karbon Emilimi", verify: "Doğrula", profile: "Profil", tx: "İşlemler" },
     dash: {
       greeting: "Hoş geldiniz", tagline: "Geçerli · Gerçek Zamanlı · Dolandırıcılık İçermez",
       netCarbon: "Net Karbon", totalEm: "Toplam Emisyon", totalAbs: "Toplam Absorpsiyon",
@@ -372,7 +372,7 @@ ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
   },
   zh: {
     flag:"🇨🇳", label:"中文",
-    nav:{ home:"首页",market:"碳交易所",calc:"总排放量",land:"碳吸收",verify:"核查",profile:"企业",tx:"交易" },
+    nav:{ home:"首页",absorb:"碳吸收",market:"碳交易所",calc:"总排放量",absorb:"碳吸收",verify:"核查",profile:"企业",tx:"交易" },
     dash:{ greeting:"欢迎回来",tagline:"有效 · 实时 · 无欺诈",netCarbon:"净碳余额",totalEm:"总排放量",totalAbs:"总吸收量",credits:"碳信用额度",creditsUSD:"投资组合价值",liveIoT:"实时物联网传感器",history:"历史",alerts:"AI检测与预警",dismiss:"关闭",myProjects:"我的活跃项目",seeAll:"查看所有土地 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"单位" },
     land:{ title:"土地所有权",addParcel:"+ 添加地块",area:"面积 (ha)",type:"土地类型",name:"地块名称",lat:"纬度",lng:"经度",depth:"泥炭深度 (m)",simulate:"模拟条件",viewAll:"所有土地地块",stockFormula:"碳储量公式",types:{forest:"森林",peatland:"泥炭地",mangrove:"红树林",agricultural:"农业",industrial:"工业"},status:{healthy:"健康",flooded:"洪涝",degraded:"退化",burned:"火灾",drying:"泥炭干燥"},alerts:{flooded:"🌊 检测到洪涝",peatland_degraded:"⚠️ 泥炭退化",burned:"🔥 火灾检测",drying:"🌡️ 泥炭干燥"} },
     calc:{ title:"碳排放计算器",scope1:"范围1",scope2:"范围2",scope3:"范围3",calculate:"计算排放量",totalEm:"总排放量",offsetNeeded:"所需碳信用",leakage:"泄漏估算",ref:"基于IPCC 2006",breakdownTitle:"按来源细分" },
@@ -385,7 +385,7 @@ ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
   },
   ko: {
     flag:"🇰🇷", label:"한국어",
-    nav:{ home:"홈",market:"탄소거래소",calc:"총배출량",land:"탄소흡수",verify:"검증",profile:"기업",tx:"거래" },
+    nav:{ home:"홈",absorb:"탄소흡수",market:"탄소거래소",calc:"총배출량",absorb:"탄소흡수",verify:"검증",profile:"기업",tx:"거래" },
     dash:{ greeting:"환영합니다",tagline:"유효 · 실시간 · 사기없음",netCarbon:"순탄소 잔액",totalEm:"총 배출량",totalAbs:"총 흡수량",credits:"탄소 크레딧",creditsUSD:"포트폴리오 가치",liveIoT:"실시간 IoT 센서",history:"기록",alerts:"AI 감지 및 경보",dismiss:"닫기",myProjects:"내 활성 프로젝트",seeAll:"모든 토지 보기 →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"단위" },
     land:{ title:"토지 소유권",addParcel:"+ 토지 추가",area:"면적 (ha)",type:"토지 유형",name:"필지 이름",lat:"위도",lng:"경도",depth:"이탄 깊이 (m)",simulate:"조건 시뮬레이션",viewAll:"모든 토지 필지",stockFormula:"탄소 저장량 공식",types:{forest:"산림",peatland:"이탄지",mangrove:"맹그로브",agricultural:"농업",industrial:"산업"},status:{healthy:"정상",flooded:"침수",degraded:"훼손",burned:"화재",drying:"이탄 건조"},alerts:{flooded:"🌊 홍수 감지",peatland_degraded:"⚠️ 이탄 훼손",burned:"🔥 화재 감지",drying:"🌡️ 이탄 건조"} },
     calc:{ title:"탄소 배출 계산기",scope1:"범위 1",scope2:"범위 2",scope3:"범위 3",calculate:"배출량 계산",totalEm:"총 배출량",offsetNeeded:"필요 크레딧",leakage:"누출 추정",ref:"IPCC 2006 기반",breakdownTitle:"소스별 분류" },
@@ -398,7 +398,7 @@ ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
   },
   ja: {
     flag:"🇯🇵", label:"日本語",
-    nav:{ home:"ホーム",market:"カーボンバーサ",calc:"総排出量",land:"碳吸收",verify:"検証",profile:"企業",tx:"取引" },
+    nav:{ home:"ホーム",absorb:"炭素吸収",market:"カーボンバーサ",calc:"総排出量",absorb:"碳吸收",verify:"検証",profile:"企業",tx:"取引" },
     dash:{ greeting:"おかえりなさい",tagline:"有効 · リアルタイム · 不正なし",netCarbon:"純炭素残高",totalEm:"総排出量",totalAbs:"総吸収量",credits:"カーボンクレジット",creditsUSD:"ポートフォリオ価値",liveIoT:"リアルタイムIoTセンサー",history:"履歴",alerts:"AI検知・アラート",dismiss:"閉じる",myProjects:"アクティブプロジェクト",seeAll:"全土地を見る →",units:{t:"tCO₂e",kt:"ktCO₂e",Mt:"MtCO₂e",kg:"kg CO₂e"},unitLabel:"単位" },
     land:{ title:"土地所有権",addParcel:"+ 土地追加",area:"面積 (ha)",type:"土地種別",name:"区画名",lat:"緯度",lng:"経度",depth:"泥炭深度 (m)",simulate:"条件シミュレーション",viewAll:"全土地区画",stockFormula:"炭素貯留量算式",types:{forest:"森林",peatland:"泥炭地",mangrove:"マングローブ",agricultural:"農業",industrial:"工業"},status:{healthy:"健全",flooded:"浸水",degraded:"劣化",burned:"火災",drying:"泥炭乾燥"},alerts:{flooded:"🌊 洪水検知",peatland_degraded:"⚠️ 泥炭劣化",burned:"🔥 火災検知",drying:"🌡️ 泥炭乾燥"} },
     calc:{ title:"排出量計算ツール",scope1:"スコープ1",scope2:"スコープ2",scope3:"スコープ3",calculate:"排出量を計算",totalEm:"総排出量",offsetNeeded:"必要クレジット",leakage:"リーケージ推定",ref:"IPCC 2006基準",breakdownTitle:"ソース別内訳" },
@@ -593,23 +593,6 @@ export const EF = {
   // ── Use of Sold Products & End-of-Life ───────────────────────────────────
   useSoldProducts:   { ef:0.5,   unit:"unit",  scope:3, category:"downstream_use", source:"Penggunaan Produk Terjual (avg estimasi)" },
   eolSoldProducts:   { ef:0.3,   unit:"ton",   scope:3, category:"downstream_use", source:"End-of-Life Produk Terjual" },
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // ENERGI TERBARUKAN (tidak menambah emisi — nilai EF = 0, dicatat sebagai offset)
-  // Sumber: IPCC 2006 Vol.2 Ch.2 Table 2.2 (biogenic tidak dihitung sebagai emisi net)
-  // ══════════════════════════════════════════════════════════════════════════
-  renewWoodWaste:    { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Kayu / Wood Waste (biogenic — net zero)" },
-  renewBlackLiquor:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Black Liquor / Sulphite Lyes (biogenic)" },
-  renewSolidBiomass: { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Solid Biomass lainnya (biogenic)" },
-  renewCharcoal:     { ef:0,     unit:"kg",    scope:1, category:"renewable", source:"Charcoal / Arang (biogenic)" },
-  renewBiogasoline:  { ef:0,     unit:"liter", scope:1, category:"renewable", source:"Biogasoline (biogenic)" },
-  renewBiodiesel:    { ef:0,     unit:"liter", scope:1, category:"renewable", source:"Biodiesel (biogenic)" },
-  renewLiquidBiofuel:{ ef:0,     unit:"liter", scope:1, category:"renewable", source:"Liquid Biofuel lainnya (biogenic)" },
-  renewLandfillGas:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Landfill Gas (biogenic)" },
-  renewSludgeGas:    { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Sludge Gas (biogenic)" },
-  renewOtherBiogas:  { ef:0,     unit:"GJ",    scope:1, category:"renewable", source:"Biogas lainnya (biogenic)" },
-  renewMuniWaste:    { ef:0,     unit:"ton",   scope:1, category:"renewable", source:"Municipal Waste — fraksi biomassa" },
-  renewPeat:         { ef:0.38,  unit:"GJ",    scope:1, category:"renewable", source:"Peat / Gambut (IPCC: 0.38 kgCO₂e/GJ — dicatat terpisah)" },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -704,7 +687,6 @@ export const EF_CATEGORIES = {
   commute:         "Komuter Karyawan",
   waste:           "Limbah Operasional",
   downstream_use:  "Penggunaan & End-of-Life Produk",
-  renewable:       "Energi Terbarukan (Biogenik)",
 };
 
 // ─── UTILS ─────────────────────────────────────────────────────────────────
@@ -842,6 +824,7 @@ export const Ic = {
   Star:     () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>,
   Settings: () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" /></svg>,
   Leaf:     ({ className }) => <svg viewBox="0 0 24 24" fill="currentColor" className={className || "w-4 h-4"}><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 5.5-11 4z" /></svg>,
+  Absorb:   () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 5.5-11 4z"/></svg>,
   Tx:       () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" /></svg>,
   Chart:    () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" /></svg>,
   Map:      () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z" /></svg>,
@@ -919,11 +902,11 @@ export function Header({ alerts, onDismiss, lang, setLang, t }) {
 // ─── BOTTOM NAV ────────────────────────────────────────────────────────────
 export function BottomNav({ page, setPage, t }) {
   const items = [
-    { id: "home",    ic: "Home",    l: t.nav.home },
-    { id: "land",    ic: "Land",    l: t.nav.land },
-    { id: "calc",    ic: "Calc",    l: t.nav.calc },
-    { id: "market",  ic: "Market",  l: t.nav.market },
-    { id: "profile", ic: "Profile", l: t.nav.profile },
+    { id: "home",   ic: "Home",    l: t.nav.home },
+    { id: "calc",   ic: "Calc",    l: t.nav.calc },
+    { id: "absorb", ic: "Absorb",  l: t.nav.absorb || "Serapan" },
+    { id: "market", ic: "Market",  l: t.nav.market },
+    { id: "profile",ic: "Profile", l: t.nav.profile },
   ];
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 shadow-lg">

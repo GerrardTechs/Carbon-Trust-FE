@@ -21,6 +21,7 @@ import {TxPage}           from "../pages/TxPage.jsx";
 import {VerifyPage}       from "../pages/VerifyPage.jsx";
 import {ProfilePage}      from "../pages/ProfilePage.jsx";
 import {CertificatePage}  from "../pages/CertificatePage.jsx";
+import {AbsorbPage}       from "../pages/AbsorbPage.jsx";
 
 export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
@@ -102,7 +103,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   const renderPage = () => {
     switch (page) {
       case "home":        return <Dashboard    parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} activeTx={activeTx} qStatus={qStatus} />;
-      case "land":        return <LandPage     parcels={parcels} setParcels={setParcels} t={t} lang={lang} setPage={setPage} companyId={companyId} />;
+      case "absorb":      return <AbsorbPage   t={t} setPage={setPage} />;
       case "calc":        return <CalcPage     t={t} setPage={setPage} companyId={companyId} />;
       case "tx":          return <TxPage       tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} parcels={parcels} company={company} />;
       case "market":      return <MarketPage   t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;
