@@ -14,7 +14,6 @@ import {
 } from "../shared.jsx";
 
 import {Dashboard}        from "../pages/Dashboard.jsx";
-import {LandPage}         from "../pages/LandPage.jsx";
 import {CalcPage}         from "../pages/CalcPage.jsx";
 import {MarketPage}       from "../pages/MarketPage.jsx";
 import {TxPage}           from "../pages/TxPage.jsx";
