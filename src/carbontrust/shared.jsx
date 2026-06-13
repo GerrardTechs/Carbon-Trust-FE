@@ -685,7 +685,7 @@ export const MOCK_PARCELS = [
   { id:"LP-002",name:"Riau Peatland B",         type:"peatland", area:320,status:"degraded",ndvi:0.31,lat:0.52,lng:101.45,absorptionMonthly:-400.0 },
   { id:"LP-003",name:"Sumatra Mangrove Coast",  type:"mangrove", area:85, status:"flooded", ndvi:0.55,lat:-5.38,lng:105.27,absorptionMonthly:31.88 },
 ];
-export const MOCK_COMPANY = { id:"COMP-001",name:"PT. Nusantara Hijau Tbk",email:"esg@nusantarahijau.co.id",entity:"PT Tbk",bizType:"Manufacturing & Plantation",location:"South Jakarta, Indonesia",walletId:"0xA3f7b82e4c1d0F56789aB3dE4F2c9dC2",walletGenerated:true,esgScore:null,esgStatus:"not_started",totalTransactions:14,removalProject:"REDD+ Kalimantan A" };
+export const MOCK_COMPANY = { id:"COMP-001",name:"PT. Nusantara Hijau Tbk",email:"contact@nusantarahijau.co.id",entity:"PT Tbk",bizType:"Manufacturing & Plantation",location:"South Jakarta, Indonesia",verified:false,totalTransactions:14,removalProject:"REDD+ Kalimantan A" };
 export const MOCK_ALERTS = [];
 export const MOCK_PROJECTS = [
   { id:"PRJ-001",company:"Borneo Green Alliance",country:"Indonesia",flag:"🇮🇩",price:18.5,available:3200,type:"Reforestation",verified:true,rating:4.9,ndvi:0.78,absRate:8.5, isLocked: false },

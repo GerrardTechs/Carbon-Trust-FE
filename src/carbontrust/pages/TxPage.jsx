@@ -14,7 +14,7 @@ const STEPS = [
   { key:"created",  icon:"📝", label:"Penawaran Diajukan",       desc:"Bid dikirim ke seller, menunggu konfirmasi." },
   { key:"escrow",   icon:"🔒", label:"Dana Masuk Escrow",        desc:"Dana terkunci di sistem — tidak bisa ditarik sepihak." },
   { key:"verified", icon:"🛰️", label:"Kredit Diverifikasi",      desc:"Satelit & IoT mengkonfirmasi serapan lahan seller." },
-  { key:"released", icon:"💸", label:"Selesai — Dana Dilepas",   desc:"Kredit berpindah, dana diteruskan ke seller. Tercatat blockchain." },
+  { key:"released", icon:"💸", label:"Selesai — Dana Dilepas",   desc:"Kredit berpindah, dana diteruskan ke seller. Tercatat di sistem MRV." },
 ];
 
 const MOCK_HISTORY = [
@@ -258,7 +258,7 @@ export function TxPage({ tx, setTx, t, lang, setPage, parcels = [], company }) {
                         )}
                         {isDone && i === 0 && (
                           <p className="text-xs text-gray-400 mt-1">
-                            Block: <span className="font-mono">{tx.blockHash || "0x7af2...c90e"}</span>
+                            Ref: <span className="font-mono">{tx.refId || tx.id || "MRV-001"}</span>
                           </p>
                         )}
                       </div>
@@ -289,12 +289,12 @@ export function TxPage({ tx, setTx, t, lang, setPage, parcels = [], company }) {
                 <div className="card p-4 bg-emerald-50 border-emerald-300">
                   <p className="text-sm font-bold text-emerald-800 mb-1">🎉 Transaksi Selesai!</p>
                   <p className="text-xs text-emerald-700">
-                    Kredit karbon sudah berpindah ke akun Anda dan tercatat secara permanen di blockchain.
+                    Kredit karbon sudah berpindah ke akun Anda dan tercatat secara permanen melalui verifikasi MRV.
                   </p>
                   <div className="mt-3 p-2 bg-white rounded-lg">
-                    <p className="text-xs text-gray-500">Block Hash</p>
+                    <p className="text-xs text-gray-500">Referensi MRV</p>
                     <p className="font-mono text-xs text-gray-700 break-all">
-                      {tx.blockHash || "0x7af2a7f2f6a4b6d08a9935a28ab6c90e3bc9d12a"}
+                      {tx.refId || tx.id || "MRV-2025-001"}
                     </p>
                   </div>
                   <button onClick={() => { setTx?.(null); setStep(0); setTab("history"); }}

@@ -237,7 +237,7 @@ const sections = [
           <tbody>
             {[
               ["Data Akun & Identitas", "Nama perusahaan, nama PIC, email, nomor telepon, kata sandi (di-hash)", "Company, Landlord"],
-              ["Data Perusahaan", "Nomor NPWP, akta perusahaan, entitas hukum (PT/CV/Tbk), lokasi kantor, skor ESG", "Company"],
+              ["Data Perusahaan", "Nomor NPWP, akta perusahaan, entitas hukum (PT/CV/Tbk), lokasi kantor, status verifikasi ISO 14064", "Company"],
               ["Data Emisi & Serapan Karbon", "Total emisi (tCO₂e/bulan), data serapan per lahan, riwayat kalkulasi emisi, laporan MRV", "Company"],
               ["Data Kepemilikan & Koordinat Lahan", "Koordinat GPS lahan (lat/lng), luas lahan (ha), tipe ekosistem (gambut/hutan/mangrove), dokumen HGU/sertifikat, dokumen Joint Venture", "Company, Landlord"],
               ["Data IoT & Sensor", "Nilai NDVI, suhu, kelembaban, konsentrasi CO₂, riwayat data sensor 72 jam", "System (dari perangkat lapangan)"],
@@ -268,7 +268,7 @@ const sections = [
           <li><strong>Verifikasi Kredit Karbon</strong> — Menghitung serapan/emisi karbon berdasarkan data lahan dan sensor IoT sesuai metodologi ISO 14064:2018 dan IPCC 2006.</li>
           <li><strong>Pelacakan Target Net-Zero</strong> — Menyediakan laporan MRV (Measurement, Reporting, Verification) agar perusahaan dapat memantau progress net-zero mereka.</li>
           <li><strong>Marketplace Kredit Karbon</strong> — Memfasilitasi transaksi jual-beli kredit karbon antar perusahaan terdaftar.</li>
-          <li><strong>Pelaporan ESG</strong> — Menghasilkan skor ESG dan laporan keberlanjutan untuk keperluan investor dan regulator.</li>
+          <li><strong>Validasi Sertifikat AI</strong> — Memverifikasi dokumen ISO 14064 dan data manual terhadap ringkasan sertifikat menggunakan teknologi MRV.</li>
           <li><strong>Transparansi Publik (atas permintaan)</strong> — Menampilkan data emisi dan serapan yang dipilih perusahaan untuk dibuka ke publik melalui fitur Public View.</li>
           <li><strong>Pemenuhan Kewajiban Hukum</strong> — Mematuhi regulasi pelaporan emisi yang berlaku di Indonesia dan negara operasi lahan.</li>
           <li><strong>Peningkatan Layanan</strong> — Menganalisis pola penggunaan platform secara anonim untuk memperbaiki performa dan UX.</li>
@@ -299,7 +299,7 @@ const sections = [
             <li>Tipe ekosistem lahan (hutan, gambut, mangrove) dan luas total</li>
             <li>Total kredit karbon tersedia (tCO₂e) dan harga ask</li>
             <li>Status verifikasi ISO 14064 (terverifikasi / pending)</li>
-            <li>Skor ESG agregat (jika perusahaan mengaktifkan fitur ini)</li>
+            <li>Status verifikasi AI sertifikat (jika tersedia)</li>
             <li>Rating project yang diberikan platform</li>
             <li>Total serapan dan emisi bulanan (angka agregat, bukan data per-sensor)</li>
           </ul>
@@ -314,7 +314,7 @@ const sections = [
             <li>Detail transaksi dan riwayat bid</li>
             <li>Laporan MRV internal dan metodologi perhitungan detail</li>
             <li>Data akun dan identitas PIC perusahaan</li>
-            <li>Informasi wallet blockchain</li>
+            <li>Log verifikasi MRV internal</li>
           </ul>
         </div>
 

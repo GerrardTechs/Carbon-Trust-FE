@@ -67,6 +67,18 @@ export function CalcMethodPage({ onSubmit, onBack, lang }) {
             </div>
           )}
 
+          <div style={{
+            padding: "12px 14px", borderRadius: 12, background: "#eef2ff",
+            border: "1px solid #c7d2fe",
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#3730a3", marginBottom: 4 }}>
+              🤖 {t.aiMethodTitle}
+            </p>
+            <p style={{ fontSize: 12, color: "#4338ca", lineHeight: 1.55, margin: 0 }}>
+              {t.aiMethodDesc}
+            </p>
+          </div>
+
           {/* GHG Inventory upload */}
           <div className="field-group">
             <label className="label">{t.ghgInventoryLabel}</label>

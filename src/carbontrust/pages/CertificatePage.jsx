@@ -106,9 +106,9 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         `Issued Date    : ${issuedAt}`,
         `Valid Until    : 31 Desember ${new Date().getFullYear() + 1}`,
         "",
-        "─── CARBON ABSORPTION ─────────────────────",
+        "─── CARBON SEQUESTRATION ──────────────────",
         ...parcels.map(parcelItem => `  ${parcelItem.name} (${parcelItem.type}, ${parcelItem.area} ha): ${Math.max(0, calcAbsorption(parcelItem))} t/month`),
-        `  Total Absorption  : ${totalAbs} tCO₂/month`,
+        `  Total Sequestration : ${totalAbs} tCO₂/month`,
         `  Total Emission    : ${totalEm} tCO₂/month`,
         `  Net Monthly       : ${netMonthly} tCO₂/month`,
         `  Net Annual        : ${netAnnual} tCO₂/year`,
@@ -121,7 +121,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         "  Standard   : ISO 14064:2018",
         "  Method     : Satellite (Sentinel-2) + IoT",
         "  NDVI       : Monitored monthly",
-        "  Blockchain : Registered",
+        "  MRV Status : AI Certificate Validated",
         "",
         "═══════════════════════════════════════════",
         "  This certificate is digitally verified",
@@ -185,7 +185,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
 
           {/* Breakdown parcels */}
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Sumber Serapan ({parcels.length} lahan)</p>
+            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Sumber Sequestration ({parcels.length} lahan)</p>
             <div className="flex flex-col gap-2">
               {parcels.map(pc => {
                 const abs = calcAbsorption(pc);
@@ -208,7 +208,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
           {/* Summary math */}
           <div className="border-t border-dashed border-gray-200 pt-3 flex flex-col gap-1.5">
             {[
-              { l:"Total Serapan / bulan",   v:`+ ${showAbs} tCO₂`,  c:"text-green-700" },
+              { l:"Total Sequestration / bulan", v:`+ ${showAbs} tCO₂`, c:"text-green-700" },
               { l:"Total Emisi / bulan",      v:`- ${showEm} tCO₂`,   c:"text-red-500"   },
               { l:"Net / bulan",              v:`= ${showMonthly} tCO₂`, c:"text-gray-800 font-black" },
               { l:"Net / tahun (×12)",        v:`${showAnnual} tCO₂`,   c:"text-gray-800 font-black" },

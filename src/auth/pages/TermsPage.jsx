@@ -85,9 +85,9 @@ const sections = [
           <li>Pencatatan dan verifikasi emisi serta serapan karbon sesuai ISO 14064:2018 dan IPCC 2006</li>
           <li>Pendaftaran dan pemantauan lahan karbon dengan sensor IoT dan analisis satelit</li>
           <li>Marketplace jual-beli kredit karbon (carbon credit trading) antar perusahaan terdaftar</li>
-          <li>Laporan MRV (Measurement, Reporting, Verification) dan skor ESG</li>
+          <li>Laporan MRV (Measurement, Reporting, Verification) dan validasi sertifikat AI</li>
           <li>Transparansi data publik melalui Public View sesuai Paris Agreement Article 6</li>
-          <li>Sertifikasi kredit karbon berbasis blockchain untuk keabsahan dan ketidakubahannya</li>
+          <li>Sertifikasi kredit karbon terverifikasi ISO 14064 untuk keabsahan dan ketertelusuran data</li>
         </ul>
       </>
     ),
@@ -136,9 +136,8 @@ const sections = [
           memerlukan auditor independen yang terakreditasi.
         </p>
         <div className="tp-callout tp-callout-green">
-          <strong>Data Blockchain:</strong> Setelah transaksi kredit karbon direkam di blockchain,
-          data tersebut bersifat imutabel dan tidak dapat diubah atau dihapus oleh siapapun,
-          termasuk tim CarbonTrust.
+          <strong>Catatan MRV:</strong> Setelah transaksi kredit karbon diverifikasi melalui sistem MRV,
+          catatan transaksi disimpan secara audit-ready dan tidak dapat diubah tanpa jejak verifikasi.
         </div>
       </>
     ),

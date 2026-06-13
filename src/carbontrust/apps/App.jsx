@@ -58,11 +58,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
     });
     apiFetch(`/company/${companyId}`).then(fetchedData => {
       if (fetchedData?.id || fetchedData?._id) {
-        setCompany(prev => ({
-          ...prev,
-          ...fetchedData,
-          walletGenerated: !!(fetchedData.walletId && fetchedData.walletGenerated !== false),
-        }));
+        setCompany(prev => ({ ...prev, ...fetchedData }));
       }
     });
   }, [companyId]);
