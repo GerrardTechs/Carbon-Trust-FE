@@ -9,9 +9,12 @@ import {
   API, CREDIT_PRICE, apiFetch,
   calcAbsorption, convertUnit,
   Modal, SBadge, Spinner, SparkLine, Ic,
+  readCarbonCredit, getActiveSequestrationProjects,
 } from "../shared.jsx";
 
-export function Dashboard({ parcels, alerts, company, setPage, t }) {
+const TYPE_ICON = { green: "🌿", solar: "☀️", biogas: "♻️", blue: "🌊", peatland: "🌾", forest: "🌲", mangrove: "🌴" };
+
+export function Dashboard({ parcels, company, setPage, t }) {
   const [liveIoT, setLiveIoT] = useState({ temp: 24.7, hum: 68, co2: 142 });
   const [tH, setTH] = useState(Array.from({ length: 20 }, (_, i) => 23 + Math.sin(i / 3) * 2 + Math.random()));
   const [hH, setHH] = useState(Array.from({ length: 20 }, (_, i) => 65 + Math.cos(i / 2.5) * 5 + Math.random() * 2));
@@ -20,7 +23,6 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
   const [histModal, setHistModal] = useState(false);
   const [histParcelId, setHistParcelId] = useState("LP-001");
   const [histData, setHistData] = useState([]);
-  const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [prevKpi, setPrevKpi] = useState(null);
   const [kpiDelta, setKpiDelta] = useState({ abs: 0, em: 0, net: 0 });
 
@@ -95,7 +97,8 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
     setHistModal(true);
   }
 
-  const visibleAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
+  const carbonCredit = readCarbonCredit();
+  const activeProjects = getActiveSequestrationProjects();
   const totalAbs  = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
   const totalEm   = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
   const netBal    = parseFloat((totalAbs - totalEm).toFixed(2));
@@ -123,7 +126,15 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg,#14532d 0%,#0f766e 100%)" }}>
         <div className="p-4">
           <p className="text-green-200 text-xs font-bold uppercase tracking-widest">{company?.name}</p>
-          <p className="text-white/80 text-xs mt-0.5">{t.dash.tagline}</p>
+          {carbonCredit && (
+            <div className="mt-2 bg-white/15 rounded-xl px-3 py-2">
+              <p className="text-green-200 text-xs">{t.dash?.carbonCreditValue || "Nilai Kredit Karbon"}</p>
+              <p className={`font-black text-lg ${carbonCredit.isPositive ? "text-white" : "text-red-200"}`}>
+                {carbonCredit.isPositive ? "+" : ""}{carbonCredit.kreditTonYr?.toLocaleString()} tCO₂e/thn
+              </p>
+            </div>
+          )}
+          <p className="text-white/80 text-xs mt-2">{t.dash.tagline}</p>
           <div className="flex gap-1 mt-3">
             {["t","kt","Mt","kg"].map(unitOpt => (
               <button key={unitOpt} onClick={() => setUnit(unitOpt)}
@@ -159,6 +170,18 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
         ))}
       </div>
 
+      {/* User journey guidance */}
+      <div className="px-4">
+        <div className="card p-4 bg-blue-50 border-blue-200">
+          <p className="text-xs font-bold text-blue-800 mb-2">{t.dash?.journeyTitle || "Alur Kredit Karbon"}</p>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-blue-700">{t.dash?.journeyStep1}</p>
+            <p className="text-xs text-blue-700">{t.dash?.journeyStep2}</p>
+            <p className="text-xs text-blue-700 font-bold">{t.dash?.journeyStep3}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Data Quality card */}
       <div className="px-4">
         <div className="card px-4 py-3 flex items-center justify-between">
@@ -166,7 +189,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
             <span className="text-base">📊</span>
             <div>
               <p className="text-xs font-bold text-gray-700">Tingkat Kepercayaan Data</p>
-              <p className="text-xs text-gray-400">Digunakan dalam scoring ESG</p>
+              <p className="text-xs text-gray-400">Digunakan dalam verifikasi MRV</p>
             </div>
           </div>
           <div className="text-right">
@@ -205,60 +228,44 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
         </div>
       </div>
 
-      {/* Active Carbon Projects */}
-      {(() => {
-        const activeProjects = [
-          { id:"PRJ-A", name:"Rehabilitasi Gambut Riau", type:"peatland", area:320, status:"active",
-            absorption: calcAbsorption(parcels.find(p => p.type === "peatland") || {}),
-            startDate:"Jan 2024", method:"Rewetting & revegetasi", progress:68 },
-          { id:"PRJ-B", name:"Konservasi Hutan Kalimantan", type:"forest", area:450, status:"active",
-            absorption: calcAbsorption(parcels.find(p => p.type === "forest") || {}),
-            startDate:"Mar 2023", method:"REDD+ protection", progress:85 },
-          { id:"PRJ-C", name:"Mangrove Pesisir Sumatra", type:"mangrove", area:85, status:"pending",
-            absorption: calcAbsorption(parcels.find(p => p.type === "mangrove") || {}),
-            startDate:"Jun 2024", method:"Replanting & monitoring", progress:32 },
-        ];
-        const statusColor = { active: "bg-emerald-100 text-emerald-700", pending: "bg-amber-100 text-amber-700", completed: "bg-blue-100 text-blue-700" };
-        return (
-          <div className="px-4">
-            <p className="text-sm font-bold text-gray-800 mb-2">{t.dash?.activeProjects || "Proyek Karbon Aktif"}</p>
-            <div className="flex flex-col gap-2">
-              {activeProjects.map(proj => (
-                <div key={proj.id} className="card p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{typeIcon[proj.type] || "🏞️"}</span>
-                      <div>
-                        <p className="text-xs font-bold text-gray-800">{proj.name}</p>
-                        <p className="text-xs text-gray-400">{proj.method} · {proj.area} ha</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor[proj.status]}`}>
-                      {t.dash?.projectStatus?.[proj.status] || proj.status}
-                    </span>
-                  </div>
-                  <div className="mb-2">
-                    <div className="flex justify-between mb-1">
-                      <p className="text-xs text-gray-400">Progress</p>
-                      <p className="text-xs font-bold text-gray-600">{proj.progress}%</p>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full transition-all"
-                        style={{ width: `${proj.progress}%`, background: proj.status === "active" ? "linear-gradient(90deg,#16a34a,#0d9488)" : "#f59e0b" }} />
+      {/* Active Carbon Projects — from Carbon Sequestration after cert upload */}
+      {activeProjects.length > 0 && (
+        <div className="px-4">
+          <p className="text-sm font-bold text-gray-800 mb-2">{t.dash?.activeProjects || "Proyek Karbon Aktif"}</p>
+          <div className="flex flex-col gap-2">
+            {activeProjects.map(proj => (
+              <div key={proj.id} className="card p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{TYPE_ICON[proj.type] || "🏞️"}</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800">{proj.name}</p>
+                      <p className="text-xs text-gray-400">{proj.method}</p>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-gray-400">Mulai: {proj.startDate}</p>
-                    <p className={`text-xs font-black ${proj.absorption < 0 ? "text-red-600" : "text-emerald-700"}`}>
-                      {proj.absorption >= 0 ? "▲" : "▼"}{Math.abs(proj.absorption)} t/bulan
-                    </p>
-                  </div>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                    {t.dash?.projectStatus?.active || "Aktif"}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div className="mb-2">
+                  <div className="flex justify-between mb-1">
+                    <p className="text-xs text-gray-500">{t.dash?.progressLabel || "Progress Verifikasi"}</p>
+                    <p className="text-xs font-bold text-gray-600">{proj.progress}%</p>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full transition-all"
+                      style={{ width: `${proj.progress}%`, background: "linear-gradient(90deg,#16a34a,#0d9488)" }} />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{t.dash?.progressHelp}</p>
+                </div>
+                <p className={`text-xs font-black text-emerald-700`}>
+                  ▲ {proj.amountTonYr} tCO₂e/tahun
+                </p>
+              </div>
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* IoT Sensors */}
       <div className="px-4">
@@ -273,7 +280,7 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           {[
             { l: "Temperature", v: `${liveIoT.temp}°C`, c: "#ef4444", d: tH },
             { l: "Humidity",    v: `${liveIoT.hum}%`,   c: "#3b82f6", d: hH },
-            { l: "CO₂ Abs.",   v: `${liveIoT.co2}t`,    c: "#10b981", d: cH },
+            { l: "CO₂ Seq.",   v: `${liveIoT.co2}t`,    c: "#10b981", d: cH },
           ].map((sensor, i) => (
             <div key={i} className="card p-3">
               <p className="text-xs text-gray-400">{sensor.l}</p>
@@ -312,28 +319,6 @@ export function Dashboard({ parcels, alerts, company, setPage, t }) {
           })}
         </div>
       </div>
-
-      {/* AI Alerts */}
-      {visibleAlerts.length > 0 && (
-        <div className="px-4">
-          <p className="text-sm font-bold text-gray-800 mb-2">{t.dash.alerts}</p>
-          <div className="flex flex-col gap-2">
-            {visibleAlerts.map(alert => (
-              <div key={alert.id} className={`card flex items-start gap-3 p-3 border-l-4 ${alert.type === "critical" ? "border-l-red-500 bg-red-50" : alert.type === "warning" ? "border-l-amber-500 bg-amber-50" : "border-l-emerald-500 bg-emerald-50"}`}>
-                <span className="text-base flex-shrink-0 mt-0.5">{alert.type === "critical" ? "🚨" : alert.type === "warning" ? "⚠️" : "✅"}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-700">{alert.parcelId}</p>
-                  <p className="text-xs text-gray-600">{alert.message}</p>
-                </div>
-                <button onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}
-                  className="flex-shrink-0 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-gray-700 text-sm flex items-center justify-center font-bold shadow-sm transition-all">
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* IoT History Modal */}
       <Modal open={histModal} onClose={() => setHistModal(false)} title={`📈 IoT History — ${histParcelId} (72h)`} wide>

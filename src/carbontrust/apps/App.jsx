@@ -101,7 +101,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
 
   const renderPage = () => {
     switch (page) {
-      case "home":        return <Dashboard    parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} activeTx={activeTx} qStatus={qStatus} />;
+      case "home":        return <Dashboard    parcels={parcels} company={company} setPage={setPage} t={t} />;
       case "absorb":      return <AbsorbPage   t={t} setPage={setPage} />;
       case "calc":        return <CalcPage     t={t} setPage={setPage} companyId={companyId} />;
       case "tx":          return <TxPage       tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} parcels={parcels} company={company} />;
@@ -109,7 +109,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
       case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} companyId={companyId} />;
       case "verify":      return <VerifyPage   t={t} parcels={parcels} lang={lang} setPage={setPage} companyId={companyId} />;
       case "profile":     return <ProfilePage  company={company} setCompany={setCompany} t={t} lang={lang} onLogout={() => onLogout?.(lang)} onExit={onExit ?? (() => {})} setPage={setPage} qStatus={qStatus} updateQStatus={updateQStatus} companyId={companyId} />;
-      default:            return <Dashboard    parcels={parcels} alerts={alerts} company={company} setPage={setPage} t={t} />;
+      default:            return <Dashboard    parcels={parcels} company={company} setPage={setPage} t={t} />;
     }
   };
 

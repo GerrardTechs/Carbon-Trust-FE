@@ -68,6 +68,15 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
   const netCredits  = Math.max(0, Math.floor(netAnnual));
 
+  // Prioritaskan hasil dari tombol "Hitung Kredit Karbon" di AbsorbPage
+  const savedCredit = (() => {
+    try { return JSON.parse(localStorage.getItem("carbon_credit_result") || "null"); }
+    catch { return null; }
+  })();
+  const finalCredits = savedCredit?.kreditTonYr != null
+    ? Math.max(0, Math.floor(savedCredit.kreditTonYr))
+    : Math.max(0, Math.floor(netAnnual));
+
   // Nomor sertifikat deterministik dari companyId — harus sebelum showCertNo
   const certNo = `CT-CERT-${(company?.id || "COMP-001").replace(/[^A-Z0-9]/g,"")}-${new Date().getFullYear()}`;
   const issuedAt = new Date().toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
@@ -77,7 +86,8 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   const showEm = certData?.totalEmission ?? totalEm;
   const showMonthly = certData?.netMonthly ?? netMonthly;
   const showAnnual = certData?.netAnnual ?? netAnnual;
-  const showCredits = certData?.netCredits ?? netCredits;
+  // Gunakan finalCredits sebagai standar untuk dirender
+  const showCredits = certData?.netCredits ?? finalCredits;
 
   function handleDownload() {
     setDownloading(true);
@@ -104,8 +114,8 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         `  Net Annual        : ${netAnnual} tCO₂/year`,
         "",
         "─── CARBON CREDITS ────────────────────────",
-        `  Verified Credits  : ${netCredits.toLocaleString()} tCO₂e`,
-        `  Est. Market Value : $${(netCredits * 18.5).toLocaleString()} USD`,
+        `  Verified Credits  : ${finalCredits.toLocaleString()} tCO₂e`,
+        `  Est. Market Value : $${(finalCredits * 18.5).toLocaleString()} USD`,
         "",
         "─── VERIFICATION ──────────────────────────",
         "  Standard   : ISO 14064:2018",
@@ -166,10 +176,10 @@ export function CertificatePage({ t, parcels, company, companyId }) {
           {/* Net credits — angka utama */}
           <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-200">
             <p className="text-xs text-green-600 uppercase tracking-wide font-bold mb-1">Net Verified Carbon Credits</p>
-            <p className="text-5xl font-black text-green-700">{showCredits.toLocaleString()}</p>
+            <p className="text-5xl font-black text-green-700">{finalCredits.toLocaleString()}</p>
             <p className="text-sm text-green-600">tCO₂e / tahun</p>
             <p className="text-xs text-green-500 mt-1">
-              ≈ ${(showCredits * 18.5).toLocaleString()} USD @ $18.5/ton
+              ≈ ${(finalCredits * 18.5).toLocaleString()} USD @ $18.5/ton
             </p>
           </div>
 

@@ -21,8 +21,7 @@ export function WelcomePage({ onContinue, lang, setLang }) {
         <div className="pill-row">
           <span className="pill pill-green">MRV Certified</span>
           <span className="pill pill-teal">ISO 14064</span>
-          <span className="pill pill-slate">Blockchain Verified</span>
-          <span className="pill pill-green">AI Monitored</span>
+          <span className="pill pill-green">AI Certificate Validated</span>
         </div>
       </div>
 

@@ -229,7 +229,7 @@ export function TxPage({ tx, setTx, t, lang, setPage, parcels = [], company }) {
               {/* Timeline escrow */}
               <div className="card p-4">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-                  Alur Escrow Blockchain
+                  Alur Escrow MRV
                 </p>
                 {STEPS.map((s, i) => {
                   const isDone   = i < step;

@@ -195,7 +195,6 @@ export function CalcPage({ t = TR.en, companyId }) {
   const [certFile, setCertFile] = useState(null);
   const [certError, setCertError] = useState("");
   const [certOk, setCertOk]     = useState(false);
-  const [freightTons, setFreightTons] = useState({ freightRoad: "", freightShip: "" });
 
   // Tab "Total" — tampilkan rincian scope mana yang dipilih (collapse/expand)
   const [totalDetailScope, setTotalDetailScope] = useState(null);
@@ -229,16 +228,12 @@ export function CalcPage({ t = TR.en, companyId }) {
       const raw = parseFloat(inputs[efKey]) || 0;
       if (raw <= 0) return;
 
-      const isTkm = (efKey === "freightRoad" || efKey === "freightShip");
-      const tons  = isTkm ? (parseFloat(freightTons[efKey]) || 0) : 1;
-      if (isTkm && tons <= 0) return;
-
-      // GHG_i = Activity × EF × equityFactor
-      const effectiveVal = isTkm ? raw * tons : raw;
+      // ton·km fields: user enters total ton-kilometers directly (prevents km×tons double-count)
+      const isTkm = ef.unit === "ton·km";
+      const effectiveVal = raw;
       const em = +(effectiveVal * ef.ef * eqFactor).toFixed(3);
 
       apiInputs[efKey] = raw;
-      if (isTkm) apiInputs[`${efKey}Tons`] = tons;
 
       if (ef.scope === 1) s1 += em;
       else if (ef.scope === 2) s2 += em;
@@ -246,7 +241,7 @@ export function CalcPage({ t = TR.en, companyId }) {
 
       breakdown.push({
         key: efKey, val: raw, ef: ef.ef,
-        unit: isTkm ? `km × ${tons} ton = ${+(raw * tons).toFixed(1)} tkm` : ef.unit,
+        unit: isTkm ? `${raw} ton·km` : ef.unit,
         emission: em, scope: ef.scope, category: ef.category,
         source: ef.source || EF_LABELS[efKey],
       });
@@ -261,6 +256,14 @@ export function CalcPage({ t = TR.en, companyId }) {
       creditsNeeded: Math.ceil(total / 1000),
     };
     setResult(nextResult);
+
+    localStorage.setItem("carbon_emission_result", JSON.stringify({
+      total: nextResult.total,
+      s1: nextResult.s1, s2: nextResult.s2, s3: nextResult.s3,
+      netEmission: nextResult.total,
+      leakage: nextResult.leakage,
+      savedAt: new Date().toISOString(),
+    }));
 
     if (companyId) {
       const saved = await apiFetch("/emissions/calculate-v2", {
@@ -359,32 +362,20 @@ export function CalcPage({ t = TR.en, companyId }) {
                           <span className="text-blue-400"> · Grid PLN Indonesia (ESDM 2023)</span>
                         </p>
                       )}
-                      {!ef.unit.includes("liter") && ef.unit !== "kWh" && emPrev && (
+                      {ef.unit === "ton·km" && (
+                        <p className="text-xs text-yellow-700 mt-1 bg-yellow-50 rounded-lg px-2 py-1">
+                          Masukkan total <strong>ton-kilometer (ton·km)</strong> = jarak (km) × muatan (ton)
+                        </p>
+                      )}
+                      {!ef.unit.includes("liter") && ef.unit !== "kWh" && ef.unit !== "ton·km" && emPrev && (
                         <p className="text-xs text-slate-500 mt-1">
                           → <strong>{emPrev} kg CO₂e</strong>
                         </p>
                       )}
-
-                      {/* Freight ton input */}
-                      {(efKey === "freightRoad" || efKey === "freightShip") && (
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-bold text-gray-700">Berat Muatan</label>
-                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">ton</span>
-                          </div>
-                          <input
-                            type="number" min="0" placeholder="e.g. 5"
-                            value={freightTons[efKey]}
-                            onChange={e => setFreightTons(freightState => ({ ...freightState, [efKey]: e.target.value }))}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
-                          />
-                          {inputs[efKey] && freightTons[efKey] && (
-                            <p className="text-xs text-yellow-700 mt-1 bg-yellow-50 rounded-lg px-2 py-1">
-                              {inputs[efKey]} km × {freightTons[efKey]} ton = <strong>{+(parseFloat(inputs[efKey]) * parseFloat(freightTons[efKey])).toFixed(1)} tkm</strong>
-                              {" × EF "}{ef.ef} = <strong>{+(parseFloat(inputs[efKey]) * parseFloat(freightTons[efKey]) * ef.ef).toFixed(2)} kg CO₂e</strong>
-                            </p>
-                          )}
-                        </div>
+                      {ef.unit === "ton·km" && emPrev && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {raw} ton·km × EF {ef.ef} = <strong>{emPrev} kg CO₂e</strong>
+                        </p>
                       )}
                     </div>
                   );
@@ -621,6 +612,13 @@ export function CalcPage({ t = TR.en, companyId }) {
             ))}
           </div>
 
+          <div className="rounded-xl px-3 py-2.5 bg-indigo-50 border border-indigo-200">
+            <p className="text-xs font-bold text-indigo-800 mb-1">🤖 Metode yang Digunakan — AI MRV</p>
+            <p className="text-xs text-indigo-700 leading-relaxed">
+              {t.calc?.aiMethodDesc || "CarbonTrust AI validates your manual inputs against ISO 14064 certificate data using IPCC emission factors and mass-balance principles."}
+            </p>
+          </div>
+
           {method === "equity" && (
             <div className="flex flex-col gap-3 pt-1">
               <div>
@@ -645,7 +643,7 @@ export function CalcPage({ t = TR.en, companyId }) {
 
               <div>
                 <label className="text-xs font-bold text-gray-600 block mb-1">
-                  Upload Your Ownership Certificate
+                  {t.calc?.ownershipCert || "Upload Ownership Certificate"}
                 </label>
                 <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors ${
                   certOk ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300 bg-gray-50"
@@ -653,7 +651,7 @@ export function CalcPage({ t = TR.en, companyId }) {
                   <span className="text-2xl">{certOk ? "📄" : "⬆️"}</span>
                   <div className="flex-1">
                     <p className="text-xs font-bold text-gray-700">
-                      {certFile ? certFile.name : "Upload Your Ownership Certificate"}
+                      {certFile ? certFile.name : (t.calc?.ownershipCert || "Upload Ownership Certificate")}
                     </p>
                     <p className="text-xs text-gray-400">PDF / JPG / PNG</p>
                   </div>

@@ -19,9 +19,8 @@ export function CalcMethodPage({ onSubmit, onBack, lang }) {
 
   async function handleFinish() {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
     onSubmit(form);
+    setLoading(false);
   }
 
   return (

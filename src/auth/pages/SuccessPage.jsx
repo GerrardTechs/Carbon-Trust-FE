@@ -15,7 +15,7 @@ export function SuccessPage({ role, name, lang }) {
         <p className="success-sub">{m.sub}</p>
         <div style={{ marginTop: 12, display: "flex", gap: 6 }}>
           <span className="pill pill-green">{t.verified}</span>
-          <span className="pill pill-teal">{t.blockchainReady}</span>
+          <span className="pill pill-teal">ISO 14064</span>
         </div>
       </div>
       <div style={{ padding: "0 28px 48px" }}>

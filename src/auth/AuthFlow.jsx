@@ -86,7 +86,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
         setStep("success");
         setTimeout(() => {
           if (onComplete) onComplete(result.user.role, result.user, lang, result.token);
-        }, 2000);
+        }, 400);
       } else {
         alert(result.message || "Gagal registrasi.");
       }
@@ -102,7 +102,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
         setStep("success");
         setTimeout(() => {
           if (onComplete) onComplete(result.user.role, result.user, lang, result.token);
-        }, 2000);
+        }, 400);
       } else {
         alert(result.message || "Gagal registrasi landlord.");
       }
