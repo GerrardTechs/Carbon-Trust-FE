@@ -13,8 +13,12 @@
  * - Breakdown per scope + per sumber
  * - Uncertainty indicator (dari pedigree matrix Excel)
  */
-import { useState, useMemo } from "react";
-import { EF, EF_LABELS, EF_CATEGORIES, CREDIT_PRICE, TR, apiFetch } from "../shared.jsx";
+import { useState, useMemo, useEffect } from "react";
+import {
+  EF, EF_LABELS, CREDIT_PRICE, TR, apiFetch,
+  Modal, Spinner, getEfCategories, getLocale,
+  CALC_DRAFT_KEY, dispatchCarbonDataUpdate,
+} from "../shared.jsx";
 
 // Group EF keys by scope
 const SCOPE_KEYS = { 1: [], 2: [], 3: [] };
@@ -50,40 +54,57 @@ const UNCERTAINTY = {
   waste:       { label: "±20%", color: "#dc2626", desc: "Tinggi — komposisi limbah tidak homogen" },
 };
 
-const SCOPE_INFO = {
-  1: { label: "Scope 1 — Direct Emissions",  sub: "Pembakaran stasioner & transportasi operasional", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
-  2: { label: "Scope 2 — Purchased Energy",  sub: "Listrik PLN (kWh) & energi yang dibeli",          color: "#ea580c", bg: "#fff7ed", border: "#fed7aa" },
-  3: { label: "Scope 3 — Value Chain",        sub: "Pengiriman, logistik, perjalanan, limbah",        color: "#ca8a04", bg: "#fefce8", border: "#fde68a" },
+const SCOPE_INFO_FALLBACK = {
+  1: { label: "Scope 1 — Direct Emissions",  sub: "Stationary combustion & operational transport", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+  2: { label: "Scope 2 — Purchased Energy",  sub: "Grid electricity (kWh) & purchased energy",       color: "#ea580c", bg: "#fff7ed", border: "#fed7aa" },
+  3: { label: "Scope 3 — Value Chain",        sub: "Freight, logistics, travel & waste",            color: "#ca8a04", bg: "#fefce8", border: "#fde68a" },
 };
 
+function getScopeInfo(t) {
+  const info = t.calc?.ui?.scopeInfo || {};
+  return {
+    1: { ...SCOPE_INFO_FALLBACK[1], ...info[1] },
+    2: { ...SCOPE_INFO_FALLBACK[2], ...info[2] },
+    3: { ...SCOPE_INFO_FALLBACK[3], ...info[3] },
+  };
+}
+
+function loadCalcDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(CALC_DRAFT_KEY) || "null");
+    return d && typeof d === "object" ? d : null;
+  } catch { return null; }
+}
+
 // ─── SCOPE SUMMARY CARD (dipakai di tab Total) ───────────────────────────────
-function ScopeSummaryCard({ scope, value, breakdown, onClick }) {
-  const si = SCOPE_INFO[scope];
+function ScopeSummaryCard({ scope, value, breakdown, onClick, ui, locale, scopeInfo }) {
+  const si = { ...SCOPE_INFO_FALLBACK[scope], ...scopeInfo[scope] };
   const count = breakdown.filter(bdItem => bdItem.scope === scope).length;
+  const sourcesLabel = (ui?.emissionSources || "{n} emission sources").replace("{n}", count);
   return (
     <button
       onClick={onClick}
       className="w-full text-left rounded-2xl p-4 border-2 transition-all hover:shadow-md active:scale-95"
-      style={{ borderColor: si.border, background: si.bg }}
+      style={{ borderColor: SCOPE_INFO_FALLBACK[scope].border, background: SCOPE_INFO_FALLBACK[scope].bg }}
     >
       <div className="flex items-center justify-between mb-2">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: si.color }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: SCOPE_INFO_FALLBACK[scope].color }}>
             Scope {scope}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">{si.sub}</p>
         </div>
         <div className="text-right">
-          <p className="font-black text-xl" style={{ color: si.color }}>
-            {value.toLocaleString("id-ID", { maximumFractionDigits: 1 })}
+          <p className="font-black text-xl" style={{ color: SCOPE_INFO_FALLBACK[scope].color }}>
+            {value.toLocaleString(locale, { maximumFractionDigits: 1 })}
           </p>
           <p className="text-xs text-gray-400">kg CO₂e</p>
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">{count} sumber emisi</span>
-        <span className="text-xs font-semibold" style={{ color: si.color }}>
-          Lihat rincian →
+        <span className="text-xs text-gray-400">{sourcesLabel}</span>
+        <span className="text-xs font-semibold" style={{ color: SCOPE_INFO_FALLBACK[scope].color }}>
+          {ui?.seeDetail || "See breakdown →"}
         </span>
       </div>
     </button>
@@ -91,9 +112,9 @@ function ScopeSummaryCard({ scope, value, breakdown, onClick }) {
 }
 
 // ─── BREAKDOWN TABLE (dipakai di tab Total untuk detail per source) ──────────
-function BreakdownTable({ items, scopeColor }) {
+function BreakdownTable({ items, scopeColor, ui, locale }) {
   if (!items.length) return (
-    <p className="text-xs text-gray-400 text-center py-3">Tidak ada emisi tercatat</p>
+    <p className="text-xs text-gray-400 text-center py-3">{ui?.noEmission || "No emissions recorded"}</p>
   );
   return (
     <div className="divide-y divide-gray-50">
@@ -115,7 +136,7 @@ function BreakdownTable({ items, scopeColor }) {
                 {unc.label}
               </span>
               <p className="font-bold text-sm" style={{ color: scopeColor }}>
-                {breakdownItem.emission.toLocaleString("id-ID", { maximumFractionDigits: 2 })} kg
+                {breakdownItem.emission.toLocaleString(locale, { maximumFractionDigits: 2 })} kg
               </p>
             </div>
           </div>
@@ -185,19 +206,34 @@ function ScopeDonut({ s1, s2, s3 }) {
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
-export function CalcPage({ t = TR.en, companyId }) {
-  const [inputs, setInputs]     = useState(Object.fromEntries(Object.keys(EF).map(efKey => [efKey, ""])));
-  const [result, setResult]     = useState(null);
-  const [activeScope, setScope] = useState(1);   // 1 | 2 | 3 | "total"
-  const [expanded, setExpanded] = useState({});
-  const [method, setMethod]     = useState("operational");
-  const [equityPct, setEquityPct] = useState("");
+export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
+  const draft = loadCalcDraft();
+  const defaultInputs = Object.fromEntries(Object.keys(EF).map(efKey => [efKey, ""]));
+  const ui = t.calc?.ui || TR.en.calc.ui;
+  const locale = getLocale(lang);
+  const scopeInfo = getScopeInfo(t);
+  const categories = getEfCategories(lang);
+
+  const [inputs, setInputs]     = useState(draft?.inputs ?? defaultInputs);
+  const [freightTons, setFreightTons] = useState(draft?.freightTons ?? {});
+  const [result, setResult]     = useState(draft?.result ?? null);
+  const [activeScope, setScope] = useState(draft?.activeScope ?? 1);
+  const [expanded, setExpanded] = useState(draft?.expanded ?? {});
+  const [method, setMethod]     = useState(draft?.method ?? "operational");
+  const [equityPct, setEquityPct] = useState(draft?.equityPct ?? "");
   const [certFile, setCertFile] = useState(null);
   const [certError, setCertError] = useState("");
   const [certOk, setCertOk]     = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [showJourneyModal, setShowJourneyModal] = useState(false);
 
-  // Tab "Total" — tampilkan rincian scope mana yang dipilih (collapse/expand)
   const [totalDetailScope, setTotalDetailScope] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(CALC_DRAFT_KEY, JSON.stringify({
+      inputs, freightTons, result, method, equityPct, activeScope, expanded,
+    }));
+  }, [inputs, freightTons, result, method, equityPct, activeScope, expanded]);
 
   function handleCertUpload(e) {
     const file = e.target.files[0];
@@ -219,6 +255,7 @@ export function CalcPage({ t = TR.en, companyId }) {
   // Formula: GHG_i = Activity_i × EF_i  (GHG Protocol, sesuai Excel Quantis/WBCSD)
   // Total = Σ Scope1_i + Σ Scope2_i + Σ Scope3_i
   async function calculate() {
+    setCalculating(true);
     const eqFactor = method === "equity" ? (parseFloat(equityPct) || 100) / 100 : 1;
     let s1 = 0, s2 = 0, s3 = 0;
     const breakdown = [];
@@ -228,22 +265,24 @@ export function CalcPage({ t = TR.en, companyId }) {
       const raw = parseFloat(inputs[efKey]) || 0;
       if (raw <= 0) return;
 
-      // ton·km fields: user enters total ton-kilometers directly (prevents km×tons double-count)
       const isTkm = ef.unit === "ton·km";
-      const effectiveVal = raw;
+      const tons = parseFloat(freightTons[efKey]) || 0;
+      const effectiveVal = isTkm ? (tons > 0 ? raw * tons : raw) : raw;
       const em = +(effectiveVal * ef.ef * eqFactor).toFixed(3);
 
-      apiInputs[efKey] = raw;
+      apiInputs[efKey] = isTkm && tons > 0 ? effectiveVal : raw;
+      if (isTkm && tons > 0) apiInputs[`${efKey}_km`] = raw;
+      if (isTkm && tons > 0) apiInputs[`${efKey}_tons`] = tons;
 
       if (ef.scope === 1) s1 += em;
       else if (ef.scope === 2) s2 += em;
       else s3 += em;
 
       breakdown.push({
-        key: efKey, val: raw, ef: ef.ef,
-        unit: isTkm ? `${raw} ton·km` : ef.unit,
+        key: efKey, val: effectiveVal, ef: ef.ef,
+        unit: isTkm ? `${effectiveVal} ton·km` : ef.unit,
         emission: em, scope: ef.scope, category: ef.category,
-        source: ef.source || EF_LABELS[efKey],
+        source: lang === "en" ? (ef.source || EF_LABELS[efKey]) : (EF_LABELS[efKey] || ef.source),
       });
     });
 
@@ -264,9 +303,10 @@ export function CalcPage({ t = TR.en, companyId }) {
       leakage: nextResult.leakage,
       savedAt: new Date().toISOString(),
     }));
+    dispatchCarbonDataUpdate();
 
     if (companyId) {
-      const saved = await apiFetch("/emissions/calculate-v2", {
+      apiFetch("/emissions/calculate-v2", {
         method: "POST",
         body: JSON.stringify({
           companyId,
@@ -274,22 +314,13 @@ export function CalcPage({ t = TR.en, companyId }) {
           equityPct: method === "equity" ? parseFloat(equityPct) || 100 : 100,
           inputs: apiInputs,
         }),
-      });
-      if (saved?.success) {
-        setResult(prev => ({
-          ...prev,
-          total: saved.total ?? prev.total,
-          s1: saved.scope1 ?? prev.s1,
-          s2: saved.scope2 ?? prev.s2,
-          s3: saved.scope3 ?? prev.s3,
-          leakage: saved.leakage ?? prev.leakage,
-          creditsNeeded: saved.creditsNeeded ?? prev.creditsNeeded,
-        }));
-      }
+      }).catch(() => {});
     }
 
+    setCalculating(false);
     setScope("total");
     setTotalDetailScope(null);
+    setShowJourneyModal(true);
   }
 
   const scopeGroups = useMemo(
@@ -297,15 +328,16 @@ export function CalcPage({ t = TR.en, companyId }) {
     [activeScope]
   );
 
-  const si = activeScope !== "total" ? SCOPE_INFO[activeScope] : null;
+  const si = activeScope !== "total" ? scopeInfo[activeScope] : null;
+  const siStyle = activeScope !== "total" ? SCOPE_INFO_FALLBACK[activeScope] : null;
 
   // ─── SCOPE INPUT PANEL ─────────────────────────────────────────────────────
   function renderScopeInput() {
     return (
       <>
         {/* Scope description */}
-        <div className="rounded-xl px-4 py-3 border" style={{ borderColor: si.border, background: si.bg }}>
-          <p className="text-xs font-bold" style={{ color: si.color }}>{si.label}</p>
+        <div className="rounded-xl px-4 py-3 border" style={{ borderColor: siStyle.border, background: siStyle.bg }}>
+          <p className="text-xs font-bold" style={{ color: siStyle.color }}>{si.label}</p>
           <p className="text-xs text-gray-500 mt-0.5">{si.sub}</p>
         </div>
 
@@ -317,8 +349,8 @@ export function CalcPage({ t = TR.en, companyId }) {
               className="w-full flex items-center justify-between px-4 py-3 border-breakdownItem border-gray-100 text-left hover:bg-gray-50 transition-colors"
             >
               <div>
-                <p className="text-xs font-bold text-gray-800">{EF_CATEGORIES[cat] || cat}</p>
-                <p className="text-xs text-gray-400">{keys.length} sumber emisi</p>
+                <p className="text-xs font-bold text-gray-800">{categories[cat] || cat}</p>
+                <p className="text-xs text-gray-400">{(ui.emissionSources || "{n} sources").replace("{n}", keys.length)}</p>
               </div>
               <span className="text-gray-400 text-sm">{expanded[cat] === false ? "▸" : "▾"}</span>
             </button>
@@ -328,12 +360,16 @@ export function CalcPage({ t = TR.en, companyId }) {
                 {keys.map(efKey => {
                   const ef     = EF[efKey];
                   const raw    = parseFloat(inputs[efKey]) || 0;
-                  const emPrev = raw > 0 ? +(raw * ef.ef).toFixed(2) : null;
+                  const tons   = parseFloat(freightTons[efKey]) || 0;
+                  const effectiveRaw = ef.unit === "ton·km" ? (tons > 0 ? raw * tons : raw) : raw;
+                  const emPrev = effectiveRaw > 0 ? +(effectiveRaw * ef.ef).toFixed(2) : null;
 
                   return (
                     <div key={efKey}>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-bold text-gray-700">{EF_LABELS[efKey]}</label>
+                        <label className="text-xs font-bold text-gray-700">
+                          {lang === "en" ? (ef.source || EF_LABELS[efKey]) : (EF_LABELS[efKey] || ef.source)}
+                        </label>
                         <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                           EF: {ef.ef} kg CO₂/{ef.unit}
                         </span>
@@ -364,8 +400,21 @@ export function CalcPage({ t = TR.en, companyId }) {
                       )}
                       {ef.unit === "ton·km" && (
                         <p className="text-xs text-yellow-700 mt-1 bg-yellow-50 rounded-lg px-2 py-1">
-                          Masukkan total <strong>ton-kilometer (ton·km)</strong> = jarak (km) × muatan (ton)
+                          {ui.tonKmHint}
                         </p>
+                      )}
+                      {ef.unit === "ton·km" && (
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            type="number" min="0" placeholder="0"
+                            value={freightTons[efKey] || ""}
+                            onChange={e => setFreightTons(prev => ({ ...prev, [efKey]: e.target.value }))}
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-400"
+                          />
+                          <span className="bg-gray-100 rounded-xl px-3 flex items-center text-xs font-medium text-gray-500 min-w-fit">
+                            {ui.tonKmLoad || "tons"}
+                          </span>
+                        </div>
                       )}
                       {!ef.unit.includes("liter") && ef.unit !== "kWh" && ef.unit !== "ton·km" && emPrev && (
                         <p className="text-xs text-slate-500 mt-1">
@@ -374,7 +423,7 @@ export function CalcPage({ t = TR.en, companyId }) {
                       )}
                       {ef.unit === "ton·km" && emPrev && (
                         <p className="text-xs text-slate-500 mt-1">
-                          {raw} ton·km × EF {ef.ef} = <strong>{emPrev} kg CO₂e</strong>
+                          {effectiveRaw} ton·km × EF {ef.ef} = <strong>{emPrev} kg CO₂e</strong>
                         </p>
                       )}
                     </div>
@@ -395,15 +444,13 @@ export function CalcPage({ t = TR.en, companyId }) {
       return (
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <div className="text-5xl">🧮</div>
-          <p className="font-bold text-gray-700 text-center">Total Emisi belum dihitung</p>
-          <p className="text-xs text-gray-400 text-center px-4">
-            Isi data di tab Scope 1, 2, dan 3 lalu klik <strong>Hitung Emisi</strong> untuk melihat total.
-          </p>
+          <p className="font-bold text-gray-700 text-center">{ui.notCalculated}</p>
+          <p className="text-xs text-gray-400 text-center px-4">{ui.notCalculatedHint}</p>
           <button
             onClick={() => setScope(1)}
             className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-4 py-2 rounded-xl"
           >
-            Mulai dari Scope 1 →
+            {ui.startScope1}
           </button>
         </div>
       );
@@ -419,18 +466,13 @@ export function CalcPage({ t = TR.en, companyId }) {
 
         {/* ── Formula Reference ── */}
         <div className="rounded-xl px-3 py-2 bg-slate-50 border border-slate-200">
-          <p className="text-xs font-bold text-slate-600 mb-0.5">📐 Formula GHG Protocol (Quantis/WBCSD)</p>
-          <p className="text-xs text-slate-500 font-mono">
-            GHG_i = Aktivitas_i × EF_i
-          </p>
-          <p className="text-xs text-slate-500 font-mono">
-            Total = Σ Scope 1 + Σ Scope 2 + Σ Scope 3
-          </p>
+          <p className="text-xs font-bold text-slate-600 mb-0.5">📐 {ui.formulaTitle}</p>
+          <p className="text-xs text-slate-500 font-mono">{ui.formula1}</p>
+          <p className="text-xs text-slate-500 font-mono">{ui.formula2}</p>
         </div>
 
-        {/* ── Donut + total angka ── */}
         <div className="card p-4">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Distribusi Emisi</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">{ui.distribution}</p>
           <ScopeDonut s1={s1} s2={s2} s3={s3} />
         </div>
 
@@ -441,7 +483,7 @@ export function CalcPage({ t = TR.en, companyId }) {
               {t.calc?.totalEm || "Total Emisi"}
             </p>
             <p className="font-black" style={{ fontSize: "2.5rem", lineHeight: 1 }}>
-              {total.toLocaleString("id-ID")}
+              {total.toLocaleString(locale)}
             </p>
             <p className="text-slate-400 text-sm mt-1">kg CO₂e</p>
             <p className="text-slate-500 text-xs mt-2">
@@ -458,7 +500,7 @@ export function CalcPage({ t = TR.en, companyId }) {
 
         {/* ── 3 scope cards — tap untuk lihat breakdown ── */}
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wide px-1">
-          Rincian per Scope — ketuk untuk detail
+          {ui.scopeBreakdown}
         </p>
         {[1, 2, 3].map(segItem => (
           <ScopeSummaryCard
@@ -467,6 +509,9 @@ export function CalcPage({ t = TR.en, companyId }) {
             value={segItem === 1 ? s1 : segItem === 2 ? s2 : s3}
             breakdown={breakdown}
             onClick={() => setTotalDetailScope(totalDetailScope === segItem ? null : segItem)}
+            ui={ui}
+            locale={locale}
+            scopeInfo={scopeInfo}
           />
         ))}
 
@@ -475,10 +520,10 @@ export function CalcPage({ t = TR.en, companyId }) {
           <div className="card overflow-hidden">
             <div
               className="px-4 py-3 border-breakdownItem border-gray-100 flex items-center justify-between"
-              style={{ background: SCOPE_INFO[totalDetailScope].bg }}
+              style={{ background: SCOPE_INFO_FALLBACK[totalDetailScope].bg }}
             >
-              <p className="text-xs font-bold" style={{ color: SCOPE_INFO[totalDetailScope].color }}>
-                Scope {totalDetailScope} — Rincian Sumber
+              <p className="text-xs font-bold" style={{ color: SCOPE_INFO_FALLBACK[totalDetailScope].color }}>
+                {(ui.scopeDetail || "Scope {n}").replace("{n}", totalDetailScope)}
               </p>
               <button
                 onClick={() => setTotalDetailScope(null)}
@@ -487,16 +532,19 @@ export function CalcPage({ t = TR.en, companyId }) {
             </div>
             <BreakdownTable
               items={breakdown.filter(bdItem => bdItem.scope === totalDetailScope)}
-              scopeColor={SCOPE_INFO[totalDetailScope].color}
+              scopeColor={SCOPE_INFO_FALLBACK[totalDetailScope].color}
+              ui={ui}
+              locale={locale}
             />
-            {/* Subtotal */}
             <div
               className="px-4 py-3 border-t flex items-center justify-between"
-              style={{ background: SCOPE_INFO[totalDetailScope].bg }}
+              style={{ background: SCOPE_INFO_FALLBACK[totalDetailScope].bg }}
             >
-              <p className="text-xs font-bold text-gray-600">Subtotal Scope {totalDetailScope}</p>
-              <p className="font-black text-sm" style={{ color: SCOPE_INFO[totalDetailScope].color }}>
-                {(totalDetailScope === 1 ? s1 : totalDetailScope === 2 ? s2 : s3).toLocaleString("id-ID", { maximumFractionDigits: 2 })} kg CO₂e
+              <p className="text-xs font-bold text-gray-600">
+                {(ui.subtotal || "Subtotal Scope {n}").replace("{n}", totalDetailScope)}
+              </p>
+              <p className="font-black text-sm" style={{ color: SCOPE_INFO_FALLBACK[totalDetailScope].color }}>
+                {(totalDetailScope === 1 ? s1 : totalDetailScope === 2 ? s2 : s3).toLocaleString(locale, { maximumFractionDigits: 2 })} kg CO₂e
               </p>
             </div>
           </div>
@@ -504,19 +552,15 @@ export function CalcPage({ t = TR.en, companyId }) {
 
         {/* ── Uncertainty note ── */}
         <div className="rounded-xl px-3 py-2.5 bg-amber-50 border border-amber-200">
-          <p className="text-xs font-bold text-amber-700 mb-1">📊 Ketidakpastian Kalkulasi</p>
-          <p className="text-xs text-amber-600">
-            Berdasarkan Pedigree Matrix (GHG Protocol): uncertainty per kategori berbeda.
-            Nilai ±% ditampilkan di rincian breakdown tiap sumber.
-          </p>
+          <p className="text-xs font-bold text-amber-700 mb-1">📊 {ui.uncertaintyTitle}</p>
+          <p className="text-xs text-amber-600">{ui.uncertaintyDesc}</p>
         </div>
 
-        {/* ── Leakage ── */}
         <div className="card p-3 bg-orange-50 border-orange-200 border">
           <p className="text-xs font-bold text-orange-700">
-            Estimasi Leakage: ~{leakage.toLocaleString("id-ID")} kg CO₂e
+            {t.calc?.leakage || "Estimated Leakage"}: ~{leakage.toLocaleString(locale)} kg CO₂e
           </p>
-          <p className="text-xs text-orange-600 mt-0.5">Scope 1 × 5% + Scope 3 × 10% (displacement effect)</p>
+          <p className="text-xs text-orange-600 mt-0.5">{ui.leakageNote}</p>
         </div>
 
         {/* ── Carbon credits needed ── */}
@@ -535,10 +579,10 @@ export function CalcPage({ t = TR.en, companyId }) {
 
         {/* ── Hitung ulang ── */}
         <button
-          onClick={() => { setScope(1); setResult(null); setTotalDetailScope(null); }}
+          onClick={() => { setScope(1); setTotalDetailScope(null); }}
           className="w-full py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 active:scale-95 transition-all"
         >
-          ← Hitung Ulang
+          {ui.recalculate}
         </button>
       </div>
     );
@@ -553,8 +597,8 @@ export function CalcPage({ t = TR.en, companyId }) {
         <p className="text-slate-300 text-xs uppercase tracking-widest mb-0.5">
           {t.calc?.title || "Emission Calculator"}
         </p>
-        <p className="font-black text-xl">Scope 1 · 2 · 3 · Total</p>
-        <p className="text-slate-400 text-xs mt-0.5">IPCC 2006 · ESDM Indonesia · GHG Protocol</p>
+        <p className="font-black text-xl">{ui.scopeTabs}</p>
+        <p className="text-slate-400 text-xs mt-0.5">{t.calc?.ref || "IPCC 2006 · GHG Protocol"}</p>
       </div>
 
       {/* ── Scope tabs (1 | 2 | 3 | Total) ── */}
@@ -568,7 +612,7 @@ export function CalcPage({ t = TR.en, companyId }) {
                 ? "text-white shadow-md"
                 : "bg-white border border-gray-200 text-gray-600"
             }`}
-            style={activeScope === segItem ? { background: SCOPE_INFO[segItem].color } : {}}
+            style={activeScope === segItem ? { background: SCOPE_INFO_FALLBACK[segItem].color } : {}}
           >
             Scope {segItem}
           </button>
@@ -596,8 +640,8 @@ export function CalcPage({ t = TR.en, companyId }) {
           </p>
           <div className="flex gap-2">
             {[
-              { val: "operational", label: "Operational / Activity" },
-              { val: "equity",      label: "Equity Share" },
+              { val: "operational", label: ui.methodOpLabel || t.calc?.methodOp },
+              { val: "equity",      label: ui.methodEqLabel || t.calc?.methodEq },
             ].map(methodOpt => (
               <button
                 key={methodOpt.val} type="button" onClick={() => setMethod(methodOpt.val)}
@@ -613,7 +657,7 @@ export function CalcPage({ t = TR.en, companyId }) {
           </div>
 
           <div className="rounded-xl px-3 py-2.5 bg-indigo-50 border border-indigo-200">
-            <p className="text-xs font-bold text-indigo-800 mb-1">🤖 Metode yang Digunakan — AI MRV</p>
+            <p className="text-xs font-bold text-indigo-800 mb-1">🤖 {ui.aiMethodTitle}</p>
             <p className="text-xs text-indigo-700 leading-relaxed">
               {t.calc?.aiMethodDesc || "CarbonTrust AI validates your manual inputs against ISO 14064 certificate data using IPCC emission factors and mass-balance principles."}
             </p>
@@ -678,11 +722,11 @@ export function CalcPage({ t = TR.en, companyId }) {
       {activeScope !== "total" && (
         <button
           onClick={calculate}
-          disabled={method === "equity" && !certOk}
-          className="w-full text-white py-3 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+          disabled={(method === "equity" && !certOk) || calculating}
+          className="w-full text-white py-3 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
           style={{ background: "linear-gradient(135deg,#1e293b,#334155)" }}
         >
-          {t.calc?.calculate || "Hitung Emisi"} →
+          {calculating ? <><Spinner /> {ui.calculating}</> : <>{t.calc?.calculate} →</>}
         </button>
       )}
 
@@ -694,23 +738,42 @@ export function CalcPage({ t = TR.en, companyId }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500">Hasil terakhir</p>
+              <p className="text-xs text-gray-500">{ui.lastResult}</p>
               <p className="font-black text-slate-800">
-                {result.total.toLocaleString("id-ID")} kg CO₂e
+                {result.total.toLocaleString(locale)} kg CO₂e
               </p>
             </div>
             <div className="flex gap-2 items-center">
               <div className="text-right">
-                <p className="text-xs text-red-500">S1: {result.s1.toLocaleString()}</p>
-                <p className="text-xs text-orange-500">S2: {result.s2.toLocaleString()}</p>
-                <p className="text-xs text-yellow-600">S3: {result.s3.toLocaleString()}</p>
+                <p className="text-xs text-red-500">S1: {result.s1.toLocaleString(locale)}</p>
+                <p className="text-xs text-orange-500">S2: {result.s2.toLocaleString(locale)}</p>
+                <p className="text-xs text-yellow-600">S3: {result.s3.toLocaleString(locale)}</p>
               </div>
               <span className="text-slate-400 text-lg">→</span>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">Ketuk untuk lihat Total Emisi lengkap</p>
+          <p className="text-xs text-slate-400 mt-1">{ui.tapTotal}</p>
         </button>
       )}
+
+      <Modal open={showJourneyModal} onClose={() => setShowJourneyModal(false)} title={ui.journeyTitle}>
+        <p className="text-sm text-gray-600 mb-4">{ui.journeyBody}</p>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => { setShowJourneyModal(false); setPage?.("absorb"); }}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white"
+            style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}
+          >
+            {ui.goSequestration}
+          </button>
+          <button
+            onClick={() => setShowJourneyModal(false)}
+            className="w-full py-2.5 rounded-xl text-sm font-bold border border-gray-200 text-gray-600"
+          >
+            {ui.stayHere}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

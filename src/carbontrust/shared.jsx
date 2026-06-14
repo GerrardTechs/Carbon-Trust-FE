@@ -109,6 +109,43 @@ export const TR = {
       ownershipHint: "PDF/image of share ownership document",
       ownershipReject: "File rejected — must be PDF or image (JPG/PNG)",
       aiMethodDesc: "CarbonTrust AI reads the 1-page ISO 14064 certificate summary using NLP and computer vision. It cross-checks your manual emission inputs against verified certificate data using IPCC Tier 1–2 emission factors, mass-balance principles, and uncertainty propagation. Mismatches are flagged before you can access the Exchange. This advanced MRV technology ensures anti-fraud compliance without blockchain.",
+      ui: {
+        scopeTabs: "Scope 1 · 2 · 3 · Total",
+        notCalculated: "Total emissions not yet calculated",
+        notCalculatedHint: "Fill in Scope 1, 2, and 3 data then click Calculate Emissions to see the total.",
+        startScope1: "Start from Scope 1 →",
+        formulaTitle: "GHG Protocol Formula (Quantis/WBCSD)",
+        formula1: "GHG_i = Activity_i × EF_i",
+        formula2: "Total = Σ Scope 1 + Σ Scope 2 + Σ Scope 3",
+        distribution: "Emission Distribution",
+        scopeBreakdown: "Breakdown by Scope — tap for detail",
+        scopeDetail: "Scope {n} — Source Breakdown",
+        subtotal: "Subtotal Scope {n}",
+        uncertaintyTitle: "Calculation Uncertainty",
+        uncertaintyDesc: "Based on Pedigree Matrix (GHG Protocol): uncertainty varies per category. ±% shown in each source breakdown.",
+        leakageNote: "Scope 1 × 5% + Scope 3 × 10% (displacement effect)",
+        recalculate: "← Recalculate",
+        lastResult: "Latest result",
+        tapTotal: "Tap to view full Total Emissions",
+        emissionSources: "{n} emission sources",
+        seeDetail: "See breakdown →",
+        noEmission: "No emissions recorded",
+        aiMethodTitle: "Method Used — AI MRV",
+        methodOpLabel: "Operational / Activity",
+        methodEqLabel: "Equity Share",
+        tonKmHint: "Enter total ton-kilometers (ton·km) = distance (km) × load (tons), or enter km and tons separately below.",
+        tonKmLoad: "Load (tons)",
+        journeyTitle: "Next Step: Carbon Sequestration",
+        journeyBody: "Your emissions are calculated. Enter your offset data on the Carbon Sequestration page to compute your net carbon credit.",
+        goSequestration: "Go to Carbon Sequestration →",
+        stayHere: "Stay on this page",
+        calculating: "Calculating...",
+        scopeInfo: {
+          1: { label: "Scope 1 — Direct Emissions", sub: "Stationary combustion & operational transport" },
+          2: { label: "Scope 2 — Purchased Energy", sub: "Grid electricity (kWh) & purchased energy" },
+          3: { label: "Scope 3 — Value Chain", sub: "Freight, logistics, travel & waste" },
+        },
+      },
     },
     market:{
       title:"Carbon Market", search:"Search projects, companies, countries...",
@@ -204,6 +241,43 @@ export const TR = {
       ownershipHint: "PDF/foto dokumen kepemilikan saham",
       ownershipReject: "File ditolak — harus PDF atau gambar (JPG/PNG)",
       aiMethodDesc: "AI CarbonTrust membaca ringkasan 1 halaman sertifikat ISO 14064 menggunakan NLP dan computer vision. Sistem memverifikasi input emisi manual Anda terhadap data sertifikat terverifikasi dengan faktor emisi IPCC Tier 1–2, prinsip neraca massa, dan propagasi ketidakpastian. Ketidaksesuaian data akan diblokir sebelum akses Bursa. Teknologi MRV canggih ini memastikan kepatuhan anti-fraud tanpa blockchain.",
+      ui: {
+        scopeTabs: "Scope 1 · 2 · 3 · Total",
+        notCalculated: "Total Emisi belum dihitung",
+        notCalculatedHint: "Isi data di tab Scope 1, 2, dan 3 lalu klik Hitung Emisi untuk melihat total.",
+        startScope1: "Mulai dari Scope 1 →",
+        formulaTitle: "Formula GHG Protocol (Quantis/WBCSD)",
+        formula1: "GHG_i = Aktivitas_i × EF_i",
+        formula2: "Total = Σ Scope 1 + Σ Scope 2 + Σ Scope 3",
+        distribution: "Distribusi Emisi",
+        scopeBreakdown: "Rincian per Scope — ketuk untuk detail",
+        scopeDetail: "Scope {n} — Rincian Sumber",
+        subtotal: "Subtotal Scope {n}",
+        uncertaintyTitle: "Ketidakpastian Kalkulasi",
+        uncertaintyDesc: "Berdasarkan Pedigree Matrix (GHG Protocol): uncertainty per kategori berbeda. Nilai ±% ditampilkan di rincian breakdown tiap sumber.",
+        leakageNote: "Scope 1 × 5% + Scope 3 × 10% (displacement effect)",
+        recalculate: "← Hitung Ulang",
+        lastResult: "Hasil terakhir",
+        tapTotal: "Ketuk untuk lihat Total Emisi lengkap",
+        emissionSources: "{n} sumber emisi",
+        seeDetail: "Lihat rincian →",
+        noEmission: "Tidak ada emisi tercatat",
+        aiMethodTitle: "Metode yang Digunakan — AI MRV",
+        methodOpLabel: "Kendali Operasional / Aktivitas",
+        methodEqLabel: "Equity Share",
+        tonKmHint: "Masukkan total ton-kilometer (ton·km) = jarak (km) × muatan (ton), atau isi km dan ton terpisah di bawah.",
+        tonKmLoad: "Muatan (ton)",
+        journeyTitle: "Langkah Berikutnya: Serapan Karbon",
+        journeyBody: "Emisi Anda sudah dihitung. Masukkan data offset di halaman Serapan Karbon untuk menghitung kredit karbon bersih.",
+        goSequestration: "Ke Serapan Karbon →",
+        stayHere: "Tetap di halaman ini",
+        calculating: "Menghitung...",
+        scopeInfo: {
+          1: { label: "Scope 1 — Emisi Langsung", sub: "Pembakaran stasioner & transportasi operasional" },
+          2: { label: "Scope 2 — Energi Dibeli", sub: "Listrik PLN (kWh) & energi yang dibeli" },
+          3: { label: "Scope 3 — Rantai Nilai", sub: "Pengiriman, logistik, perjalanan, limbah" },
+        },
+      },
     },
     market: {
       title: "Bursa Karbon", search: "Cari proyek, perusahaan, negara...",
@@ -299,6 +373,43 @@ export const TR = {
       ownershipHint: "PDF / JPG / PNG",
       ownershipReject: "Dosya reddedildi — PDF veya resim olmalı",
       aiMethodDesc: "CarbonTrust AI, NLP ve bilgisayarlı görü ile ISO 14064 sertifikasının 1 sayfalık özetini okur. Manuel emisyon girişlerinizi doğrulanmış sertifika verileriyle IPCC Tier 1–2 emisyon faktörleri, kütle dengesi ilkeleri ve belirsizlik yayılımı kullanarak çapraz kontrol eder. Uyuşmazlıklar Borsa erişiminden önce işaretlenir. Bu gelişmiş MRV teknolojisi blockchain olmadan dolandırıcılık önleme uyumluluğu sağlar.",
+      ui: {
+        scopeTabs: "Kapsam 1 · 2 · 3 · Toplam",
+        notCalculated: "Toplam emisyon henüz hesaplanmadı",
+        notCalculatedHint: "Kapsam 1, 2 ve 3 verilerini doldurun, ardından toplamı görmek için Emisyonu Hesapla'ya tıklayın.",
+        startScope1: "Kapsam 1'den başla →",
+        formulaTitle: "GHG Protocol Formülü (Quantis/WBCSD)",
+        formula1: "GHG_i = Aktivite_i × EF_i",
+        formula2: "Toplam = Σ Kapsam 1 + Σ Kapsam 2 + Σ Kapsam 3",
+        distribution: "Emisyon Dağılımı",
+        scopeBreakdown: "Kapsama göre kırılım — detay için dokunun",
+        scopeDetail: "Kapsam {n} — Kaynak Kırılımı",
+        subtotal: "Kapsam {n} Alt Toplamı",
+        uncertaintyTitle: "Hesaplama Belirsizliği",
+        uncertaintyDesc: "Pedigree Matrix (GHG Protocol) temel alınmıştır: belirsizlik kategoriye göre değişir.",
+        leakageNote: "Kapsam 1 × %5 + Kapsam 3 × %10 (yer değiştirme etkisi)",
+        recalculate: "← Yeniden Hesapla",
+        lastResult: "Son sonuç",
+        tapTotal: "Tam Toplam Emisyonu görmek için dokunun",
+        emissionSources: "{n} emisyon kaynağı",
+        seeDetail: "Kırılımı gör →",
+        noEmission: "Kayıtlı emisyon yok",
+        aiMethodTitle: "Kullanılan Yöntem — AI MRV",
+        methodOpLabel: "Operasyonel / Aktivite",
+        methodEqLabel: "Hisse Payı (Equity)",
+        tonKmHint: "Toplam ton-kilometre (ton·km) = mesafe (km) × yük (ton) girin veya km ve tonu ayrı ayrı doldurun.",
+        tonKmLoad: "Yük (ton)",
+        journeyTitle: "Sonraki Adım: Karbon Tutulumu",
+        journeyBody: "Emisyonlarınız hesaplandı. Net karbon kredinizi hesaplamak için Karbon Tutulumu sayfasına offset verilerinizi girin.",
+        goSequestration: "Karbon Tutulumuna Git →",
+        stayHere: "Bu sayfada kal",
+        calculating: "Hesaplanıyor...",
+        scopeInfo: {
+          1: { label: "Kapsam 1 — Doğrudan Emisyonlar", sub: "Sabit yakma ve operasyonel taşımacılık" },
+          2: { label: "Kapsam 2 — Satın Alınan Enerji", sub: "Şebeke elektriği (kWh) ve satın alınan enerji" },
+          3: { label: "Kapsam 3 — Değer Zinciri", sub: "Nakliye, lojistik, seyahat ve atık" },
+        },
+      },
     },
     market: {
       title: "Karbon Piyasası", search: "Proje ara...",
@@ -508,8 +619,8 @@ export const EF = {
   // ══════════════════════════════════════════════════════════════════════════
 
   // ── Purchased Goods & Services ───────────────────────────────────────────
-  purchasedGoods:    { ef:0.3,   unit:"ton",   scope:3, category:"upstream_goods", source:"Purchased Goods & Services (avg 0.3 tCO₂e/ton)" },
-  capitalGoods:      { ef:0.5,   unit:"unit",  scope:3, category:"upstream_goods", source:"Capital Goods (avg 0.5 tCO₂e/unit, estimasi)" },
+  purchasedGoods:    { ef:300,   unit:"ton",   scope:3, category:"upstream_goods", source:"Purchased Goods & Services (avg 0.3 tCO₂e/ton)" },
+  capitalGoods:      { ef:500,   unit:"unit",  scope:3, category:"upstream_goods", source:"Capital Goods (avg 0.5 tCO₂e/unit, estimasi)" },
 
   // ── Upstream Transport & Distribution ────────────────────────────────────
   freightRoad:       { ef:0.062, unit:"ton·km",scope:3, category:"freight_up", source:"Pengiriman Darat — Truk (0.062 kgCO₂e/ton·km)" },
@@ -537,14 +648,14 @@ export const EF = {
   commutePublicBus:  { ef:0.089, unit:"km",    scope:3, category:"commute", source:"Komuter — Bus/Transportasi Umum" },
 
   // ── Waste Generated in Operations ────────────────────────────────────────
-  wasteLandfill:     { ef:0.50,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Dibuang ke TPA (Landfill)" },
-  wasteIncineration: { ef:0.43,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Insinerasi" },
-  wasteRecycled:     { ef:0.02,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Didaur Ulang" },
-  wasteCompost:      { ef:0.01,  unit:"ton",   scope:3, category:"waste", source:"Limbah — Kompos" },
+  wasteLandfill:     { ef:500,   unit:"ton",   scope:3, category:"waste", source:"Limbah — Dibuang ke TPA (Landfill)" },
+  wasteIncineration: { ef:430,   unit:"ton",   scope:3, category:"waste", source:"Limbah — Insinerasi" },
+  wasteRecycled:     { ef:20,    unit:"ton",   scope:3, category:"waste", source:"Limbah — Didaur Ulang" },
+  wasteCompost:      { ef:10,    unit:"ton",   scope:3, category:"waste", source:"Limbah — Kompos" },
 
   // ── Use of Sold Products & End-of-Life ───────────────────────────────────
-  useSoldProducts:   { ef:0.5,   unit:"unit",  scope:3, category:"downstream_use", source:"Penggunaan Produk Terjual (avg estimasi)" },
-  eolSoldProducts:   { ef:0.3,   unit:"ton",   scope:3, category:"downstream_use", source:"End-of-Life Produk Terjual" },
+  useSoldProducts:   { ef:500,   unit:"unit",  scope:3, category:"downstream_use", source:"Penggunaan Produk Terjual (avg estimasi)" },
+  eolSoldProducts:   { ef:300,   unit:"ton",   scope:3, category:"downstream_use", source:"End-of-Life Produk Terjual" },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -641,6 +752,43 @@ export const EF_CATEGORIES = {
   downstream_use:  "Penggunaan & End-of-Life Produk",
 };
 
+export const EF_CATEGORIES_EN = {
+  stationary:       "Stationary Combustion (Boiler / Genset / Furnace)",
+  mobile:           "Passenger & Heavy Vehicles",
+  offroad:          "Off-road Equipment",
+  transport_special:"Special Transport (Aircraft / Ship / Locomotive)",
+  fugitive:         "Fugitive Emissions (Refrigerants & Gas)",
+  process:          "Industrial Process Emissions",
+  electricity:      "Purchased Electricity",
+  steam:            "Steam / Chilled Water",
+  upstream_goods:   "Purchased Goods & Services",
+  freight_up:       "Upstream Freight",
+  freight_down:     "Downstream Distribution",
+  travel:           "Business Travel",
+  commute:          "Employee Commuting",
+  waste:            "Operational Waste",
+  downstream_use:   "Product Use & End-of-Life",
+};
+
+export function getEfCategories(lang) {
+  if (lang === "en") return EF_CATEGORIES_EN;
+  return EF_CATEGORIES;
+}
+
+export function getLocale(lang) {
+  if (lang === "id") return "id-ID";
+  if (lang === "tr") return "tr-TR";
+  return "en-US";
+}
+
+export const CARBON_DATA_EVENT = "carbon-data-update";
+export const CALC_DRAFT_KEY = "carbon_calc_draft";
+export const ABSORB_DRAFT_KEY = "carbon_absorb_draft";
+
+export function dispatchCarbonDataUpdate() {
+  window.dispatchEvent(new Event(CARBON_DATA_EVENT));
+}
+
 // ─── UTILS ─────────────────────────────────────────────────────────────────
 export function calcAbsorption(p) {
   // Gambut dengan data humidity → pakai model matematis (#24)
@@ -724,6 +872,21 @@ export function SBadge({ status, t }) {
 
 export function Spinner() {
   return <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full spin" />;
+}
+
+export function Toast({ message, type = "success", onClose }) {
+  if (!message) return null;
+  const bg = type === "error" ? "bg-red-600" : type === "info" ? "bg-slate-800" : "bg-emerald-600";
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-sm px-4 pointer-events-none">
+      <div className={`${bg} text-white rounded-xl px-4 py-3 shadow-lg text-sm font-semibold text-center fade-up flex items-center justify-between gap-2 pointer-events-auto`}>
+        <span className="flex-1">{message}</span>
+        {onClose && (
+          <button onClick={onClose} className="text-white/80 hover:text-white text-xs shrink-0">✕</button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function SparkLine({ data, color = "#22c55e", h = 36 }) {

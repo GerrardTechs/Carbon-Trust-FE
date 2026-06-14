@@ -3,7 +3,15 @@
  * Categories: Green Carbon, Solar, Biogas, Blue Carbon (marine biota)
  * Only two certificate uploads: Sertifikat Emisi & Sertifikat Serapan
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Toast, ABSORB_DRAFT_KEY, dispatchCarbonDataUpdate } from "../shared.jsx";
+
+function loadAbsorbDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(ABSORB_DRAFT_KEY) || "null");
+    return d && typeof d === "object" ? d : null;
+  } catch { return null; }
+}
 
 const TABS = [
   { id: "green",  icon: "🌿", label: "Karbon Hijau" },
@@ -39,6 +47,7 @@ function HitungKreditButton({ totalAbsorbKg, setPage }) {
       isPositive,
       savedAt: new Date().toISOString(),
     }));
+    dispatchCarbonDataUpdate();
     setOpen(true);
   }
 
@@ -104,19 +113,27 @@ function HitungKreditButton({ totalAbsorbKg, setPage }) {
 }
 
 export function AbsorbPage({ t, setPage }) {
-  const [tab, setTab] = useState("green");
+  const draft = loadAbsorbDraft();
+  const [tab, setTab] = useState(draft?.tab ?? "green");
+  const [toast, setToast] = useState("");
 
-  const [greenAbsorb, setGreenAbsorb] = useState("");
-  const [solarPanels, setSolarPanels] = useState("");
-  const [solarWp, setSolarWp] = useState("");
-  const [solarSunHours, setSolarSunHours] = useState("3.5");
-  const [biogasInputs, setBiogasInputs] = useState({ organik: "", sapi: "", babi: "", ayam: "", pome: "" });
-  const [blueProjectName, setBlueProjectName] = useState("");
-  const [blueSequestration, setBlueSequestration] = useState("");
+  const [greenAbsorb, setGreenAbsorb] = useState(draft?.greenAbsorb ?? "");
+  const [solarPanels, setSolarPanels] = useState(draft?.solarPanels ?? "");
+  const [solarWp, setSolarWp] = useState(draft?.solarWp ?? "");
+  const [solarSunHours, setSolarSunHours] = useState(draft?.solarSunHours ?? "3.5");
+  const [biogasInputs, setBiogasInputs] = useState(draft?.biogasInputs ?? { organik: "", sapi: "", babi: "", ayam: "", pome: "" });
+  const [blueProjectName, setBlueProjectName] = useState(draft?.blueProjectName ?? "");
+  const [blueSequestration, setBlueSequestration] = useState(draft?.blueSequestration ?? "");
 
   const [emissionCertFile, setEmissionCertFile] = useState(null);
   const [sequestrationCertFile, setSequestrationCertFile] = useState(null);
-  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(ABSORB_DRAFT_KEY, JSON.stringify({
+      tab, greenAbsorb, solarPanels, solarWp, solarSunHours,
+      biogasInputs, blueProjectName, blueSequestration,
+    }));
+  }, [tab, greenAbsorb, solarPanels, solarWp, solarSunHours, biogasInputs, blueProjectName, blueSequestration]);
 
   const BIOGAS_CONV = { organik: 0.01, sapi: 0.04, babi: 0.06, ayam: 0.07, pome: 28.0 };
 
@@ -178,8 +195,9 @@ export function AbsorbPage({ t, setPage }) {
       projects: buildProjects(),
       savedAt: new Date().toISOString(),
     }));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    dispatchCarbonDataUpdate();
+    setToast(t?.profile?.saved || "✅ Saved!");
+    setTimeout(() => setToast(""), 3000);
   }
 
   return (
@@ -233,7 +251,7 @@ export function AbsorbPage({ t, setPage }) {
           <p className="text-xs opacity-75">per bulan = {(totalAbsorbKg * 12 / 1000).toFixed(2)} tCO₂e/tahun</p>
           <button onClick={saveAbsorb}
             className="mt-3 w-full py-2 rounded-xl bg-white/20 text-white text-xs font-bold hover:bg-white/30 transition-all">
-            {saved ? "✅ Tersimpan!" : "💾 Simpan Hasil Sequestration"}
+            💾 {t?.common?.save || "Save"} Sequestration
           </button>
         </div>
       )}
@@ -362,11 +380,13 @@ export function AbsorbPage({ t, setPage }) {
           <button onClick={saveAbsorb}
             className="w-full py-3 rounded-xl font-bold text-white active:scale-95 transition-all"
             style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-            {saved ? "✅ Tersimpan!" : "💾 Simpan Hasil Sequestration →"}
+            💾 {t?.common?.save || "Save"} Sequestration →
           </button>
           <HitungKreditButton totalAbsorbKg={totalAbsorbKg} setPage={setPage} />
         </div>
       )}
+
+      <Toast message={toast} onClose={() => setToast("")} />
     </div>
   );
 }

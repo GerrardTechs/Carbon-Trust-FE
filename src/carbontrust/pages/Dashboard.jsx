@@ -10,6 +10,7 @@ import {
   calcAbsorption, convertUnit,
   Modal, SBadge, Spinner, SparkLine, Ic,
   readCarbonCredit, getActiveSequestrationProjects,
+  CARBON_DATA_EVENT,
 } from "../shared.jsx";
 
 const TYPE_ICON = { green: "🌿", solar: "☀️", biogas: "♻️", blue: "🌊", peatland: "🌾", forest: "🌲", mangrove: "🌴" };
@@ -97,7 +98,18 @@ export function Dashboard({ parcels, company, setPage, t }) {
     setHistModal(true);
   }
 
-  const carbonCredit = readCarbonCredit();
+  const [carbonCredit, setCarbonCredit] = useState(readCarbonCredit);
+
+  useEffect(() => {
+    const refresh = () => setCarbonCredit(readCarbonCredit());
+    window.addEventListener(CARBON_DATA_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(CARBON_DATA_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
   const activeProjects = getActiveSequestrationProjects();
   const totalAbs  = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0,  calcAbsorption(p)), 0).toFixed(2));
   const totalEm   = parseFloat(parcels.reduce((sum, p) => sum + Math.max(0, -calcAbsorption(p)), 0).toFixed(2));
