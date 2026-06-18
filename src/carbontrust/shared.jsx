@@ -15,6 +15,24 @@ export const CREDIT_PRICE = 18.5;
 
 export const GCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --ct-bg: #f1f5f1;
+    --ct-surface: #f9fafb;
+    --ct-card: #ffffff;
+    --ct-border: #e5e7eb;
+    --ct-text: #1f2937;
+    --ct-text-muted: #6b7280;
+    --ct-header: #ffffff;
+  }
+  html.dark {
+    --ct-bg: #0f172a;
+    --ct-surface: #111827;
+    --ct-card: #1e293b;
+    --ct-border: #334155;
+    --ct-text: #f1f5f9;
+    --ct-text-muted: #94a3b8;
+    --ct-header: #1e293b;
+  }
   * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
   @keyframes sway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
   @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -22,27 +40,57 @@ export const GCSS = `
   @keyframes pulse2 { 0%,100%{opacity:1} 50%{opacity:.4} }
   @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
   .fade-up { animation: fadeUp .35s ease forwards; }
-  .card { background:#fff; border-radius:16px; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .card { background:var(--ct-card); border-radius:16px; border:1px solid var(--ct-border); box-shadow:0 1px 4px rgba(0,0,0,.06); color:var(--ct-text); }
   .card-green { background:#f0fdf4; border:1px solid #bbf7d0; }
+  html.dark .card-green { background:#14532d33; border-color:#166534; }
   .spin { animation: spin 1s linear infinite; }
   .pulse2 { animation: pulse2 1.4s ease infinite; }
   input[type=range] { accent-color: #16a34a; }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+  html.dark ::-webkit-scrollbar-thumb { background: #475569; }
+  html.dark input, html.dark select, html.dark textarea { background:#0f172a; color:var(--ct-text); border-color:var(--ct-border); }
+  html.dark .text-gray-800, html.dark .text-gray-700, html.dark .text-gray-600 { color: var(--ct-text) !important; }
+  html.dark .text-gray-500, html.dark .text-gray-400 { color: var(--ct-text-muted) !important; }
+  html.dark .bg-white { background: var(--ct-card) !important; }
+  html.dark .bg-gray-50 { background: #0f172a !important; }
+  html.dark .border-gray-100, html.dark .border-gray-200 { border-color: var(--ct-border) !important; }
 `;
+
+export const THEME_KEY = "carbon_theme";
+
+export function getStoredTheme() {
+  try { return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light"; }
+  catch { return "light"; }
+}
+
+export function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+  try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
+}
+
+export function useTheme() {
+  const [theme, setThemeState] = useState(getStoredTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+  const toggleTheme = () => setThemeState(prev => (prev === "dark" ? "light" : "dark"));
+  return { theme, setTheme: setThemeState, toggleTheme, isDark: theme === "dark" };
+}
 
 export async function apiFetch(path, opts = {}) {
   try {
     const session = JSON.parse(localStorage.getItem("carbon_session") || "{}");
     const token = session?.token || "";
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts.headers || {}),
+    };
+    if (!opts.isFormData) headers["Content-Type"] = "application/json";
     const res = await fetch(`${API}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(opts.headers || {}),
-      },
       ...opts,
+      headers,
     });
     const data = await res.json().catch(() => null);
     if (!res.ok && data && !data.message) {
@@ -76,7 +124,50 @@ export const TR = {
       journeyTitle: "Your Carbon Credit Journey",
       journeyStep1: "Step 1: Enter Total Emissions (Scope 1–3) in the Emissions menu",
       journeyStep2: "Step 2: Enter offset data in Carbon Sequestration",
-      journeyStep3: "Step 3: Credit = Total Emission − Total Sequestration",
+      journeyStep3: "Step 3: Carbon Credit = Total Emission − Total Sequestration",
+      alerts: "AI Detection & Alerts",
+      dismiss: "Dismiss",
+      noAlerts: "No active alerts",
+      dataTrust: "Data Confidence Level",
+      dataTrustSub: "Used in MRV verification",
+      certQuick: "Certificate",
+      certQuickSub: "Carbon credits",
+    },
+    absorb: {
+      subtitle: "Total sequestration is used to calculate Net Carbon Credit",
+      tabs: { green: "Green Carbon", solar: "Solar Panel", biogas: "Biogas", blue: "Blue Carbon" },
+      certTitle: "Verification Certificates",
+      certRequired: "required for active projects",
+      certEmission: "Emission Certificate",
+      certSequestration: "Sequestration Certificate",
+      certHint: "PDF or image — ISO 14064 summary",
+      certBothUploaded: "Both certificates uploaded — projects will appear on Home",
+      saveSequestration: "Save Sequestration",
+      saveSuccess: "Sequestration saved successfully!",
+      goDashboard: "Go to Dashboard →",
+      calcCredit: "Calculate Carbon Credit →",
+      calcCreditNeedEmission: "Enter Total Emissions first in the Emissions menu",
+      solar: {
+        title: "Solar Panel",
+        desc: "Solar electricity reduces grid demand from the utility (Scope 2 offset).",
+        panelCount: "Number of solar panels",
+        panelUnit: "units",
+        capacity: "Capacity per panel",
+        capacityUnit: "Wp",
+        sunHours: "Effective sunshine hours",
+        sunHoursLocked: "3.5 h/day (Indonesia average)",
+        efficiency: "Efficiency factor",
+        efficiencyLocked: "0.75 (locked)",
+        outputWh: "Watt Hour (Wh)",
+        outputKwh: "Kilo Watt Hour (kWh)",
+        offsetMonthly: "monthly CO₂e offset",
+      },
+      green: { title: "Green Carbon — Land / Forest", hint: "Enter verified third-party sequestration from land or forest." },
+      biogas: { title: "Biogas / Biogenic", hint: "Biogas from organic waste replaces fossil fuel." },
+      blue: { title: "Blue Carbon — Marine Biota", hint: "Sequestration from coastal mangrove, seagrass, coral reef, and other marine ecosystems." },
+      totalSequestration: "Total Sequestration (all categories)",
+      perMonth: "per month",
+      perYear: "per year",
     },
     land:{
       title:"Land Ownership", addParcel:"Add Land Parcel",
@@ -87,11 +178,11 @@ export const TR = {
       types:{ forest:"Forest",peatland:"Peatland",mangrove:"Mangrove",agricultural:"Agricultural",industrial:"Industrial" },
       status:{ healthy:"Healthy",flooded:"Flooded",degraded:"Degraded",burned:"Burned",drying:"Peat Drying" },
       alerts:{
-        flooded:"🌊 BANJIR / FLOOD — Serapan berkurang drastis. Air menggenangi lahan menghambat fotosintesis & pertukaran gas. Kredit karbon ditangguhkan.",
-        degraded:"⚠️ TERDEGRADASI — Lahan kehilangan kemampuan serapan. Vegetasi rusak, struktur tanah terganggu. Perlu rehabilitasi segera.",
-        peatland_degraded:"⚠️ GAMBUT TERDEGRADASI — Gambut berubah jadi emitter CO₂ aktif. Dekomposisi organik melepas CH₄ & CO₂ dalam jumlah besar (Ebo formula aktif).",
-        burned:"🔥 KEBAKARAN / FIRE — Emisi masif CO₂ & CH₄. Karbon tersimpan dilepas seketika. Kredit dibatalkan untuk area terdampak. Gas metana mengancam kesehatan.",
-        drying:"🌡️ GAMBUT MENGERING — Kelembaban turun drastis. Gambut kering = emitter CH₄ & CO₂. Risiko kebakaran meningkat. NDVI menurun."
+        flooded:"🌊 FLOOD — Sequestration drops sharply. Waterlogged land blocks photosynthesis & gas exchange. Carbon credits suspended.",
+        degraded:"⚠️ DEGRADED — Land loses sequestration capacity. Vegetation damaged, soil structure disrupted. Rehabilitation needed.",
+        peatland_degraded:"⚠️ PEAT DEGRADED — Peatland becomes an active CO₂ emitter. Organic decomposition releases large amounts of CH₄ & CO₂.",
+        burned:"🔥 FIRE — Massive CO₂ & CH₄ emissions. Stored carbon released instantly. Credits cancelled for affected areas.",
+        drying:"🌡️ PEAT DRYING — Humidity drops sharply. Dry peat emits CH₄ & CO₂. Fire risk increases. NDVI declining."
       },
     },
     calc:{
@@ -173,6 +264,12 @@ export const TR = {
     verify:{ title:"MRV & Verification", download:"Download ISO 14064 Certificate", log:"IoT · ML · Satellite Log",
       satelliteView:"Satellite View — Land Boundaries", multiSite:"Multi-Site Satellite View",
       certDownloaded:"ISO 14064 Certificate Downloaded",
+      isoUploadTitle:"Upload ISO 14064 Verification Certificate",
+      isoUploadHint:"Upload your ISO 14064 certificate from a verification body. Required before offering credits on the Market.",
+      isoUploadLabel:"Upload ISO 14064 Certificate",
+      isoUploadReject:"File rejected — must be PDF or JPG/PNG",
+      submitVerify:"Submit for Verification",
+      uploading:"Uploading...",
     },
     profile:{
       title:"Company Profile", settings:"Profile Settings",
@@ -208,7 +305,49 @@ export const TR = {
       journeyTitle: "Alur Mendapatkan Kredit Karbon",
       journeyStep1: "Langkah 1: Input Total Emisi (Scope 1–3) di menu Emisi",
       journeyStep2: "Langkah 2: Input data offset di menu Serapan Karbon",
-      journeyStep3: "Langkah 3: Kredit = Total Emisi − Total Serapan",
+      journeyStep3: "Langkah 3: Kredit Karbon = Total Emisi − Total Serapan",
+      alerts: "Deteksi AI & Peringatan",
+      dismiss: "Tutup",
+      dataTrust: "Tingkat Kepercayaan Data",
+      dataTrustSub: "Digunakan dalam verifikasi MRV",
+      certQuick: "Sertifikat",
+      certQuickSub: "Kredit karbon",
+    },
+    absorb: {
+      subtitle: "Total sequestration digunakan untuk menghitung Net Carbon Credit",
+      tabs: { green: "Karbon Hijau", solar: "Panel Surya", biogas: "Biogas", blue: "Blue Carbon" },
+      certTitle: "Sertifikat Verifikasi",
+      certRequired: "wajib untuk proyek aktif",
+      certEmission: "Sertifikat Emisi",
+      certSequestration: "Sertifikat Serapan",
+      certHint: "PDF atau gambar — ISO 14064 summary",
+      certBothUploaded: "Kedua sertifikat diunggah — proyek akan muncul di Beranda",
+      saveSequestration: "Simpan Sequestration",
+      saveSuccess: "Sequestration berhasil disimpan!",
+      goDashboard: "Ke Beranda →",
+      calcCredit: "Hitung Kredit Karbon →",
+      calcCreditNeedEmission: "Isi Total Emisi dulu di menu Emisi",
+      solar: {
+        title: "Panel Surya",
+        desc: "Listrik panel surya mengurangi kebutuhan dari PLN (offset Scope 2).",
+        panelCount: "Jumlah lembar panel surya",
+        panelUnit: "buah",
+        capacity: "Kapasitas",
+        capacityUnit: "Wp",
+        sunHours: "Jumlah jam matahari efektif",
+        sunHoursLocked: "3,5 jam/hari (rata-rata Indonesia)",
+        efficiency: "Faktor efisiensi",
+        efficiencyLocked: "0,75 (terkunci)",
+        outputWh: "Watt Hour (Wh)",
+        outputKwh: "Kilo Watt Hour (kWh)",
+        offsetMonthly: "offset CO₂e/bulan",
+      },
+      green: { title: "Karbon Hijau — Lahan / Hutan", hint: "Masukkan total sequestration dari lahan atau hutan yang sudah diverifikasi pihak ketiga." },
+      biogas: { title: "Biogas / Biogenik", hint: "Biogas dari limbah organik menggantikan bahan bakar fosil." },
+      blue: { title: "Blue Carbon — Biota Laut", hint: "Sequestration dari ekosistem laut: mangrove, lamun, terumbu karang, dan biota laut lainnya." },
+      totalSequestration: "Total Sequestration (semua kategori)",
+      perMonth: "per bulan",
+      perYear: "per tahun",
     },
     land: {
       title: "Serapan Karbon Lahan", addParcel: "Tambah Lahan Serapan",
@@ -306,6 +445,12 @@ export const TR = {
       title: "MRV & Verifikasi", download: "Unduh Sertifikat ISO 14064", log: "Log IoT · ML · Satelit",
       satelliteView: "Tampilan Satelit — Batas Lahan", multiSite: "Tampilan Satelit Multi-Lokasi",
       certDownloaded: "Sertifikat ISO 14064 Diunduh",
+      isoUploadTitle: "Upload Sertifikat Verifikasi ISO",
+      isoUploadHint: "Upload sertifikat ISO 14064 dari lembaga verifikasi. Wajib agar kredit karbon bisa ditawarkan di market.",
+      isoUploadLabel: "Upload Sertifikat ISO 14064",
+      isoUploadReject: "File ditolak — harus PDF atau JPG/PNG",
+      submitVerify: "Submit untuk Verifikasi",
+      uploading: "Mengunggah...",
     },
     profile: {
       title: "Profil Perusahaan", settings: "Pengaturan Profil",
@@ -340,7 +485,49 @@ export const TR = {
       journeyTitle: "Karbon Kredisi Yolculuğunuz",
       journeyStep1: "Adım 1: Emisyonlar menüsünde Toplam Emisyon (Kapsam 1–3) girin",
       journeyStep2: "Adım 2: Karbon Tutulumu menüsünde offset verilerini girin",
-      journeyStep3: "Adım 3: Kredi = Toplam Emisyon − Toplam Tutulum",
+      journeyStep3: "Adım 3: Karbon Kredisi = Toplam Emisyon − Toplam Tutulum",
+      alerts: "AI Tespiti ve Uyarılar",
+      dismiss: "Kapat",
+      dataTrust: "Veri Güven Düzeyi",
+      dataTrustSub: "MRV doğrulamasında kullanılır",
+      certQuick: "Sertifika",
+      certQuickSub: "Karbon kredisi",
+    },
+    absorb: {
+      subtitle: "Toplam tutulum, Net Karbon Kredisini hesaplamak için kullanılır",
+      tabs: { green: "Yeşil Karbon", solar: "Güneş Paneli", biogas: "Biyogaz", blue: "Mavi Karbon" },
+      certTitle: "Doğrulama Sertifikaları",
+      certRequired: "aktif projeler için zorunlu",
+      certEmission: "Emisyon Sertifikası",
+      certSequestration: "Tutulum Sertifikası",
+      certHint: "PDF veya görsel — ISO 14064 özeti",
+      certBothUploaded: "Her iki sertifika yüklendi — projeler Ana Sayfada görünecek",
+      saveSequestration: "Tutulumu Kaydet",
+      saveSuccess: "Tutulum başarıyla kaydedildi!",
+      goDashboard: "Ana Sayfaya Git →",
+      calcCredit: "Karbon Kredisini Hesapla →",
+      calcCreditNeedEmission: "Önce Emisyonlar menüsünden Toplam Emisyonu girin",
+      solar: {
+        title: "Güneş Paneli",
+        desc: "Güneş elektriği şebeke talebini azaltır (Kapsam 2 dengelemesi).",
+        panelCount: "Güneş paneli sayısı",
+        panelUnit: "adet",
+        capacity: "Kapasite",
+        capacityUnit: "Wp",
+        sunHours: "Etkin güneş saati",
+        sunHoursLocked: "3,5 saat/gün (Endonezya ortalaması)",
+        efficiency: "Verimlilik faktörü",
+        efficiencyLocked: "0,75 (sabit)",
+        outputWh: "Watt Saat (Wh)",
+        outputKwh: "Kilo Watt Saat (kWh)",
+        offsetMonthly: "aylık CO₂e dengelemesi",
+      },
+      green: { title: "Yeşil Karbon — Arazi / Orman", hint: "Üçüncü taraf doğrulanmış arazi veya orman tutulumunu girin." },
+      biogas: { title: "Biyogaz / Biyojenik", hint: "Organik atıktan biyogaz fosil yakıtın yerini alır." },
+      blue: { title: "Mavi Karbon — Deniz Biyotası", hint: "Kıyı mangrov, deniz çayırlığı, mercan resifi ve diğer deniz ekosistemlerinden tutulum." },
+      totalSequestration: "Toplam Tutulum (tüm kategoriler)",
+      perMonth: "aylık",
+      perYear: "yıllık",
     },
     land: {
       title: "Karbon Emilimi — Arazi", addParcel: "Arazi Ekle",
@@ -438,6 +625,12 @@ export const TR = {
       title: "Doğrulama", download: "ISO 14064 Sertifikasını İndir", log: "IoT · ML · Uydu Günlüğü",
       satelliteView: "Uydu Görünümü — Arazi Sınırı", multiSite: "Çoklu Konum Uydu Görünümü",
       certDownloaded: "ISO 14064 Sertifikası İndirildi",
+      isoUploadTitle: "ISO 14064 Doğrulama Sertifikası Yükle",
+      isoUploadHint: "Doğrulama kurumundan ISO 14064 sertifikanızı yükleyin. Pazarda kredi sunmadan önce zorunludur.",
+      isoUploadLabel: "ISO 14064 Sertifikası Yükle",
+      isoUploadReject: "Dosya reddedildi — PDF veya JPG/PNG olmalı",
+      submitVerify: "Doğrulama için Gönder",
+      uploading: "Yükleniyor...",
     },
     profile: {
       title: "Şirket Profili", settings: "Ayarlar",
@@ -454,9 +647,173 @@ export const TR = {
     },
     common: { save: "Kaydet", cancel: "İptal", back: "← Geri", loading: "İşleniyor...", confirm: "Onayla", download: "İndir", close: "Kapat", add: "Ekle", submit: "Gönder" },
   },
+  zh: {
+    flag: "🇨🇳", label: "中文",
+    nav: { home: "首页", absorb: "碳封存", market: "碳市场", calc: "总排放量", verify: "核查", profile: "企业", tx: "交易" },
+    dash: {
+      greeting: "欢迎回来", tagline: "有效 · 实时 · 无欺诈",
+      netCarbon: "净碳余额", totalEm: "总排放量", totalAbs: "总封存量",
+      credits: "碳信用", creditsUSD: "投资组合价值",
+      liveIoT: "实时物联网传感器", history: "历史",
+      myProjects: "碳封存项目", seeAll: "查看所有地块 →",
+      units: { t: "tCO₂e", kt: "ktCO₂e", Mt: "MtCO₂e", kg: "kg CO₂e" }, unitLabel: "单位",
+      activeProjects: "活跃碳项目",
+      projectStatus: { active: "活跃", pending: "待处理", completed: "已完成" },
+      progressLabel: "核查进度",
+      progressHelp: "跟踪封存数据在MRV流程中的进度：数据录入 → 证书上传 → AI验证 → 信用计算。",
+      carbonCreditValue: "碳信用价值",
+      journeyTitle: "获取碳信用流程",
+      journeyStep1: "步骤1：在排放菜单输入总排放量（范围1–3）",
+      journeyStep2: "步骤2：在碳封存页面输入抵消数据",
+      journeyStep3: "步骤3：碳信用 = 总排放量 − 总封存量",
+      alerts: "AI检测与预警", dismiss: "关闭",
+      dataTrust: "数据置信度", dataTrustSub: "用于MRV核查",
+      certQuick: "证书", certQuickSub: "碳信用",
+    },
+    absorb: {
+      subtitle: "总封存量用于计算净碳信用",
+      tabs: { green: "绿色碳", solar: "太阳能板", biogas: "沼气", blue: "蓝碳" },
+      certTitle: "核查证书", certRequired: "活跃项目必填",
+      certEmission: "排放证书", certSequestration: "封存证书",
+      certHint: "PDF或图片 — ISO 14064摘要",
+      certBothUploaded: "两份证书已上传 — 项目将显示在首页",
+      saveSequestration: "保存封存数据",
+      saveSuccess: "封存数据保存成功！",
+      goDashboard: "前往首页 →",
+      calcCredit: "计算碳信用 →",
+      calcCreditNeedEmission: "请先在排放菜单输入总排放量",
+      solar: {
+        title: "太阳能板", desc: "太阳能发电减少电网需求（范围2抵消）。",
+        panelCount: "太阳能板数量", panelUnit: "块",
+        capacity: "容量", capacityUnit: "Wp",
+        sunHours: "有效日照小时数", sunHoursLocked: "3.5 小时/天（印尼平均值）",
+        efficiency: "效率系数", efficiencyLocked: "0.75（固定）",
+        outputWh: "瓦时 (Wh)", outputKwh: "千瓦时 (kWh)",
+        offsetMonthly: "每月CO₂e抵消量",
+      },
+      green: { title: "绿色碳 — 土地/森林", hint: "输入经第三方核查的土地或森林封存量。" },
+      biogas: { title: "沼气/生物源", hint: "有机废物沼气替代化石燃料。" },
+      blue: { title: "蓝碳 — 海洋生物", hint: "来自红树林、海草、珊瑚礁等海洋生态系统的封存。" },
+      totalSequestration: "总封存量（所有类别）",
+      perMonth: "每月", perYear: "每年",
+    },
+    land: {
+      title: "土地封存", addParcel: "添加地块",
+      area: "面积 (ha)", type: "土地类型", name: "地块名称",
+      lat: "纬度", lng: "经度", depth: "泥炭深度 (m)",
+      simulate: "模拟条件", viewAll: "所有地块",
+      stockFormula: "碳封存公式",
+      types: { forest: "森林", peatland: "泥炭地", mangrove: "红树林", agricultural: "农业", industrial: "工业" },
+      status: { healthy: "健康", flooded: "洪涝", degraded: "退化", burned: "火灾", drying: "泥炭干燥" },
+      alerts: {
+        flooded: "🌊 检测到洪涝 — 封存量急剧下降，碳信用暂停。",
+        degraded: "⚠️ 退化 — 植被受损，需要修复。",
+        peatland_degraded: "⚠️ 泥炭退化 — 成为活跃CO₂排放源。",
+        burned: "🔥 检测到火灾 — 大量CO₂和CH₄排放，信用取消。",
+        drying: "🌡️ 泥炭干燥 — 湿度下降，排放风险增加。",
+      },
+    },
+    calc: {
+      title: "排放计算器", scope1: "范围1 — 直接排放",
+      scope2: "范围2 — 间接能源", scope3: "范围3 — 价值链",
+      calculate: "计算排放量", totalEm: "总排放量",
+      offsetNeeded: "所需碳信用", leakage: "泄漏估算",
+      ref: "基于 IPCC 2006 · 印尼ESDM排放因子",
+      breakdownTitle: "按来源明细",
+      method: "计算方法", methodOp: "运营控制", methodEq: "股权份额",
+      equityPct: "股权比例 (%)",
+      ownershipCert: "上传所有权证书",
+      ownershipHint: "股权文件 PDF/图片",
+      ownershipReject: "文件被拒绝 — 必须为 PDF 或图片",
+      aiMethodDesc: "CarbonTrust AI 使用 NLP 和计算机视觉读取 ISO 14064 证书摘要，并通过 IPCC 排放因子交叉验证您的手动输入。",
+      ui: {
+        scopeTabs: "范围 1 · 2 · 3 · 总计",
+        notCalculated: "尚未计算总排放量",
+        notCalculatedHint: "填写范围1、2、3数据后点击计算排放量。",
+        startScope1: "从范围1开始 →",
+        formulaTitle: "GHG Protocol 公式 (Quantis/WBCSD)",
+        formula1: "GHG_i = 活动量_i × EF_i",
+        formula2: "总计 = Σ 范围1 + Σ 范围2 + Σ 范围3",
+        distribution: "排放分布",
+        scopeBreakdown: "按范围明细 — 点击查看详情",
+        scopeDetail: "范围 {n} — 来源明细",
+        subtotal: "范围 {n} 小计",
+        uncertaintyTitle: "计算不确定性",
+        uncertaintyDesc: "基于 Pedigree Matrix (GHG Protocol)。",
+        leakageNote: "范围1 × 5% + 范围3 × 10%",
+        recalculate: "← 重新计算",
+        lastResult: "最新结果",
+        tapTotal: "点击查看完整总排放量",
+        emissionSources: "{n} 个排放源",
+        seeDetail: "查看明细 →",
+        noEmission: "无排放记录",
+        aiMethodTitle: "使用方法 — AI MRV",
+        methodOpLabel: "运营/活动",
+        methodEqLabel: "股权份额",
+        tonKmHint: "输入总吨公里 (ton·km) = 距离 (km) × 载荷 (吨)。",
+        tonKmLoad: "载荷 (吨)",
+        journeyTitle: "下一步：碳封存",
+        journeyBody: "排放量已计算。请在碳封存页面输入抵消数据以计算净碳信用。",
+        goSequestration: "前往碳封存 →",
+        stayHere: "留在此页",
+        calculating: "计算中...",
+        scopeInfo: {
+          1: { label: "范围1 — 直接排放", sub: "固定燃烧与运营运输" },
+          2: { label: "范围2 — 外购能源", sub: "电网电力 (kWh) 与外购能源" },
+          3: { label: "范围3 — 价值链", sub: "货运、物流、差旅与废物" },
+        },
+      },
+    },
+    market: {
+      title: "碳市场", search: "搜索项目、公司、国家...",
+      detail: "查看详情", transact: "开始交易",
+      aiMatch: "AI匹配", analyzing: "分析兼容性...",
+      score: "兼容性得分", buyer: "买方", seller: "卖方",
+      proceed: "继续交易 →", recommend: "为您推荐",
+      est500: "500吨购买估算", eqArea: "公顷等效", renewableProj: "可再生能源项目",
+    },
+    tx: {
+      title: "交易", new: "新交易",
+      stage0: "协议已创建", stage1: "资金托管",
+      stage2: "碳已验证", stage3: "资金释放",
+      confirmReceipt: "确认收货",
+      escrow: "托管金额", verified: "MRV已验证",
+      volume: "数量", price: "价格/吨", total: "总计",
+      noTx: "无活跃交易", noTxSub: "从市场页面开始交易",
+      status: "交易状态", complete: "交易完成 — 资金已释放",
+      active: "● 活跃", completed: "✓ 已完成", inProgress: "● 进行中",
+      advanceDemo: "▶ 进入下一阶段 (演示)",
+      escrowNote: "B2B协议通过MRV验证跟踪",
+    },
+    verify: {
+      title: "MRV与验证", download: "下载 ISO 14064 证书", log: "IoT · ML · 卫星日志",
+      satelliteView: "卫星视图 — 地块边界", multiSite: "多站点卫星视图",
+      certDownloaded: "ISO 14064 证书已下载",
+      isoUploadTitle: "上传 ISO 14064 核查证书",
+      isoUploadHint: "上传核查机构的 ISO 14064 证书。在市场中出售信用额度前必填。",
+      isoUploadLabel: "上传 ISO 14064 证书",
+      isoUploadReject: "文件被拒绝 — 必须为 PDF 或 JPG/PNG",
+      submitVerify: "提交核查",
+      uploading: "上传中...",
+    },
+    profile: {
+      title: "企业档案", settings: "档案设置",
+      save: "保存档案", saved: "✅ 已保存！",
+      companyName: "企业名称", emailLabel: "机构邮箱", locationLabel: "位置",
+      removalProjectLabel: "碳去除项目", entityTypeLabel: "实体/企业类型", bizTypeLabel: "业务活动类型",
+      txCount: "交易",
+    },
+    exit: {
+      btn: "退出", title: "退出应用", desc: "您想做什么？",
+      exitOnly: "退出应用", logout: "退出并注销",
+      logoutDesc: "您将返回到注册页面。",
+      cancelBtn: "取消", noActiveTx: "没有活跃交易",
+    },
+    common: { save: "保存", cancel: "取消", back: "← 返回", loading: "处理中...", confirm: "确认", download: "下载", close: "关闭", add: "添加", submit: "提交" },
+  },
 };
 
-export const ALLOWED_LANGS = ["en", "id", "tr"];
+export const ALLOWED_LANGS = ["en", "id", "tr", "zh"];
 
 export function readCarbonCredit() {
   try { return JSON.parse(localStorage.getItem("carbon_credit_result") || "null"); }
@@ -485,13 +842,13 @@ export const ABS_RATES = {
 };
 
 export function calcPeatAbsorption(area, humidity) {
-  const h = parseFloat(humidity) || 60; // default 60% kalau tidak ada sensor
-  if (h >= 80) return +(( 2.8 * area) / 12).toFixed(2);  // sangat basah — serapan max
-  if (h >= 60) return +(( 2.1 * area) / 12).toFixed(2);  // optimal — serapan normal
-  if (h >= 50) return +(( 0.5 * area) / 12).toFixed(2);  // mulai kering — serapan turun
-  if (h >= 40) return +((-5.0 * area) / 12).toFixed(2);  // kering — mulai emit
-  if (h >= 30) return +((-15  * area) / 12).toFixed(2);  // sangat kering — emit aktif
-  return              +((-25  * area) / 12).toFixed(2);   // kritis — emit maksimal
+  const h = parseNum(humidity) || 60;
+  if (h >= 80) return roundCarbon((2.8 * parseNum(area)) / 12, 2);
+  if (h >= 60) return roundCarbon((2.1 * parseNum(area)) / 12, 2);
+  if (h >= 50) return roundCarbon((0.5 * parseNum(area)) / 12, 2);
+  if (h >= 40) return roundCarbon((-5.0 * parseNum(area)) / 12, 2);
+  if (h >= 30) return roundCarbon((-15 * parseNum(area)) / 12, 2);
+  return roundCarbon((-25 * parseNum(area)) / 12, 2);
 }
 
 // Label tingkat risiko berdasarkan humidity gambut
@@ -778,7 +1135,77 @@ export function getEfCategories(lang) {
 export function getLocale(lang) {
   if (lang === "id") return "id-ID";
   if (lang === "tr") return "tr-TR";
+  if (lang === "zh") return "zh-CN";
   return "en-US";
+}
+
+/** Parse numeric input — accepts comma or dot decimal separators. */
+export function parseNum(val) {
+  if (val == null || val === "") return 0;
+  const n = parseFloat(String(val).trim().replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Consistent rounding for carbon calculations (avoids floating-point drift). */
+export function roundCarbon(n, decimals = 2) {
+  const factor = 10 ** decimals;
+  return Math.round((Number(n) + Number.EPSILON) * factor) / factor;
+}
+
+export const SOLAR_SUN_HOURS = 3.5;
+export const SOLAR_EFFICIENCY = 0.75;
+
+/** Solar panel energy: Wh = panels × Wp × 3.5 × 0.75; kWh = Wh / 1000 */
+export function calcSolarEnergy(panelCount, capacityWp) {
+  const panels = parseNum(panelCount);
+  const wp = parseNum(capacityWp);
+  const wh = roundCarbon(panels * wp * SOLAR_SUN_HOURS * SOLAR_EFFICIENCY, 2);
+  const kwh = roundCarbon(wh / 1000, 4);
+  return { wh, kwh };
+}
+
+/** Build a minimal valid PDF blob from plain text lines. */
+export function buildTextPdfBlob(lines) {
+  const escapePdf = (s) => String(s).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  const textLines = Array.isArray(lines) ? lines : String(lines).split("\n");
+  const streamBody = ["BT", "/F1 10 Tf", "14 TL", "50 780 Td"];
+  textLines.forEach((line, i) => {
+    if (i > 0) streamBody.push("T*");
+    streamBody.push(`(${escapePdf(line)}) Tj`);
+  });
+  streamBody.push("ET");
+  const stream = streamBody.join("\n");
+  const streamLen = new TextEncoder().encode(stream).length;
+  const objects = [
+    "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
+    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+    "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj",
+    `4 0 obj<</Length ${streamLen}>>stream\n${stream}\nendstream endobj`,
+    "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((obj) => {
+    offsets.push(pdf.length);
+    pdf += obj + "\n";
+  });
+  const xrefPos = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (let i = 1; i <= objects.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer<</Size ${objects.length + 1}/Root 1 0 R>>\nstartxref\n${xrefPos}\n%%EOF`;
+  return new Blob([pdf], { type: "application/pdf" });
+}
+
+export function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export const CARBON_DATA_EVENT = "carbon-data-update";
@@ -796,13 +1223,14 @@ export function calcAbsorption(p) {
     return calcPeatAbsorption(p.area, p.humidity);
   }
   const r = ABS_RATES[p.type]?.[p.status] ?? 0;
-  return parseFloat(((r * p.area) / 12).toFixed(2));
+  return roundCarbon((r * parseNum(p.area)) / 12, 2);
 }
 export function convertUnit(val, unit) {
-  if (unit === "kg") return parseFloat((val * 1000).toFixed(0));
-  if (unit === "kt") return parseFloat((val / 1000).toFixed(3));
-  if (unit === "Mt") return parseFloat((val / 1000000).toFixed(6));
-  return val;
+  const v = parseNum(val);
+  if (unit === "kg") return roundCarbon(v * 1000, 0);
+  if (unit === "kt") return roundCarbon(v / 1000, 3);
+  if (unit === "Mt") return roundCarbon(v / 1000000, 6);
+  return v;
 }
 
 // ─── HOOKS ─────────────────────────────────────────────────────────────────
@@ -906,14 +1334,15 @@ export function SparkLine({ data, color = "#22c55e", h = 36 }) {
 export function Logo({ size = 38 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <img src="/logo.jpg" alt="Logo CarbonTrust" style={{ width: size, height: size }}
-        className="object-contain rounded-lg shadow-sm" />
+      <img src="/logo_depan.svg" alt="Logo CarbonTrust"
+        style={{ width: size, height: size }}
+        className="object-contain rounded-lg dark:brightness-110" />
       <div>
         <div className="leading-none">
-          <span className="font-black text-green-700" style={{ fontSize: "1.05rem", letterSpacing: "-0.02em" }}>Carbon</span>
-          <span className="font-black text-teal-600" style={{ fontSize: "1.05rem", letterSpacing: "-0.02em" }}>Trust</span>
+          <span className="font-black text-green-700 dark:text-green-400" style={{ fontSize: "1.05rem", letterSpacing: "-0.02em" }}>Carbon</span>
+          <span className="font-black text-teal-600 dark:text-teal-400" style={{ fontSize: "1.05rem", letterSpacing: "-0.02em" }}>Trust</span>
         </div>
-        <div className="text-green-600 font-semibold" style={{ fontSize: "7.5px", letterSpacing: "0.14em", marginTop: "1px" }}>
+        <div className="text-green-600 dark:text-green-500 font-semibold" style={{ fontSize: "7.5px", letterSpacing: "0.14em", marginTop: "1px" }}>
           VALID · REAL-TIME · FRAUD-FREE
         </div>
       </div>
@@ -973,25 +1402,30 @@ export function LangSel({ lang, setLang }) {
 }
 
 // ─── HEADER ────────────────────────────────────────────────────────────────
-export function Header({ alerts, onDismiss, lang, setLang, t }) {
+export function Header({ alerts, onDismiss, lang, setLang, t, theme, toggleTheme }) {
   const [open, setOpen] = useState(false);
   const crit = alerts.filter(alertItem => alertItem.type !== "info").length;
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
+    <header className="sticky top-0 z-20 shadow-sm border-b border-gray-100 dark:border-slate-700"
+      style={{ background: "var(--ct-header)" }}>
       <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-2">
         <Logo size={36} />
         <div className="ml-auto flex items-center gap-2">
+          <button onClick={toggleTheme} aria-label="Toggle dark mode"
+            className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center text-gray-500 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 text-sm">
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
           <LangSel lang={lang} setLang={setLang} />
           <button onClick={() => setOpen(true)}
-            className="relative w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100">
+            className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center text-gray-500 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700">
             <Ic.Bell />
             {crit > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">{crit}</span>}
           </button>
         </div>
       </div>
-      <Modal open={open} onClose={() => setOpen(false)} title={`🔔 ${t.dash.alerts}`}>
+      <Modal open={open} onClose={() => setOpen(false)} title={`🔔 ${t.dash?.alerts || "Alerts"}`}>
         <div className="flex flex-col gap-3">
-          {alerts.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No active alerts</p>}
+          {alerts.length === 0 && <p className="text-sm text-gray-400 text-center py-4">{t.dash?.noAlerts || "No active alerts"}</p>}
           {alerts.map(alertItem => (
             <div key={alertItem.id} className={`flex items-start gap-3 p-3 rounded-xl ${alertItem.type === "critical" ? "bg-red-50" : alertItem.type === "warning" ? "bg-amber-50" : "bg-green-50"}`}>
               <span className="text-lg">{alertItem.type === "critical" ? "🚨" : alertItem.type === "warning" ? "⚠️" : "✅"}</span>
@@ -1024,7 +1458,8 @@ export function BottomNav({ page, setPage, t }) {
     { id: "profile",ic: "Profile", l: t.nav.profile },
   ];
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-100 dark:border-slate-700 shadow-lg"
+      style={{ background: "var(--ct-header)" }}>
       <div className="max-w-md mx-auto flex">
         {items.map(item => {
           const active = page === item.id;

@@ -17,7 +17,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   EF, EF_LABELS, CREDIT_PRICE, TR, apiFetch,
   Modal, Spinner, getEfCategories, getLocale,
-  CALC_DRAFT_KEY, dispatchCarbonDataUpdate,
+  CALC_DRAFT_KEY, dispatchCarbonDataUpdate, parseNum, roundCarbon,
 } from "../shared.jsx";
 
 // Group EF keys by scope
@@ -256,19 +256,19 @@ export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
   // Total = Σ Scope1_i + Σ Scope2_i + Σ Scope3_i
   async function calculate() {
     setCalculating(true);
-    const eqFactor = method === "equity" ? (parseFloat(equityPct) || 100) / 100 : 1;
+    const eqFactor = method === "equity" ? (parseNum(equityPct) || 100) / 100 : 1;
     let s1 = 0, s2 = 0, s3 = 0;
     const breakdown = [];
     const apiInputs = {};
 
     Object.entries(EF).forEach(([efKey, ef]) => {
-      const raw = parseFloat(inputs[efKey]) || 0;
+      const raw = parseNum(inputs[efKey]);
       if (raw <= 0) return;
 
       const isTkm = ef.unit === "ton·km";
-      const tons = parseFloat(freightTons[efKey]) || 0;
+      const tons = parseNum(freightTons[efKey]);
       const effectiveVal = isTkm ? (tons > 0 ? raw * tons : raw) : raw;
-      const em = +(effectiveVal * ef.ef * eqFactor).toFixed(3);
+      const em = roundCarbon(effectiveVal * ef.ef * eqFactor, 3);
 
       apiInputs[efKey] = isTkm && tons > 0 ? effectiveVal : raw;
       if (isTkm && tons > 0) apiInputs[`${efKey}_km`] = raw;
@@ -286,11 +286,11 @@ export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
       });
     });
 
-    const total   = +(s1 + s2 + s3).toFixed(2);
-    const leakage = +(s1 * 0.05 + s3 * 0.10).toFixed(2);
+    const total   = roundCarbon(s1 + s2 + s3, 2);
+    const leakage = roundCarbon(s1 * 0.05 + s3 * 0.10, 2);
 
     const nextResult = {
-      total, s1: +s1.toFixed(2), s2: +s2.toFixed(2), s3: +s3.toFixed(2),
+      total, s1: roundCarbon(s1, 2), s2: roundCarbon(s2, 2), s3: roundCarbon(s3, 2),
       leakage, breakdown,
       creditsNeeded: Math.ceil(total / 1000),
     };
@@ -311,7 +311,7 @@ export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
         body: JSON.stringify({
           companyId,
           method,
-          equityPct: method === "equity" ? parseFloat(equityPct) || 100 : 100,
+          equityPct: method === "equity" ? parseNum(equityPct) || 100 : 100,
           inputs: apiInputs,
         }),
       }).catch(() => {});

@@ -3,7 +3,7 @@
  * MRV & Verification: satellite view, IoT log, ISO 14064 download
  */
 import { useState } from "react";
-import { API, useInterval, Spinner, Ic } from "../shared.jsx";
+import { API, useInterval, Spinner, Ic, apiFetch } from "../shared.jsx";
 
 
 export function VerifyPage({ t, parcels, companyId }) {
@@ -14,6 +14,7 @@ export function VerifyPage({ t, parcels, companyId }) {
   const [dl, setDl] = useState(false);
   const [done, setDone] = useState(false);
   const [scanLine, setScanLine] = useState(0);
+  const v = t?.verify || {};
   useInterval(() => setScanLine(prev => (prev + 1) % 100), 30);
 
   function handleIsoUpload(e) {
@@ -21,7 +22,7 @@ export function VerifyPage({ t, parcels, companyId }) {
     if (!file) return;
     const allowed = ["application/pdf", "image/jpeg", "image/png"];
     if (!allowed.includes(file.type)) {
-      setCertError("File ditolak — harus PDF atau JPG/PNG");
+      setCertError(v.isoUploadReject || "File rejected — must be PDF or JPG/PNG");
       setIsoCert(null);
       return;
     }
@@ -34,23 +35,17 @@ export function VerifyPage({ t, parcels, companyId }) {
     if (!isoCert || !companyId) return;
     try {
       setUploading(true);
-      const session = JSON.parse(localStorage.getItem("carbon_session") || "{}");
       const fd = new FormData();
       fd.append("isoCert", isoCert);
-      const res = await fetch(`${API}/company/${companyId}/upload-iso`, {
-        method: "POST",
-        headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
-        body: fd,
-      });
-      const data = await res.json();
-      if (data?.success) {
+      const res = await apiFetch(`/company/${companyId}/upload-iso`, { method: "POST", body: fd, isFormData: true });
+      if (res?.success) {
         setVerified(true);
         setCertError("");
       } else {
-        setCertError(data?.message || "Upload sertifikat gagal");
+        setCertError(res?.message || v.isoUploadReject || "Certificate upload failed");
       }
     } catch {
-      setCertError("Gagal upload sertifikat");
+      setCertError(v.isoUploadReject || "Certificate upload failed");
     } finally {
       setUploading(false);
     }
@@ -68,7 +63,7 @@ export function VerifyPage({ t, parcels, companyId }) {
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-4 fade-up">
       <div className="rounded-2xl p-4 text-white" style={{ background: "linear-gradient(135deg,#0f766e,#166534)" }}>
-        <p className="text-teal-200 text-xs uppercase tracking-widest mb-1">{t.verify.title}</p>
+        <p className="text-teal-200 text-xs uppercase tracking-widest mb-1">{v.title}</p>
         <p className="font-black text-xl">MRV Report · ISO 14064:2018</p>
         <div className="flex gap-2 mt-2 flex-wrap">
           {["ISO 14064:2018", "VCS Verra", "Gold Standard", "IPCC 2006"].map(badgeLabel => (
@@ -77,10 +72,9 @@ export function VerifyPage({ t, parcels, companyId }) {
         </div>
       </div>
 
-      {/* Multi-parcel satellite view */}
       <div className="card overflow-hidden">
         <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2"><Ic.Map /><p className="font-bold text-gray-800 text-sm">Multi-Site Satellite View</p></div>
+          <div className="flex items-center gap-2"><Ic.Map /><p className="font-bold text-gray-800 text-sm">{v.multiSite || "Multi-Site Satellite View"}</p></div>
           <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Sentinel-2 Live</span>
         </div>
         <div className="relative bg-green-950 overflow-hidden" style={{ height: 200 }}>
@@ -97,15 +91,6 @@ export function VerifyPage({ t, parcels, companyId }) {
                   <rect x={bx} y={by} width={90} height={60}
                     fill={{ forest: "#166534", peatland: "#92400e", mangrove: "#0e7490", agricultural: "#a16207", industrial: "#475569" }[parcel.type]} opacity=".45"
                     stroke={sc} strokeWidth="2" strokeDasharray={parcel.status !== "healthy" ? "6,3" : "none"} rx="4" />
-                  {[[bx + 20, by + 20], [bx + 50, by + 15], [bx + 70, by + 35]].map(([sx, sy], j) => (
-                    <g key={j}>
-                      <circle cx={sx} cy={sy} r="4" fill={sc} opacity=".9" />
-                      <circle cx={sx} cy={sy} r="9" fill="none" stroke={sc} strokeWidth="1" opacity=".4">
-                        <animate attributeName="r" values="4;12;4" dur="2.5s" repeatCount="indefinite" begin={`${j * 0.5}s`} />
-                        <animate attributeName="opacity" values=".5;0;.5" dur="2.5s" repeatCount="indefinite" begin={`${j * 0.5}s`} />
-                      </circle>
-                    </g>
-                  ))}
                   <text x={bx + 4} y={by + 12} fill="white" fontSize="8" fontWeight="bold" opacity=".9">{parcel.id}</text>
                 </g>
               );
@@ -116,10 +101,9 @@ export function VerifyPage({ t, parcels, companyId }) {
         </div>
       </div>
 
-      {/* Log */}
       <div className="card">
         <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-          <p className="font-bold text-gray-800 text-sm">{t.verify.log}</p>
+          <p className="font-bold text-gray-800 text-sm">{v.log}</p>
           <span className="text-xs text-gray-400">{geoLog.length} entries</span>
         </div>
         <div className="divide-y divide-gray-50">
@@ -134,49 +118,45 @@ export function VerifyPage({ t, parcels, companyId }) {
           ))}
         </div>
       </div>
-      
-      {/* ISO Cert Upload */}
-<div className="card p-4 flex flex-col gap-3">
-  <div className="flex items-center justify-between">
-    <p className="text-sm font-bold text-gray-800">📋 Upload Sertifikat Verifikasi ISO</p>
-    {verified && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">✅ Verified</span>}
-  </div>
-  <p className="text-xs text-gray-500">
-    Upload sertifikat ISO 14064 dari lembaga verifikasi. Wajib agar kredit karbon bisa ditawarkan di market.
-  </p>
 
-  <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
-    ${isoCert ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}>
-    <span className="text-2xl">{isoCert ? "📄" : "⬆️"}</span>
-    <div className="flex-1">
-      <p className="text-xs font-bold text-gray-700">
-        {isoCert ? isoCert.name : "Upload Sertifikat ISO 14064"}
-      </p>
-      <p className="text-xs text-gray-400">PDF / JPG / PNG · maks 10MB</p>
-    </div>
-    {isoCert && <span className="text-green-600 font-bold text-xs">✓</span>}
-    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleIsoUpload} />
-  </label>
+      <div className="card p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-bold text-gray-800">📋 {v.isoUploadTitle}</p>
+          {verified && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">✅ Verified</span>}
+        </div>
+        <p className="text-xs text-gray-500">{v.isoUploadHint}</p>
 
-  {certError && <p className="text-xs text-red-600">{certError}</p>}
+        <label className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors
+          ${isoCert ? "border-green-400 bg-green-50" : certError ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-gray-300"}`}>
+          <span className="text-2xl">{isoCert ? "📄" : "⬆️"}</span>
+          <div className="flex-1">
+            <p className="text-xs font-bold text-gray-700">
+              {isoCert ? isoCert.name : v.isoUploadLabel}
+            </p>
+            <p className="text-xs text-gray-400">PDF / JPG / PNG · max 10MB</p>
+          </div>
+          {isoCert && <span className="text-green-600 font-bold text-xs">✓</span>}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleIsoUpload} />
+        </label>
 
-  {isoCert && !verified && (
-    <button
-      onClick={submitIsoVerification}
-      disabled={uploading}
-      className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
-      style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
-      {uploading ? "Uploading..." : "Submit untuk Verifikasi"}
-    </button>
-  )}
-</div>
+        {certError && <p className="text-xs text-red-600">{certError}</p>}
+
+        {isoCert && !verified && (
+          <button
+            onClick={submitIsoVerification}
+            disabled={uploading}
+            className="w-full py-2.5 rounded-xl font-bold text-white text-sm active:scale-95 transition-all"
+            style={{ background: "linear-gradient(135deg,#166534,#0f766e)" }}>
+            {uploading ? (v.uploading || "Uploading...") : (v.submitVerify || "Submit for Verification")}
+          </button>
+        )}
+      </div>
 
       <button onClick={() => { setDl(true); setTimeout(() => { setDl(false); setDone(true); }, 2500); }} disabled={dl}
         className={`flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-bold transition-all ${done ? "bg-green-50 text-green-700 border border-green-200" : "text-white active:scale-95"} disabled:opacity-60`}
         style={!done ? { background: "linear-gradient(135deg,#166534,#0f766e)" } : {}}>
-        {dl ? <><Spinner />Processing...</> : done ? <>✅ ISO 14064 Certificate Downloaded</> : <><Ic.Dl />{t.verify.download}</>}
+        {dl ? <><Spinner />{t?.common?.loading || "Processing..."}</> : done ? <>✅ {v.certDownloaded}</> : <><Ic.Dl />{v.download}</>}
       </button>
     </div>
   );
 }
-

@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import {
   COMPANY_ID, apiFetch, GCSS,
   MOCK_PARCELS, MOCK_ALERTS, MOCK_COMPANY, MOCK_PROJECTS,
-  TR, Header, BottomNav,
+  TR, Header, BottomNav, useTheme, applyTheme, getStoredTheme,
 } from "../shared.jsx";
 
 import {Dashboard}        from "../pages/Dashboard.jsx";
@@ -25,6 +25,7 @@ import {AbsorbPage}       from "../pages/AbsorbPage.jsx";
 export default function App({ onLogout, onExit, initialLang = "en", userData }) {
   const [page,     setPage]     = useState("home");
   const [lang,     setLang]     = useState(initialLang);
+  const { theme, toggleTheme } = useTheme();
   const [parcels,  setParcels]  = useState(MOCK_PARCELS);
   const [alerts,   setAlerts]   = useState(MOCK_ALERTS);
   const [company,  setCompany]  = useState(userData || MOCK_COMPANY);
@@ -49,6 +50,9 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
 
   // companyId dari session user, fallback ke COMPANY_ID
   const companyId = userData?.id || userData?._id || userData?.companyId || COMPANY_ID;
+
+  // Apply stored theme on mount
+  useEffect(() => { applyTheme(getStoredTheme()); }, []);
 
   // Load data dari BE
   // FIX: hapus /alerts dan /transactions — endpoint tidak ada di BE
@@ -110,10 +114,10 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#f1f5f1" }}>
+    <div className="min-h-screen" style={{ background: "var(--ct-bg)" }}>
       <style>{GCSS}</style>
-      <div className="max-w-md mx-auto relative min-h-screen flex flex-col bg-gray-50 shadow-2xl">
-        <Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} />
+      <div className="max-w-md mx-auto relative min-h-screen flex flex-col shadow-2xl" style={{ background: "var(--ct-surface)" }}>
+        <Header alerts={alerts} onDismiss={handleDismiss} lang={lang} setLang={setLang} t={t} theme={theme} toggleTheme={toggleTheme} />
         <main className="flex-1 overflow-y-auto pb-20">{renderPage()}</main>
         <BottomNav page={page} setPage={setPage} t={t} />
       </div>

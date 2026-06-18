@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Spinner, Ic, apiFetch } from "../shared.jsx";
+import { Spinner, Ic, apiFetch, buildTextPdfBlob, downloadBlob, roundCarbon, parseNum } from "../shared.jsx";
 
 function calcAbsorption(parcel) {
   const BASE = {
@@ -11,7 +11,7 @@ function calcAbsorption(parcel) {
     industrial:   { healthy:0,    flooded:0,    degraded:0,    burned:0,    drying:0    },
   };
   const rate = BASE[parcel.type]?.[parcel.status] ?? 0;
-  return parseFloat(((rate * parcel.area) / 12).toFixed(2));
+  return roundCarbon((rate * parseNum(parcel.area)) / 12, 2);
 }
 
 export function CertificatePage({ t, parcels, company, companyId }) {
@@ -41,8 +41,8 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   })();
   // Fallback ke kalkulasi parcel jika AbsorbPage belum diisi
   const totalAbs = savedAbsorb?.totalAbsorbKg != null
-    ? parseFloat((savedAbsorb.totalAbsorbKg / 1000 / 12 * 12).toFixed(2)) // kg/bln → t/bln (× 12 = t/thn)
-    : parseFloat(parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0).toFixed(2));
+    ? roundCarbon(savedAbsorb.totalAbsorbKg / 1000 / 12 * 12, 2)
+    : roundCarbon(parcels.reduce((sum, pc) => sum + Math.max(0, calcAbsorption(pc)), 0), 2);
 
   // ── Emisi perusahaan dari CalcPage (Scope 1+2+3) ─────────────────────────
   // Baca dari localStorage yang disimpan saat user klik "Hitung Emisi" di CalcPage
@@ -54,18 +54,15 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   })();
   // total dari CalcPage dalam kg CO₂e → konversi ke tCO₂/bulan
   const companyEmMonthly = savedEmission
-    ? parseFloat((savedEmission.total / 1000 / 12).toFixed(2))  // kg/yr ÷ 1000 ÷ 12 = t/bln
-    : parseFloat(parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0).toFixed(2));
+    ? roundCarbon(savedEmission.total / 1000 / 12, 2)
+    : roundCarbon(parcels.reduce((sum, pc) => sum + Math.max(0, -calcAbsorption(pc)), 0), 2);
 
-  // Gunakan netEmission (sudah dikurangi offset) jika tersedia
   const totalEm = savedEmission?.netEmission
-    ? parseFloat((savedEmission.netEmission / 1000 / 12).toFixed(2))  // net kg/yr → t/bln
+    ? roundCarbon(savedEmission.netEmission / 1000 / 12, 2)
     : companyEmMonthly;
 
-  // ── Net Carbon Credit ──────────────────────────────────────────────────────
-  // Net = Serapan - Emisi (per bulan) → × 12 = per tahun
-  const netMonthly  = parseFloat((totalAbs - totalEm).toFixed(2));
-  const netAnnual   = parseFloat((netMonthly * 12).toFixed(2));
+  const netMonthly  = roundCarbon(totalAbs - totalEm, 2);
+  const netAnnual   = roundCarbon(netMonthly * 12, 2);
   const netCredits  = Math.max(0, Math.floor(netAnnual));
 
   // Prioritaskan hasil dari tombol "Hitung Kredit Karbon" di AbsorbPage
@@ -92,7 +89,6 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   function handleDownload() {
     setDownloading(true);
     setTimeout(() => {
-      // Generate teks sertifikat sederhana untuk di-download
       const content = [
         "═══════════════════════════════════════════",
         "       CARBON CREDIT CERTIFICATE",
@@ -127,18 +123,13 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         "  This certificate is digitally verified",
         "  by the CarbonTrust platform.",
         "═══════════════════════════════════════════",
-      ].join("\n");
+      ];
 
-      const blob = new Blob([content], { type: "application/pdf" });
-      const url  = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href     = url;
-      anchor.download = `${certNo}.pdf`;
-      anchor.click();
-      URL.revokeObjectURL(url);
+      const blob = buildTextPdfBlob(content);
+      downloadBlob(blob, `${certNo}.pdf`);
       setDownloading(false);
       setDownloaded(true);
-    }, 2000);
+    }, 800);
   }
 
   return (

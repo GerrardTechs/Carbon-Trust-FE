@@ -55,7 +55,7 @@ export default function RootApp() {
       @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
       @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
       .wb-top { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 28px 40px; text-align: center; animation: fadeUp .35s ease forwards; }
-      .wb-logo-ring { width: 120px; height: 120px; border-radius: 50%; transform: scale(1.8); overflow: hidden; background: white; border: 1.5px solid #dcfce7; display: flex; align-items: center; justify-content: center; margin-bottom: 70px; }
+      .wb-logo-ring { width: 120px; height: 120px; border-radius: 50%; transform: scale(1.8); overflow: hidden; background: transparent; border: 1.5px solid #dcfce7; display: flex; align-items: center; justify-content: center; margin-bottom: 70px; }
       .wb-logo-ring img { width: 170%; height: 170%; object-fit: contain; }
       .wb-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #16a34a; background: #dcfce7; padding: 5px 14px; border-radius: 999px; margin-bottom: 18px; display: inline-block; animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .1s both; }
       .wb-headline { font-size: 28px; font-weight: 900; color: #1e293b; line-height: 1.2; letter-spacing: -.03em; margin-bottom: 10px; }
@@ -78,6 +78,7 @@ export default function RootApp() {
       en: { tag:"Session Saved",      headline:"Welcome\nBack!",               sub:"Your account is still active. Continue your carbon activities.",    verified:"✓ Verified",      aiValidated:"AI Certificate Validated", enter:"Enter Dashboard →",    switch_:"Switch Account / Logout" },
       id: { tag:"Sesi Tersimpan",     headline:"Selamat Datang\nKembali!",     sub:"Akun Anda masih aktif. Lanjutkan aktivitas karbon Anda.",          verified:"✓ Terverifikasi", aiValidated:"Sertifikat Tervalidasi AI", enter:"Masuk ke Dashboard →", switch_:"Ganti Akun / Logout" },
       tr: { tag:"Oturum Kaydedildi", headline:"Tekrar\nHoş Geldiniz!",        sub:"Hesabınız hâlâ aktif. Karbon faaliyetlerinize devam edin.",         verified:"✓ Doğrulandı",   aiValidated:"AI Sertifika Doğrulandı", enter:"Panele Gir →",         switch_:"Hesabı Değiştir / Çıkış" },
+      zh: { tag:"会话已保存", headline:"欢迎\n回来！", sub:"您的账户仍然有效。继续您的碳活动。", verified:"✓ 已验证", aiValidated:"AI证书已验证", enter:"进入仪表板 →", switch_:"切换账户 / 退出" },
     };
     const wb = WB_T[L] || WB_T.en;
     const displayName = session.user?.name || "PT. Nusantara Hijau";

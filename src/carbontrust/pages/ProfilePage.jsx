@@ -83,13 +83,13 @@ export function ProfilePage({
     setCertError("");
     setIsoUploading(true);
     const fd = new FormData();
-    fd.append("iso", isoCert);
+    fd.append("isoCert", isoCert);
     const res = await apiFetch(`/company/${cid}/upload-iso`, { method:"POST", body: fd, isFormData: true });
-    if (res?.ok) {
+    if (res?.success) {
       setIsoVerified(true);
       setCompany(prev => ({ ...prev, verified: true }));
     } else {
-      setCertError("Upload gagal, coba lagi.");
+      setCertError(res?.message || t?.verify?.isoUploadReject || "Upload failed, please try again.");
     }
     setIsoUploading(false);
   }
@@ -246,7 +246,7 @@ export function ProfilePage({
               <button onClick={submitISO} disabled={isoUploading}
                 className="mt-2 w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
                 style={{ background:"linear-gradient(135deg,#166534,#0f766e)" }}>
-                {isoUploading ? "Uploading..." : "Submit for Verification →"}
+                {isoUploading ? (t?.verify?.uploading || "Uploading...") : (t?.verify?.submitVerify || "Submit for Verification →")}
               </button>
             )}
           </>

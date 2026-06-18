@@ -200,8 +200,8 @@ export function Dashboard({ parcels, company, setPage, t }) {
           <div className="flex items-center gap-2">
             <span className="text-base">📊</span>
             <div>
-              <p className="text-xs font-bold text-gray-700">Tingkat Kepercayaan Data</p>
-              <p className="text-xs text-gray-400">Digunakan dalam verifikasi MRV</p>
+              <p className="text-xs font-bold text-gray-700">{t.dash?.dataTrust || "Data Confidence Level"}</p>
+              <p className="text-xs text-gray-400">{t.dash?.dataTrustSub || "Used in MRV verification"}</p>
             </div>
           </div>
           <div className="text-right">
@@ -220,8 +220,8 @@ export function Dashboard({ parcels, company, setPage, t }) {
         <button onClick={() => setPage("certificate")} className="card p-3 flex items-center gap-2 active:scale-95 transition-all">
           <span className="text-xl">📜</span>
           <div className="text-left">
-            <p className="text-xs font-bold text-gray-700">Sertifikat</p>
-            <p className="text-xs text-gray-400">Kredit karbon</p>
+            <p className="text-xs font-bold text-gray-700">{t.dash?.certQuick || "Certificate"}</p>
+            <p className="text-xs text-gray-400">{t.dash?.certQuickSub || "Carbon credits"}</p>
           </div>
         </button>
       </div>
