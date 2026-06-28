@@ -17,6 +17,7 @@ export function RegisterPage({ role, onSubmit, onBack, onGoToLogin, lang }) {
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const [idCopied, setIdCopied] = useState(false);
   const usernameCheckRef = useRef({ lastChecked: "", timer: null });
 
@@ -57,10 +58,16 @@ export function RegisterPage({ role, onSubmit, onBack, onGoToLogin, lang }) {
   async function handleSubmit() {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
-    const ok = await onSubmit(form);
-    setLoading(false);
-    if (ok === false) return;
+    try {
+      const ok = await onSubmit(form);
+      if (ok === false) return;
+    } finally {
+      submittingRef.current = false;
+      setLoading(false);
+    }
   }
 
   function checkUsernameAvailable(name) {

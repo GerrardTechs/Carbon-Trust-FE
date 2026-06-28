@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import {
-  Toast, ABSORB_DRAFT_KEY, dispatchCarbonDataUpdate,
+  Toast, ABSORB_DRAFT_KEY, dispatchCarbonDataUpdate, apiFetch,
   calcSolarEnergy, parseNum, roundCarbon, SOLAR_SUN_HOURS, SOLAR_EFFICIENCY,
 } from "../shared.jsx";
 
@@ -17,7 +17,7 @@ function loadAbsorbDraft() {
 
 const TYPE_ICON = { green: "🌿", solar: "☀️", biogas: "♻️", blue: "🌊" };
 
-function HitungKreditButton({ totalAbsorbKg, setPage, t }) {
+function HitungKreditButton({ totalAbsorbKg, setPage, t, companyId }) {
   const [open, setOpen] = useState(false);
   const ab = t?.absorb || {};
 
@@ -35,15 +35,22 @@ function HitungKreditButton({ totalAbsorbKg, setPage, t }) {
 
   function handleClick() {
     if (!hasEmisi) return;
-    localStorage.setItem("carbon_credit_result", JSON.stringify({
+    const creditPayload = {
       kreditKgYr: kreditKg,
       kreditTonYr: kreditTon,
       absorbKgYr,
       emisiKgYr,
       isPositive,
       savedAt: new Date().toISOString(),
-    }));
+    };
+    localStorage.setItem("carbon_credit_result", JSON.stringify(creditPayload));
     dispatchCarbonDataUpdate();
+    if (companyId) {
+      apiFetch(`/sequestration/${companyId}`, {
+        method: "POST",
+        body: JSON.stringify({ carbonCredit: creditPayload }),
+      }).catch(() => {});
+    }
     setOpen(true);
   }
 
@@ -97,7 +104,7 @@ function HitungKreditButton({ totalAbsorbKg, setPage, t }) {
   );
 }
 
-export function AbsorbPage({ t, setPage }) {
+export function AbsorbPage({ t, setPage, companyId }) {
   const draft = loadAbsorbDraft();
   const ab = t?.absorb || {};
   const tabs = [
@@ -120,6 +127,33 @@ export function AbsorbPage({ t, setPage }) {
 
   const [emissionCertFile, setEmissionCertFile] = useState(null);
   const [sequestrationCertFile, setSequestrationCertFile] = useState(null);
+
+  useEffect(() => {
+    if (!companyId) return;
+    apiFetch(`/sequestration/${companyId}`).then(data => {
+      if (!data?.success || !data.record) return;
+      const r = data.record;
+      if (r.greenAbsorbTonYr) setGreenAbsorb(String(r.greenAbsorbTonYr));
+      if (r.solarPanels) setSolarPanels(String(r.solarPanels));
+      if (r.solarWp) setSolarWp(String(r.solarWp));
+      if (r.biogasInputs) setBiogasInputs(prev => ({ ...prev, ...r.biogasInputs }));
+      if (r.blueProjectName) setBlueProjectName(r.blueProjectName);
+      if (r.blueSequestrationTonYr) setBlueSequestration(String(r.blueSequestrationTonYr));
+      const saved = {
+        totalAbsorbKg: r.totalAbsorbKg,
+        greenOffsetKg: r.greenOffsetKg,
+        solarOffsetKg: r.solarOffsetKg,
+        biogasOffsetKg: r.biogasOffsetKg,
+        blueOffsetKg: r.blueOffsetKg,
+        projects: r.projects,
+        certificatesUploaded: r.certificatesUploaded,
+        savedAt: r.updatedAt,
+      };
+      localStorage.setItem("carbon_absorb_result", JSON.stringify(saved));
+      if (r.carbonCredit) localStorage.setItem("carbon_credit_result", JSON.stringify({ ...r.carbonCredit, savedAt: r.updatedAt }));
+      dispatchCarbonDataUpdate();
+    });
+  }, [companyId]);
 
   useEffect(() => {
     localStorage.setItem(ABSORB_DRAFT_KEY, JSON.stringify({
@@ -173,25 +207,48 @@ export function AbsorbPage({ t, setPage }) {
     return projects;
   }
 
-  function saveAbsorb(navigateHome = false) {
-    localStorage.setItem("carbon_absorb_result", JSON.stringify({
+  async function saveAbsorb(navigateHome = false) {
+    const payload = {
       totalAbsorbKg,
       greenOffsetKg,
       solarOffsetKg,
       biogasOffsetKg,
       blueOffsetKg,
+      solarPanels: parseNum(solarPanels),
+      solarWp: parseNum(solarWp),
       solarWh: solar.wh,
       solarKwh: solar.kwh,
       greenAbsorbTonYr: parseNum(greenAbsorb),
       blueProjectName,
       blueSequestrationTonYr: parseNum(blueSequestration),
+      biogasInputs,
+      projects: buildProjects(),
       certificatesUploaded,
       emissionCertName: emissionCertFile?.name || null,
       sequestrationCertName: sequestrationCertFile?.name || null,
-      projects: buildProjects(),
+    };
+
+    localStorage.setItem("carbon_absorb_result", JSON.stringify({
+      ...payload,
       savedAt: new Date().toISOString(),
     }));
     dispatchCarbonDataUpdate();
+
+    if (companyId) {
+      if (emissionCertFile || sequestrationCertFile) {
+        const fd = new FormData();
+        Object.entries(payload).forEach(([k, v]) => {
+          if (v != null && typeof v !== "object") fd.append(k, String(v));
+          else if (v != null) fd.append(k, JSON.stringify(v));
+        });
+        if (emissionCertFile) fd.append("emissionCert", emissionCertFile);
+        if (sequestrationCertFile) fd.append("sequestrationCert", sequestrationCertFile);
+        await apiFetch(`/sequestration/${companyId}`, { method: "POST", body: fd, isFormData: true });
+      } else {
+        await apiFetch(`/sequestration/${companyId}`, { method: "POST", body: JSON.stringify(payload) });
+      }
+    }
+
     setToastType("success");
     setToast(ab.saveSuccess || t?.profile?.saved || "✅ Saved!");
     setTimeout(() => setToast(""), 3500);
@@ -402,7 +459,7 @@ export function AbsorbPage({ t, setPage }) {
             className="w-full py-2.5 rounded-xl font-bold text-green-700 bg-green-50 border border-green-200 text-sm active:scale-95 transition-all">
             💾 {ab.saveSequestration} · {ab.goDashboard}
           </button>
-          <HitungKreditButton totalAbsorbKg={totalAbsorbKg} setPage={setPage} t={t} />
+          <HitungKreditButton totalAbsorbKg={totalAbsorbKg} setPage={setPage} t={t} companyId={companyId} />
         </div>
       )}
 

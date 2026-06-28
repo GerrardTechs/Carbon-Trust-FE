@@ -380,8 +380,15 @@ export default function PublicView() {
                     </div>
                   )}
 
-                  <a href="/" className="pv-cta">Login untuk Ajukan Bid →</a>
-                  <div className="pv-cta-sub">Butuh akun untuk mengajukan harga bid</div>
+                  <a 
+  href="/?view=login" 
+  className="pv-cta"
+  onClick={(e) => {
+    localStorage.removeItem("carbon_session");
+  }}
+>
+  Login untuk Ajukan Bid →
+</a><div className="pv-cta-sub">Butuh akun untuk mengajukan harga bid</div>
                 </>
               )}
             </div>

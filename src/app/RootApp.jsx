@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthFlow from "../auth/AuthFlow.jsx";
 import CarbonTrust from "../carbontrust/apps/App.jsx";
 import AdminApp from "../carbontrust/apps/AdminApp.jsx";
@@ -6,33 +6,86 @@ import LandlordApp from "../carbontrust/apps/LandlordApp.jsx";
 import PublicView from "../carbontrust/apps/PublicView.jsx";
 import PrivacyPage from "../auth/pages/PrivacyPage.jsx";
 import TermsPage   from "../auth/pages/TermsPage.jsx";
+import { logoutUser, getMe } from "../auth/api/authApi.js";
 
 export default function RootApp() {
+  // =====================================================
+  // GUARD #0 — ZONA PUBLIK (prioritas tertinggi, tanpa hambatan)
+  // Dihitung di awal function body (bukan di dalam useEffect/state)
+  // supaya tidak ada flicker/delay dan tidak tergantung session sama sekali.
+  // =====================================================
+  const isPublic =
+    window.location.pathname.startsWith("/public") ||
+    new URLSearchParams(window.location.search).get("view") === "public";
+
+  // =====================================================
+  // GUARD #1 — ZONA STATIS (privacy & terms)
+  // Juga tidak butuh session, tapi prioritasnya di bawah isPublic
+  // karena /public bisa saja punya query string apa pun.
+  // =====================================================
   const isPrivacy = window.location.pathname.startsWith("/privacy");
   const isTerms   = window.location.pathname.startsWith("/terms");
-  const isPublic = window.location.pathname.startsWith("/public") ||
-                   new URLSearchParams(window.location.search).get("view") === "public";
 
+  // =====================================================
+  // STATE SESI
+  // =====================================================
   const [session, setSession] = useState(() => {
     const savedSession = localStorage.getItem("carbon_session");
-    return savedSession ? JSON.parse(savedSession) : null;
-  });
+    if (!savedSession) return null;
+  const parsed = JSON.parse(savedSession);
+  if (!parsed?.token) {
+    localStorage.removeItem("carbon_session");
+    return null;
+  }
+  return parsed;
+});
 
   const [isAppActive, setIsAppActive] = useState(() => {
     return !!localStorage.getItem("carbon_session");
   });
 
-  if (isPrivacy) return <PrivacyPage />;
-  if (isTerms)   return <TermsPage />;
+  // Validasi token ke backend setiap mount (hanya relevan kalau ada session)
+  useEffect(() => {
+    if (!session?.token) return;
 
+    getMe(session.token)
+      .then((data) => {
+        if (!data?.success) {
+          // Token invalid/expired -> paksa logout
+          setSession(null);
+          setIsAppActive(false);
+          localStorage.removeItem("carbon_session");
+        } else if (data.user) {
+          setSession((prev) => (prev ? { ...prev, user: { ...prev.user, ...data.user } } : prev));
+          localStorage.setItem(
+            "carbon_session",
+            JSON.stringify({ ...session, user: { ...session.user, ...data.user } })
+          );
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // =====================================================
+  // HANDLERS
+  // =====================================================
   const handleLogin = (role, user, lang, token) => {
+    if (!token || role === "guest") return;
     const userData = { role: user?.role || role, user, lang, token };
     setSession(userData);
     localStorage.setItem("carbon_session", JSON.stringify(userData));
     setIsAppActive(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (session?.token) {
+      try {
+        await logoutUser(session.token);
+      } catch {
+        /* ignore network error saat logout, tetap clear local state */
+      }
+    }
     setSession(null);
     setIsAppActive(false);
     localStorage.removeItem("carbon_session");
@@ -42,10 +95,27 @@ export default function RootApp() {
     setIsAppActive(false);
   };
 
+  // =====================================================
+  // EARLY RETURN #0 — ZONA PUBLIK
+  // Cek paling pertama, sebelum cek apapun yang lain (termasuk privacy/terms).
+  // =====================================================
   if (isPublic) return <PublicView />;
 
+  // =====================================================
+  // EARLY RETURN #1 — ZONA STATIS
+  // =====================================================
+  if (isPrivacy) return <PrivacyPage />;
+  if (isTerms)   return <TermsPage />;
+
+  // =====================================================
+  // EARLY RETURN #2 — BELUM LOGIN
+  // =====================================================
   if (!session) return <AuthFlow onComplete={handleLogin} />;
 
+  // =====================================================
+  // EARLY RETURN #3 — SUDAH LOGIN, TAPI APP BELUM "DIAKTIFKAN"
+  // (layar "Welcome Back")
+  // =====================================================
   if (session && !isAppActive) {
     const wbCss = `
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -120,6 +190,9 @@ export default function RootApp() {
     );
   }
 
+  // =====================================================
+  // EARLY RETURN #4 — SESSION AKTIF, ROUTING BERDASARKAN ROLE
+  // =====================================================
   if (session?.role === "admin") {
     return <AdminApp onLogout={handleLogout} user={session.user} lang={session.lang} />;
   }
@@ -128,6 +201,7 @@ export default function RootApp() {
     return <LandlordApp onLogout={handleLogout} onExit={handleExitApp} user={session.user} lang={session.lang} />;
   }
 
+  // Fallback role default (mis. "individual" / "company")
   return (
     <CarbonTrust
       initialLang={session.lang}

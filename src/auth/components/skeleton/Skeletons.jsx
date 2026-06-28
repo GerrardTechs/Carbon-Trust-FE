@@ -39,24 +39,6 @@ export function KpiSkeleton() {
   );
 }
 
-/** IoT sensor cards */
-export function IoTSkeleton() {
-  return (
-    <>
-      <style>{CSS}</style>
-      <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 12, border: "1px solid #e5e7eb" }}>
-            <SkBase style={{ height: 12, width: "60%", marginBottom: 6 }} />
-            <SkBase style={{ height: 22, width: "80%", marginBottom: 8 }} />
-            <SkBase style={{ height: 24, width: "100%", borderRadius: 4 }} />
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
 /** Parcel list rows */
 export function ParcelListSkeleton({ count = 3 }) {
   return (

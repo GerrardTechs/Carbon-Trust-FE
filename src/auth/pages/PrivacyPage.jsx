@@ -240,7 +240,7 @@ const sections = [
               ["Data Perusahaan", "Nomor NPWP, akta perusahaan, entitas hukum (PT/CV/Tbk), lokasi kantor, status verifikasi ISO 14064", "Company"],
               ["Data Emisi & Serapan Karbon", "Total emisi (tCO₂e/bulan), data serapan per lahan, riwayat kalkulasi emisi, laporan MRV", "Company"],
               ["Data Kepemilikan & Koordinat Lahan", "Koordinat GPS lahan (lat/lng), luas lahan (ha), tipe ekosistem (gambut/hutan/mangrove), dokumen HGU/sertifikat, dokumen Joint Venture", "Company, Landlord"],
-              ["Data IoT & Sensor", "Nilai NDVI, suhu, kelembaban, konsentrasi CO₂, riwayat data sensor 72 jam", "System (dari perangkat lapangan)"],
+              ["Data Satelit & MRV", "Nilai NDVI, indeks vegetasi, analisis Sentinel-2, laporan verifikasi manual", "System (satelit & MRV)"],
               ["Data Transaksi Kredit Karbon", "Bid yang diajukan, volume kredit, harga per ton, status transaksi (pending/accepted/rejected)", "Company"],
               ["Data Sesi & Log Akses", "Alamat IP, user-agent, waktu login/logout, token sesi", "Semua pengguna terautentikasi"],
               ["Data Publik (tanpa login)", "Profil perusahaan yang dipublikasikan, total kredit tersedia, harga ask, rating project — data yang secara eksplisit dipilih perusahaan untuk dibuka ke publik", "Publik"],
@@ -265,7 +265,7 @@ const sections = [
         <p className="pp-p">Data yang dikumpulkan digunakan hanya untuk tujuan berikut:</p>
         <ul className="pp-list">
           <li><strong>Autentikasi & Keamanan Akun</strong> — Memverifikasi identitas pengguna dan mencegah akses tidak sah.</li>
-          <li><strong>Verifikasi Kredit Karbon</strong> — Menghitung serapan/emisi karbon berdasarkan data lahan dan sensor IoT sesuai metodologi ISO 14064:2018 dan IPCC 2006.</li>
+          <li><strong>Verifikasi Kredit Karbon</strong> — Menghitung serapan/emisi karbon berdasarkan data lahan, analisis satelit, dan verifikasi manual sesuai metodologi ISO 14064:2018 dan IPCC 2006.</li>
           <li><strong>Pelacakan Target Net-Zero</strong> — Menyediakan laporan MRV (Measurement, Reporting, Verification) agar perusahaan dapat memantau progress net-zero mereka.</li>
           <li><strong>Marketplace Kredit Karbon</strong> — Memfasilitasi transaksi jual-beli kredit karbon antar perusahaan terdaftar.</li>
           <li><strong>Validasi Sertifikat AI</strong> — Memverifikasi dokumen ISO 14064 dan data manual terhadap ringkasan sertifikat menggunakan teknologi MRV.</li>
@@ -301,7 +301,7 @@ const sections = [
             <li>Status verifikasi ISO 14064 (terverifikasi / pending)</li>
             <li>Status verifikasi AI sertifikat (jika tersedia)</li>
             <li>Rating project yang diberikan platform</li>
-            <li>Total serapan dan emisi bulanan (angka agregat, bukan data per-sensor)</li>
+            <li>Total serapan dan emisi bulanan (angka agregat)</li>
           </ul>
         </div>
 
@@ -310,9 +310,8 @@ const sections = [
           <ul className="pp-list" style={{ marginTop: 6 }}>
             <li>Koordinat GPS spesifik per titik lahan</li>
             <li>Dokumen kepemilikan lahan (HGU, sertifikat saham, akta)</li>
-            <li>Data sensor IoT real-time dan riwayat 72 jam per parsel</li>
-            <li>Detail transaksi dan riwayat bid</li>
             <li>Laporan MRV internal dan metodologi perhitungan detail</li>
+            <li>Detail transaksi dan riwayat bid</li>
             <li>Data akun dan identitas PIC perusahaan</li>
             <li>Log verifikasi MRV internal</li>
           </ul>
@@ -382,7 +381,7 @@ const sections = [
             {[
               ["Data akun aktif", "Selama akun aktif + 30 hari setelah penghapusan akun"],
               ["Laporan MRV & kredit karbon", "10 tahun (kewajiban audit lingkungan)"],
-              ["Data IoT sensor", "2 tahun (rolling window)"],
+              ["Data satelit & MRV", "2 tahun (rolling window)"],
               ["Log transaksi kredit karbon", "7 tahun (kewajiban perpajakan dan audit)"],
               ["Log sesi & akses", "90 hari"],
               ["Dokumen kepemilikan lahan", "Selama lahan terdaftar aktif + 5 tahun"],

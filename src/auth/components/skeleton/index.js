@@ -1,6 +1,5 @@
 export {
     KpiSkeleton,
-    IoTSkeleton,
     ParcelListSkeleton,
     MarketSkeleton,
     AdminSkeleton,

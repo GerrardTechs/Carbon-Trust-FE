@@ -47,7 +47,6 @@ export function RolePage({ onSelect, onGuest, onBack, lang }) {
             </div>
           ))}
 
-          {/* Tambah setelah card Landlord */}
           <button 
             className="role-card" 
             onClick={() => onSelect("admin")}

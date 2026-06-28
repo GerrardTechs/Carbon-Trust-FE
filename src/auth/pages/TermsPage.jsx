@@ -83,7 +83,7 @@ const sections = [
         </p>
         <ul className="tp-list">
           <li>Pencatatan dan verifikasi emisi serta serapan karbon sesuai ISO 14064:2018 dan IPCC 2006</li>
-          <li>Pendaftaran dan pemantauan lahan karbon dengan sensor IoT dan analisis satelit</li>
+          <li>Pendaftaran dan pemantauan lahan karbon dengan analisis satelit dan verifikasi manual</li>
           <li>Marketplace jual-beli kredit karbon (carbon credit trading) antar perusahaan terdaftar</li>
           <li>Laporan MRV (Measurement, Reporting, Verification) dan validasi sertifikat AI</li>
           <li>Transparansi data publik melalui Public View sesuai Paris Agreement Article 6</li>
@@ -113,7 +113,7 @@ const sections = [
           <li>Tidak melakukan scraping, reverse engineering, atau eksploitasi sistem platform</li>
         </ul>
         <div className="tp-callout tp-callout-red" style={{ marginTop: 10 }}>
-          <strong>Pelanggaran berat:</strong> Pelaporan emisi palsu, manipulasi data sensor IoT,
+          <strong>Pelanggaran berat:</strong> Pelaporan emisi palsu, manipulasi data verifikasi,
           atau pembuatan kredit karbon fiktif dapat mengakibatkan pemblokiran akun permanen dan
           pelaporan ke otoritas berwenang (KLHK, OJK).
         </div>

@@ -60,3 +60,24 @@ export async function adminLogin(username, password) {
   });
   return res.json();
 }
+
+export async function logoutUser(token) {
+  const res = await fetch(`${API}/auth/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  return res.json();
+}
+
+export async function getMe(token) {
+  const res = await fetch(`${API}/auth/me`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  return res.json();
+}

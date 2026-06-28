@@ -42,7 +42,7 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
   }
 
   function handleGuest() {
-    if (onComplete) onComplete("guest", null, lang);
+    window.location.href = "/public";
   }
 
   function handleLoginSuccess(user, token) {
@@ -58,6 +58,9 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
       role,
       phone: formData.phone,
       location: formData.location,
+      institutionId: formData.institutionId,
+      position: formData.position,
+      customPosition: formData.customPosition,
     });
 
     if (!result.success) {
@@ -72,12 +75,23 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
 
   const handleFinalSubmit = async (finalCalcData) => {
     const completeData = {
-      ...userData,
-      ...operationalData,
-      ...finalCalcData,
+      name: userData?.name,
+      email: userData?.email,
+      username: userData?.username,
+      password: userData?.password,
+      institutionId: userData?.institutionId,
+      position: userData?.position,
+      customPosition: userData?.customPosition,
+      emissionObject: operationalData?.emissionObject,
+      companyType: operationalData?.companyType,
+      officeAddress: operationalData?.officeAddress,
+      siteAddress: operationalData?.siteAddress,
+      location: operationalData?.officeAddress,
       verificationToken,
       calcMethod: finalCalcData?.calcMethod,
       equityPct: finalCalcData?.equityShare,
+      ghgInventoryPath: finalCalcData?.ghgInventory?.name || finalCalcData?.ghgInventoryPath,
+      carbonRemovalPath: finalCalcData?.carbonRemoval?.name || finalCalcData?.carbonRemovalPath,
     };
 
     try {
@@ -97,7 +111,15 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
 
   async function registerLandlordAfterVerify(token) {
     try {
-      const result = await registerLandlord({ ...userData, verificationToken: token });
+      const result = await registerLandlord({
+        name: userData?.name,
+        email: userData?.email,
+        username: userData?.username,
+        password: userData?.password,
+        phone: userData?.phone,
+        location: userData?.location,
+        verificationToken: token,
+      });
       if (result.success) {
         setStep("success");
         setTimeout(() => {
@@ -111,18 +133,27 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
     }
   }
 
-  function handleVerified(tokenFromEmail) {
+  function handleVerified(tokenFromEmail, verifyData) {
     setVerificationToken(tokenFromEmail);
+    if (verifyData?.role) setRole(verifyData.role);
+    if (verifyData?.registrationPreview) {
+      setUserData(prev => ({
+        ...(prev || {}),
+        ...verifyData.registrationPreview,
+        email: verifyData.registrationPreview.email || verifyData.email || pendingEmail,
+      }));
+    }
     if (typeof window !== "undefined" && window.history.replaceState) {
       const url = new URL(window.location.href);
       url.searchParams.delete("verifyToken");
       url.searchParams.delete("email");
       window.history.replaceState({}, "", url.pathname);
     }
-    if (role === "company") {
+    const activeRole = verifyData?.role || role;
+    if (activeRole === "company") {
       setStep("operational");
-    } else if (role === "landlord") {
-      registerLandlordAfterVerify(tokenFromEmail); // ← pass langsung, tidak tunggu setState
+    } else if (activeRole === "landlord") {
+      registerLandlordAfterVerify(tokenFromEmail);
     }
   }
 
@@ -196,9 +227,12 @@ export default function AuthFlow({ onComplete, initialLang = "id" }) {
             email: userData.email,
             username: userData.username,
             password: userData.password,
-            role: role,
+            role: role || userData.role,
             phone: userData.phone,
             location: userData.location,
+            institutionId: userData.institutionId,
+            position: userData.position,
+            customPosition: userData.customPosition,
           }).then(r => r.success) : null}
           lang={lang}
         />

@@ -103,7 +103,7 @@ export default function App({ onLogout, onExit, initialLang = "en", userData }) 
     switch (page) {
       case "home":        return <Dashboard    parcels={parcels} company={company} setPage={setPage} t={t} />;
       case "calc":        return <CalcPage     t={t} setPage={setPage} companyId={companyId} lang={lang} />;
-      case "absorb":      return <AbsorbPage   t={t} setPage={setPage} lang={lang} />;
+      case "absorb":      return <AbsorbPage   t={t} setPage={setPage} lang={lang} companyId={companyId} />;
       case "tx":          return <TxPage       tx={activeTx} setTx={setActiveTx} t={t} lang={lang} setPage={setPage} parcels={parcels} company={company} />;
       case "market":      return <MarketPage   t={t} company={company} parcels={parcels} projects={projects} setProjects={setProjects} />;
       case "certificate": return <CertificatePage t={t} parcels={parcels} company={company} companyId={companyId} />;

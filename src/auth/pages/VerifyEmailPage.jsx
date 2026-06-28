@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API } from "../../carbontrust/shared.jsx";
 import { G } from "../constants/tokens.js";
 import { LANGS } from "../i18n/langs.js";
@@ -12,8 +12,13 @@ export function VerifyEmailPage({ email, role, userData, onVerified, onBack, onR
   const [errMsg, setErrMsg] = useState("");
   const [resendCd, setResendCd] = useState(30);
   const [resent, setResent] = useState(false);
+  const autoSubmitted = useRef(false);
 
   const t = LANGS[lang].verify;
+
+  function normalizeToken(value) {
+    return String(value || "").trim().toUpperCase();
+  }
 
   useEffect(() => {
     if (resendCd <= 0) return;
@@ -22,14 +27,15 @@ export function VerifyEmailPage({ email, role, userData, onVerified, onBack, onR
   }, [resendCd]);
 
   useEffect(() => {
-    if (initialToken && initialToken.length >= 8) {
+    if (initialToken && initialToken.length >= 8 && !autoSubmitted.current) {
+      autoSubmitted.current = true;
       submitToken(initialToken);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function submitToken(code) {
-    const trimmed = (code || token).trim();
+    const trimmed = normalizeToken(code || token);
     if (trimmed.length < 8) {
       setErrMsg(t.invalidCode);
       return;
@@ -44,7 +50,7 @@ export function VerifyEmailPage({ email, role, userData, onVerified, onBack, onR
       });
       const data = await res.json();
       if (data.success) {
-        onVerified(data.verificationToken);
+        onVerified(data.verificationToken, data);
       } else {
         setErrMsg(data.message || t.invalidCode);
       }
@@ -95,7 +101,7 @@ export function VerifyEmailPage({ email, role, userData, onVerified, onBack, onR
             type="text"
             placeholder={t.tokenPlaceholder}
             value={token}
-            onChange={e => { setToken(e.target.value.trim()); setErrMsg(""); }}
+            onChange={e => { setToken(normalizeToken(e.target.value)); setErrMsg(""); }}
             autoComplete="one-time-code"
           />
         </div>

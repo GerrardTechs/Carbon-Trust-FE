@@ -313,12 +313,21 @@ export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
           method,
           equityPct: method === "equity" ? parseNum(equityPct) || 100 : 100,
           inputs: apiInputs,
+          clientSnapshot: {
+            total: nextResult.total,
+            s1: nextResult.s1,
+            s2: nextResult.s2,
+            s3: nextResult.s3,
+            leakage: nextResult.leakage,
+            creditsNeeded: nextResult.creditsNeeded,
+            breakdown: nextResult.breakdown,
+            netEmission: nextResult.total,
+          },
         }),
       }).catch(() => {});
     }
 
     setCalculating(false);
-    setScope("total");
     setTotalDetailScope(null);
     setShowJourneyModal(true);
   }
@@ -767,7 +776,7 @@ export function CalcPage({ t = TR.en, companyId, setPage, lang = "en" }) {
             {ui.goSequestration}
           </button>
           <button
-            onClick={() => setShowJourneyModal(false)}
+            onClick={() => { setShowJourneyModal(false); setScope("total"); }}
             className="w-full py-2.5 rounded-xl text-sm font-bold border border-gray-200 text-gray-600"
           >
             {ui.stayHere}

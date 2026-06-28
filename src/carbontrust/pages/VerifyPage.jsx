@@ -1,6 +1,6 @@
 /**
  * CarbonTrust — VerifyPage.jsx
- * MRV & Verification: satellite view, IoT log, ISO 14064 download
+ * MRV & Verification: satellite view, verification log, ISO 14064 download
  */
 import { useState } from "react";
 import { API, useInterval, Spinner, Ic, apiFetch } from "../shared.jsx";
@@ -52,11 +52,9 @@ export function VerifyPage({ t, parcels, companyId }) {
   }
 
   const geoLog = [
-    { date: "2024-06-12 08:14", type: "IoT", msg: "Sensor C-12: CO₂ flux = 2.14 tCO₂/ha/day ✓", st: "ok" },
     { date: "2024-06-12 07:03", type: "Sat", msg: "LP-003: MNDWI > 0.42 — Flood confirmed Sentinel-2", st: "warn" },
     { date: "2024-06-11 20:07", type: "ML", msg: "LP-002: NDVI 0.31 (↓0.52) — Peat drying detected", st: "warn" },
     { date: "2024-06-11 14:33", type: "Sat", msg: "LP-001: 0 deforestation detected ✓", st: "ok" },
-    { date: "2024-06-10 09:52", type: "IoT", msg: "⚠ Sensor B-04: Humidity 89% — Logged", st: "warn" },
     { date: "2024-06-09 16:18", type: "ML", msg: "LP-001 Carbon Model: 3,825 tCO₂/yr estimated ✓", st: "ok" },
   ];
 
@@ -109,7 +107,7 @@ export function VerifyPage({ t, parcels, companyId }) {
         <div className="divide-y divide-gray-50">
           {geoLog.map((e, i) => (
             <div key={i} className="flex items-start gap-3 px-4 py-3">
-              <span className={`flex-shrink-0 text-xs px-1.5 py-0.5 rounded font-mono mt-0.5 ${e.type === "IoT" ? "bg-blue-50 text-blue-600" : e.type === "ML" ? "bg-purple-50 text-purple-600" : "bg-amber-50 text-amber-600"}`}>{e.type}</span>
+              <span className={`flex-shrink-0 text-xs px-1.5 py-0.5 rounded font-mono mt-0.5 ${e.type === "ML" ? "bg-purple-50 text-purple-600" : "bg-amber-50 text-amber-600"}`}>{e.type}</span>
               <div>
                 <p className={`text-xs ${e.st === "warn" ? "text-amber-700" : "text-gray-600"}`}>{e.msg}</p>
                 <p className="text-xs text-gray-400 font-mono mt-0.5">{e.date}</p>

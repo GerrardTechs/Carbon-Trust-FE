@@ -13,7 +13,7 @@ import { apiFetch, CREDIT_PRICE, calcAbsorption } from "../shared.jsx";
 const STEPS = [
   { key:"created",  icon:"📝", label:"Penawaran Diajukan",       desc:"Bid dikirim ke seller, menunggu konfirmasi." },
   { key:"escrow",   icon:"🔒", label:"Dana Masuk Escrow",        desc:"Dana terkunci di sistem — tidak bisa ditarik sepihak." },
-  { key:"verified", icon:"🛰️", label:"Kredit Diverifikasi",      desc:"Satelit & IoT mengkonfirmasi serapan lahan seller." },
+  { key:"verified", icon:"🛰️", label:"Kredit Diverifikasi",      desc:"Satelit & verifikasi manual mengkonfirmasi serapan lahan seller." },
   { key:"released", icon:"💸", label:"Selesai — Dana Dilepas",   desc:"Kredit berpindah, dana diteruskan ke seller. Tercatat di sistem MRV." },
 ];
 

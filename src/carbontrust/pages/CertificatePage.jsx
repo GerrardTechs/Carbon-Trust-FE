@@ -77,14 +77,12 @@ export function CertificatePage({ t, parcels, company, companyId }) {
   // Nomor sertifikat deterministik dari companyId — harus sebelum showCertNo
   const certNo = `CT-CERT-${(company?.id || "COMP-001").replace(/[^A-Z0-9]/g,"")}-${new Date().getFullYear()}`;
   const issuedAt = new Date().toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
-
-  const showCertNo = certData?.certNumber || certNo;
-  const showAbs = certData?.totalAbsorption ?? totalAbs;
-  const showEm = certData?.totalEmission ?? totalEm;
-  const showMonthly = certData?.netMonthly ?? netMonthly;
-  const showAnnual = certData?.netAnnual ?? netAnnual;
-  // Gunakan finalCredits sebagai standar untuk dirender
-  const showCredits = certData?.netCredits ?? finalCredits;
+  const showCertNo  = certData?.certNumber || certNo;
+  const showAbs      = certData?.totalAbsorption || totalAbs;
+  const showEm        = certData?.totalEmission || totalEm;
+  const showMonthly  = certData?.netMonthly || netMonthly;
+  const showAnnual    = certData?.netAnnual || netAnnual;
+  const showCredits  = certData?.netCredits || finalCredits;
 
   function handleDownload() {
     setDownloading(true);
@@ -115,7 +113,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
         "",
         "─── VERIFICATION ──────────────────────────",
         "  Standard   : ISO 14064:2018",
-        "  Method     : Satellite (Sentinel-2) + IoT",
+        "  Method     : Satellite (Sentinel-2) + Verifikasi Manual",
         "  NDVI       : Monitored monthly",
         "  MRV Status : AI Certificate Validated",
         "",
@@ -217,7 +215,7 @@ export function CertificatePage({ t, parcels, company, companyId }) {
               { l:"Diterbitkan",    v:issuedAt },
               { l:"Berlaku s/d",    v:`31 Des ${new Date().getFullYear()+1}` },
               { l:"Standar",        v:"ISO 14064:2018" },
-              { l:"Verifikasi",     v:"Sentinel-2 + IoT" },
+              { l:"Verifikasi",     v:"Sentinel-2 + Verifikasi Manual" },
             ].map((metaItem, i) => (
               <div key={i} className="bg-gray-50 rounded-xl p-2">
                 <p className="text-xs text-gray-400">{metaItem.l}</p>
